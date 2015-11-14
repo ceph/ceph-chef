@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# Work-in-process so informational only for now...
+# NOT installed - just in repo for now!
+
+# Removes Ceph and makes sure all ceph residuals are cleaned up
+
+set +e
+
+# Remove ceph-create-keys if it exists first
+procs=($(ps aux | grep [c]eph-create-keys | awk '{print $2}'))
+for proc in ${procs[@]}; do
+  sudo kill $proc
+done
+
+sudo service ceph-radosgw stop
+sudo service ceph stop
+
+mounts=($(df | grep '/var/lib/ceph/' | awk '{print $1}'))
+
+# Unmount and clean all ceph devices
+for mnt in ${mounts[@]}; do
+  sudo umount $mnt
+  new_mnt=$(echo $mnt | sed 's/[0-9]*//g')
+  sudo sgdisk --zap-all $new_mnt
+done
+
+# Uninstall ceph and related software
+sudo yum remove -y ceph-radosgw
+sudo yum remove -y ceph
+
+# Make sure all ceph related processes are gone too
+procs=($(ps aux | grep [c]eph | awk '{print $2}'))
+for proc in ${procs[@]}; do
+  sudo kill $proc
+done
+
+# Remove any devices that were unounted but still used by ceph
+devs=($(sudo lsblk -nlo NAME,LABEL,PARTLABEL | grep ceph | awk '{print $1}' | sed 's/[0-9]*//g' | uniq))
+for dev in ${devs[@]}; do
+  sudo sgdisk --zap-all /dev/$dev
+done
+
+# Remove directories
+sudo rm -rf /var/log/ceph
+sudo rm -rf /var/log/radosgw
+sudo rm -rf /var/run/ceph
+sudo rm -rf /var/lib/ceph
+sudo rm -rf /etc/ceph
+
+# Reset the partition table
+sudo partprobe
+
+# Ceph will use a temporary mount in /var/lib/ceph/tmp to verify install before unmounting and remounting to
+# /var/lib/ceph/ceph-XX so as to not have a partial install. This is important to know in the event something
+# happens and ceph has not unmounted the tmp mounts. These have to be umount before removing the /var/lib/ceph
+# directory.
+
+# 1. umount any mounted OSDs or tmp mounted in /var/lib/ceph/tmp
+# 2. Zap all OSD devices including journal if on separate device. This can be done via 'ceph-disk zap <device>' or 'sgdisk --zap-all <device>' if ceph-disk is not installed
+# 3. rm -rf /etc/ceph
+# 4. rm -rf /var/log/ceph
+# 5. rm -rf /var/log/radosgw (if radosgw is on the given node)
+# 6. rm -rf /var/run/ceph
+# 7. rm -rf /var/lib/ceph
+# 8. yum (or apt-get) remove -y ceph && yum (or apt-get) remove -y ceph-radosgw (apt - radosgw) if the node has radosgw installed
+# Clean

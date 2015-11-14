@@ -1,0 +1,142 @@
+#######################################################################
+# Maintained by ceph cookbook
+# Please do not modify by hand. Changes will get overridden.
+# Author: Chris Jones
+# Copyright 2015, Bloomberg Finance L.P.
+#######################################################################
+
+[global]
+  # This value must be set before the mon.rb recipe is called. Do this in your own recipe where you set your owner
+  # variables. For an example, see ceph-chef/recipes/ceph-mon.rb
+  fsid = <%= @fsid_secret %>
+  host = <%= node['hostname'] %>
+  keyring = /etc/ceph/$cluster.$name.keyring
+  auth cluster required = cephx
+  auth service required = cephx
+  auth client required = cephx
+  cephx require signatures = true
+  cephx cluster require signatures = true
+  cephx service require signatures = true
+  cephx sign messages = true
+  # Note: mon host (required) and mon initial members (optional) should be in global section in addition
+  # to the cluster and public network options since they are all critical to every node.
+  <% if node['ceph']['config']['mon_initial_members'] %>
+  mon initial members = <%= node['ceph']['config']['mon_initial_members'] %>
+  <% end -%>
+  # List of all of the monitor nodes in the given cluster
+  mon host = <%= @mon_addresses.sort.join(', ') %>
+  # Suppress warning of too many pgs
+  mon pg warn max per osd = 0
+  cluster network = <%= node['ceph']['network']['cluster']['cidr'] %>
+  public network = <%= node['ceph']['network']['public']['cidr'] %>
+<% if !node['ceph']['config']['global'].nil? -%>
+  # This is very flexible section. You can add more options OR override options from above simply by
+  # specifying the values in your wrapper cookbook or your "chef-repo". If you override values then
+  # you may see a warning in the logs letting you know you have overridden.
+  <% node['ceph']['config']['global'].sort.each do |k, v| %>
+  <%= k %> = <%= v %>
+  <% end %>
+<% end -%>
+<% if !node['ceph']['config']['rebalance'].nil? and @node['ceph']['config']['rebalance'] %>
+  paxos propose interval = 60
+<% end %>
+
+[osd]
+  host = <%= node['hostname'] %>
+  keyring = /var/lib/ceph/osd/$cluster-$id/keyring
+  <% if node['ceph']['config']['osd'].nil? -%>
+  # Set the default values here if no values provided to override them
+  filestore xattr use omap = true
+  filestore flusher = false
+  osd journal size = 2000 # 10000
+  osd mkfs type = xfs
+  osd mkfs options xfs = -f -i size=2048 -n size=65536
+  osd mount options xfs = noexec,nodev,noatime,nodiratime,barrier=0,discard
+  # IMPORTANT: If you modify the crush map with the automation then uncomment the line below (osd crush update ...)
+  # otherwise the crush map will not get created correctly and the PGs will stay in inactive/unclean state
+  # osd crush update on start = false
+  osd client up priority = 63
+  # You can change the replica count via config or cli
+  osd pool default size = 3
+  osd pool default min size = 2
+  osd pool default pg num = 128
+  osd pool default pgp num = 128
+  osd pool default crush rule = 0
+  osd backfill full ratio = 0.70
+  # Host
+  osd crush chooseleaf type = 1
+  # Note: All of these values can be overridden in you wrapper cookbook or "chef-repo" project
+  <% end -%>
+  <% if !node['ceph']['config']['rebalance'].nil? and @node['ceph']['config']['rebalance'] %>
+  osd recovery max active = 1
+  osd max backfills  = 1
+  osd op threads = 10
+  osd recovery op priority = 1
+  osd mon report interval min = 30
+  <% end %>
+  <% if !node['ceph']['config']['osd'].nil? -%>
+  <% node['ceph']['config']['osd'].sort.each do |k, v| %>
+  <%= k %> = <%= v %>
+  <% end %>
+  <% end -%>
+
+[mon]
+  host = <%= node['hostname'] %>
+  <% if !node['ceph']['mon']['clock_drift_allowed'].nil? -%>
+  # Default is .050 out of box but 15 in ceph cookbook. VMs (used in development) often drift so set this in the environment file if desired to override the defaults
+  mon clock drift allowed = <%= node['ceph']['mon']['clock_drift_allowed'] %>
+  <% end -%>
+  <% if !node['ceph']['config']['mon'].nil? -%>
+  <% node['ceph']['config']['mon'].sort.each do |k, v| %>
+  <%= k %> = <%= v %>
+  <% end %>
+  <% end -%>
+
+<% if !node['ceph']['config']['mds'].nil? -%>
+[mds]
+  <% node['ceph']['config']['mds'].sort.each do |key, value| -%>
+  <%= key %> = <%= value %>
+  <% end -%>
+<% end -%>
+
+# Have other client here such as glance, cinder ... if using openstack and wanting to have different settings than the default 'client'
+
+[client]
+  rbd cache = true
+  rbd cache writethrough until flush = true
+  # admin socket must be writable by QEMU and allowed by SELinux or AppArmor
+#  admin socket = /var/run/ceph/$cluster-$type.$id.$pid.$cctid.asok
+  log file = /var/log/qemu/qemu-guest-$pid.log
+  rbd concurrent management ops = 20
+
+[client.admin]
+  keyring = /etc/ceph/$cluster.client.admin.keyring
+
+<% if @is_rgw -%>
+[client.radosgw.<%= node['hostname'] %>]
+  host = <%= node['hostname'] %>
+  keyring = /etc/ceph/$cluster.client.radosgw.keyring
+  <% if node['ceph']['radosgw']['rgw_port'] == false %>
+  rgw frontends = civetweb port=80
+  <% else -%>
+  rgw frontends = civetweb port=<%= node['ceph']['radosgw']['rgw_port'] %>
+  <% end -%>
+  # rgw enable ops log = false
+  # rgw enable usage log = false
+  pid file = /var/run/ceph/$name.pid
+  log file = /var/log/radosgw/$cluster.client.radosgw.<%= node['hostname'] -%>.log
+  # Increased to 1 to log HTTP return codes - http://tracker.ceph.com/issues/12432
+  debug rgw = 1/0
+<% if !node['ceph']['config']['rgw'].nil? -%>
+  <% node['ceph']['config']['rgw'].sort.each do |k, v| %>
+  <%= k %> = <%= v %>
+  <% end %>
+<% end -%>
+<% end -%>
+
+<% node['ceph']['config-sections'].sort.each do |name, sect| %>
+[<%= name %>]
+  <% sect.sort.each do |k, v| %>
+  <%= k %> = <%= v %>
+  <% end %>
+<% end %>
