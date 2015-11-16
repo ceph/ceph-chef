@@ -8,7 +8,10 @@ Installs and configures Ceph, a distributed network storage and filesystem desig
 
 The current version is focused on installing and configuring Ceph for Ubuntu, CentOS and RHEL.
 
-For documentation on how to use this cookbook, refer to the [USAGE](#USAGE) section. Also, you can look at https://github.com/bloomberg/chef-bcs. This Chef App (repo) uses 100% of this repo at Bloomberg's large clusters.
+For documentation on how to use this cookbook, refer to the [USAGE](#USAGE) section.
+
+### Recommendation
+Also, you can look at https://github.com/bloomberg/chef-bcs. That Chef App (repo) uses this repo for Bloomberg's large clusters. The chef-bcs repo is an S3 Object Store Cluster used in multiple data centers.
 
 Note: The documentation is a WIP along with a few other features. This repo is actively managed.  
 
@@ -37,6 +40,7 @@ https://supermarket.chef.io/
 * [apt](https://supermarket.chef.io/cookbooks/apt)
 * [apache2](https://supermarket.chef.io/cookbooks/apache2)
 * [yum](https://supermarket.chef.io/cookbooks/yum)
+* [ntp](https://supermarket.chef.io/cookbooks/ntp)
 
 ## TEMPLATES
 
