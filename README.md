@@ -1,12 +1,14 @@
-# Ceph Chef cookbook
+# Ceph-Chef cookbook
 
 ## DESCRIPTION
 
 Installs and configures Ceph, a distributed network storage and filesystem designed to provide excellent performance, reliability, and scalability.
 
-The current version is focused on all installing and configuring Ceph for Ubuntu, CentOS and RHEL.
+The current version is focused on installing and configuring Ceph for Ubuntu, CentOS and RHEL.
 
-For documentation on how to use this cookbook, refer to the [USAGE](#USAGE) section.
+For documentation on how to use this cookbook, refer to the [USAGE](#USAGE) section. Also, you can look at https://github.com/bloomberg/chef-bcs. This Chef App (repo) uses 100% of this repo at Bloomberg's large clusters.
+
+Note: The documentation is a WIP along with a few other features. This repo is actively managed.  
 
 For help, use [Gitter chat](https://gitter.im/ceph/ceph-chef), [mailing-list](mailto:ceph-users-join@lists.ceph.com) or [issues](https://github.com/ceph/ceph-chef/issues)
 
@@ -14,13 +16,13 @@ For help, use [Gitter chat](https://gitter.im/ceph/ceph-chef), [mailing-list](ma
 
 ### Chef
 
-\>= 12.5.0
+\>= 12+
 
 ### Platform
 
 Tested as working:
 
-* Ubuntu Trusty (14.04)
+* Ubuntu Trusty (14.04) [Still verifying updates work]
 * CentOS (7.1)
 * RHEL (7.1)
 
