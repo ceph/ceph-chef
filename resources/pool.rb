@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+provides :ceph_chef_pool
+
 actions :create, :set, :delete
 default_action :create
 

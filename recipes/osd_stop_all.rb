@@ -22,7 +22,7 @@
 service_type = node['ceph']['osd']['init_style']
 
 if service_type == 'upstart'
-  service 'ceph_osd' do
+  service 'ceph_chef_osd' do
     case service_type
     when 'upstart'
       service_name 'ceph-osd-all-starter'

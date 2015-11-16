@@ -44,10 +44,10 @@ template "/etc/ceph/#{node['ceph']['cluster']}.conf" do
   source 'ceph.conf.erb'
   variables lazy {
     {
-      :fsid_secret => ceph_fsid_secret,
-      :mon_addresses => ceph_mon_addresses,
+      :fsid_secret => ceph_chef_fsid_secret,
+      :mon_addresses => ceph_chef_mon_addresses,
       :is_rbd => node['ceph']['is_rbd'],
-      :is_rgw => ceph_is_radosgw_node
+      :is_rgw => ceph_chef_is_radosgw_node
     }
   }
   mode '0644'

@@ -77,7 +77,7 @@ keyring = "/etc/ceph/#{node['ceph']['cluster']}.mon.keyring"
 execute 'format ceph-mon-secret as keyring' do
   command lazy { "ceph-authtool --create-keyring #{keyring} --name=mon. --add-key=#{node['ceph']['monitor-secret']} --cap mon 'allow *'" }
   creates keyring
-  only_if { ceph_mon_secret }
+  only_if { ceph_chef_mon_secret }
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
@@ -85,14 +85,14 @@ end
 execute 'generate ceph-mon-secret as keyring' do
   command lazy { "ceph-authtool --create-keyring #{keyring} --name=mon. --gen-key --cap mon 'allow *'" }
   creates keyring
-  not_if { ceph_mon_secret }
-  notifies :create, 'ruby_block[save ceph_mon_secret]', :immediately
+  not_if { ceph_chef_mon_secret }
+  notifies :create, 'ruby_block[save ceph_chef_mon_secret]', :immediately
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
-# Part of monitor-secret calls above - Also, you can set node['ceph']['monitor-secret'] = ceph_keygen()
+# Part of monitor-secret calls above - Also, you can set node['ceph']['monitor-secret'] = ceph_chef_keygen()
 # in a higher level recipe like the way ceph-chef does it in ceph-mon.rb
-ruby_block 'save ceph_mon_secret' do
+ruby_block 'save ceph_chef_mon_secret' do
   block do
     fetch = Mixlib::ShellOut.new("ceph-authtool #{keyring} --print-key --name=mon.")
     fetch.run_command

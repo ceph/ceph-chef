@@ -25,7 +25,7 @@ if node['ceph']['pools']['active']
     node['ceph']['pools']["#{pool}"]['names'].each do |name|
       pool_name = ".#{name}"
 
-      ceph_pool pool_name do
+      ceph_chef_pool pool_name do
         action :create
         pg_num node['ceph']['pools']["#{pool}"]['settings']['pg_num']
         pgp_num node['ceph']['pools']["#{pool}"]['settings']['pgp_num']

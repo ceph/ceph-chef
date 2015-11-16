@@ -20,17 +20,17 @@
 # This will execute on other nodes besides the first mon node.
 execute 'format ceph-admin-secret as keyring' do
   command lazy { "ceph-authtool --create-keyring /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring --name=client.admin --add-key='#{node['ceph']['admin-secret']}' --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *'" }
-  only_if { ceph_admin_secret }
+  only_if { ceph_chef_admin_secret }
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
 execute 'gen ceph-admin-secret' do
   command lazy { "ceph-authtool --create-keyring /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring --gen-key -n client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *'" }
-  not_if { ceph_admin_secret }
-  notifies :create, 'ruby_block[save ceph_admin_secret]', :immediately
+  not_if { ceph_chef_admin_secret }
+  notifies :create, 'ruby_block[save ceph_chef_admin_secret]', :immediately
 end
 
-ruby_block 'save ceph_admin_secret' do
+ruby_block 'save ceph_chef_admin_secret' do
   block do
     fetch = Mixlib::ShellOut.new("ceph-authtool /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring --print-key")
     fetch.run_command

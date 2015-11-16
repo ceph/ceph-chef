@@ -23,7 +23,7 @@ default['ceph']['osd']['init_style'] = node['ceph']['init_style']
 default['ceph']['osd']['dmcrypt'] = false  # By default don't encrypt osds at rest
 default['ceph']['osd']['fs_type'] = 'xfs'  # xfs, ext4, btrfs
 
-default['ceph']['osd']['secret_file'] = '/etc/chef/secrets/ceph_osd'
+default['ceph']['osd']['secret_file'] = '/etc/chef/secrets/ceph_chef_osd'
 
 # Defaults for osd pools that are replica pools. Max size is the number of replicas and min is the lowest.
 default['ceph']['osd']['size']['max'] = 3

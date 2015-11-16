@@ -19,9 +19,9 @@
 
 require 'json'
 
-def ceph_is_mon_node
+def ceph_chef_is_mon_node
   val = false
-  nodes = ceph_mon_nodes
+  nodes = ceph_chef_mon_nodes
   nodes.each do |n|
     if n['hostname'] == node['hostname']
       val = true
@@ -31,9 +31,9 @@ def ceph_is_mon_node
   val
 end
 
-def ceph_is_osd_node
+def ceph_chef_is_osd_node
   val = false
-  nodes = ceph_osd_nodes
+  nodes = ceph_chef_osd_nodes
   nodes.each do |n|
     if n['hostname'] == node['hostname']
       val = true
@@ -43,9 +43,9 @@ def ceph_is_osd_node
   val
 end
 
-def ceph_is_radosgw_node
+def ceph_chef_is_radosgw_node
   val = false
-  nodes = ceph_radosgw_nodes
+  nodes = ceph_chef_radosgw_nodes
   nodes.each do |n|
     if n['hostname'] == node['hostname']
       val = true
@@ -55,9 +55,9 @@ def ceph_is_radosgw_node
   val
 end
 
-def ceph_is_admin_node
+def ceph_chef_is_admin_node
   val = false
-  nodes = ceph_admin_nodes
+  nodes = ceph_chef_admin_nodes
   nodes.each do |n|
     if n['hostname'] == node['hostname']
       val = true
@@ -67,9 +67,9 @@ def ceph_is_admin_node
   val
 end
 
-def ceph_is_mds_node
+def ceph_chef_is_mds_node
   val = false
-  nodes = ceph_mds_nodes
+  nodes = ceph_chef_mds_nodes
   nodes.each do |n|
     if n['hostname'] == node['hostname']
       val = true
@@ -79,8 +79,8 @@ def ceph_is_mds_node
   val
 end
 
-def ceph_mon_env_search_string
-  search_string = 'ceph_is_mon:true'
+def ceph_chef_mon_env_search_string
+  search_string = 'ceph_chef_is_mon:true'
   if node['ceph']['search_environment'].is_a?(String)
     # search for nodes with this particular env
     search_string += " AND chef_environment:#{node['ceph']['search_environment']}"
@@ -91,16 +91,16 @@ def ceph_mon_env_search_string
   search_string
 end
 
-# fsid is on all nodes so just use a function similar to ceph_mon_secret
-def ceph_fsid_secret
+# fsid is on all nodes so just use a function similar to ceph_chef_mon_secret
+def ceph_chef_fsid_secret
   if node['ceph']['encrypted_data_bags']
     secret = Chef::EncryptedDataBagItem.load_secret(node['ceph']['fsid']['secret_file'])
     Chef::EncryptedDataBagItem.load('ceph', 'fsid', secret)['secret']
-  elsif !ceph_mon_nodes.empty?
-    secret = ceph_mon_nodes[0]['ceph']['fsid-secret']
+  elsif !ceph_chef_mon_nodes.empty?
+    secret = ceph_chef_mon_nodes[0]['ceph']['fsid-secret']
     if !secret.nil? && !secret.empty?
-      ceph_save_fsid_secret(secret)
-      ceph_mon_nodes[0]['ceph']['fsid-secret']
+      ceph_chef_save_fsid_secret(secret)
+      ceph_chef_mon_nodes[0]['ceph']['fsid-secret']
     elsif node['ceph']['fsid-secret']
       node['ceph']['fsid-secret']
     else
@@ -112,19 +112,19 @@ def ceph_fsid_secret
   end
 end
 
-def ceph_save_fsid_secret(secret)
+def ceph_chef_save_fsid_secret(secret)
   node.set['ceph']['fsid-secret'] = secret
   node.save
   secret
 end
 
-def ceph_mon_secret
+def ceph_chef_mon_secret
   if node['ceph']['encrypted_data_bags']
     secret = Chef::EncryptedDataBagItem.load_secret(node['ceph']['mon']['secret_file'])
     Chef::EncryptedDataBagItem.load('ceph', 'mon', secret)['secret']
-  elsif !ceph_mon_nodes.empty?
-    ceph_save_mon_secret(ceph_mon_nodes[0]['ceph']['monitor-secret'])
-    ceph_mon_nodes[0]['ceph']['monitor-secret']
+  elsif !ceph_chef_mon_nodes.empty?
+    ceph_chef_save_mon_secret(ceph_chef_mon_nodes[0]['ceph']['monitor-secret'])
+    ceph_chef_mon_nodes[0]['ceph']['monitor-secret']
   elsif node['ceph']['monitor-secret']
     node['ceph']['monitor-secret']
   else
@@ -133,19 +133,19 @@ def ceph_mon_secret
   end
 end
 
-def ceph_save_mon_secret(secret)
+def ceph_chef_save_mon_secret(secret)
   node.set['ceph']['monitor-secret'] = secret
   node.save
   secret
 end
 
-def ceph_bootstrap_osd_secret
+def ceph_chef_bootstrap_osd_secret
   if node['ceph']['encrypted_data_bags']
     secret = Chef::EncryptedDataBagItem.load_secret(node['ceph']['bootstrap-osd']['secret_file'])
     Chef::EncryptedDataBagItem.load('ceph', 'bootstrap_osd', secret)['secret']
-  elsif !ceph_osd_nodes.empty?
-    ceph_save_bootstrap_osd_secret(ceph_osd_nodes[0]['ceph']['bootstrap-osd'])
-    ceph_osd_nodes[0]['ceph']['bootstrap-osd']
+  elsif !ceph_chef_osd_nodes.empty?
+    ceph_chef_save_bootstrap_osd_secret(ceph_chef_osd_nodes[0]['ceph']['bootstrap-osd'])
+    ceph_chef_osd_nodes[0]['ceph']['bootstrap-osd']
   elsif node['ceph']['bootstrap-osd']
     node['ceph']['bootstrap-osd']
   else
@@ -154,19 +154,19 @@ def ceph_bootstrap_osd_secret
   end
 end
 
-def ceph_save_bootstrap_osd_secret(secret)
+def ceph_chef_save_bootstrap_osd_secret(secret)
   node.set['ceph']['bootstrap-osd'] = secret
   node.save
   secret
 end
 
-def ceph_admin_secret
+def ceph_chef_admin_secret
   if node['ceph']['encrypted_data_bags']
     secret = Chef::EncryptedDataBagItem.load_secret(node['ceph']['admin']['secret_file'])
     Chef::EncryptedDataBagItem.load('ceph', 'admin', secret)['secret']
-  elsif !ceph_admin_nodes.empty?
-    ceph_save_admin_secret(ceph_admin_nodes[0]['ceph']['admin-secret'])
-    ceph_admin_nodes[0]['ceph']['admin-secret']
+  elsif !ceph_chef_admin_nodes.empty?
+    ceph_chef_save_admin_secret(ceph_chef_admin_nodes[0]['ceph']['admin-secret'])
+    ceph_chef_admin_nodes[0]['ceph']['admin-secret']
   elsif node['ceph']['admin-secret']
     node['ceph']['admin-secret']
   else
@@ -175,19 +175,19 @@ def ceph_admin_secret
   end
 end
 
-def ceph_save_admin_secret(secret)
+def ceph_chef_save_admin_secret(secret)
   node.set['ceph']['admin-secret'] = secret
   node.save
   secret
 end
 
-def ceph_radosgw_secret
+def ceph_chef_radosgw_secret
   if node['ceph']['encrypted_data_bags']
     secret = Chef::EncryptedDataBagItem.load_secret(node['ceph']['radosgw']['secret_file'])
     Chef::EncryptedDataBagItem.load('ceph', 'radowgw', secret)['secret']
-  elsif !ceph_radosgw_nodes.empty?
-    ceph_save_radosgw_secret(ceph_radosgw_nodes[0]['ceph']['radosgw-secret'])
-    ceph_radosgw_nodes[0]['ceph']['radosgw-secret']
+  elsif !ceph_chef_radosgw_nodes.empty?
+    ceph_chef_save_radosgw_secret(ceph_chef_radosgw_nodes[0]['ceph']['radosgw-secret'])
+    ceph_chef_radosgw_nodes[0]['ceph']['radosgw-secret']
   elsif node['ceph']['radosgw-secret']
     node['ceph']['radosgw-secret']
   else
@@ -196,7 +196,7 @@ def ceph_radosgw_secret
   end
 end
 
-def ceph_save_radosgw_secret(secret)
+def ceph_chef_save_radosgw_secret(secret)
   node.set['ceph']['radosgw-secret'] = secret
   node.save
   secret
@@ -208,7 +208,7 @@ end
 #    a. We look if the network is IPv6 or IPv4
 #    b. We look for a route matching the network
 #    c. If we found match, we return the IP with the port
-def ceph_find_node_ip_in_network(network, nodeish = nil)
+def ceph_chef_find_node_ip_in_network(network, nodeish = nil)
   require 'netaddr'
   nodeish = node unless nodeish
   network.split(/\s*,\s*/).each do |n|
@@ -216,37 +216,37 @@ def ceph_find_node_ip_in_network(network, nodeish = nil)
     nodeish['network']['interfaces'].each do |_iface, addrs|
       addresses = addrs['addresses'] || []
       addresses.each do |ip, params|
-        return ceph_ip_address_to_ceph_address(ip, params) if ceph_ip_address_in_network?(ip, params, net)
+        return ceph_chef_ip_address_to_ceph_chef_address(ip, params) if ceph_chef_ip_address_in_network?(ip, params, net)
       end
     end
   end
   nil
 end
 
-def ceph_ip_address_in_network?(ip, params, net)
+def ceph_chef_ip_address_in_network?(ip, params, net)
   # Find the IP on this interface that matches the public_network
   # Uses a few heuristics to find the primary IP that ceph would bind to
   # Most secondary IPs never have a broadcast value set
   # Other secondary IPs have a prefix of /32
   # Match the prefix that we want from the public_network prefix
   if params['family'] == 'inet' && net.version == 4
-    ceph_ip4_address_in_network?(ip, params, net)
+    ceph_chef_ip4_address_in_network?(ip, params, net)
   elsif params['family'] == 'inet6' && net.version == 6
-    ceph_ip6_address_in_network?(ip, params, net)
+    ceph_chef_ip6_address_in_network?(ip, params, net)
   else
     false
   end
 end
 
-def ceph_ip4_address_in_network?(ip, params, net)
+def ceph_chef_ip4_address_in_network?(ip, params, net)
   net.contains?(ip) && params.key?('broadcast') && params['prefixlen'].to_i == net.bits
 end
 
-def ceph_ip6_address_in_network?(ip, params, net)
+def ceph_chef_ip6_address_in_network?(ip, params, net)
   net.contains?(ip) && params['prefixlen'].to_i == net.bits
 end
 
-def ceph_ip_address_to_ceph_address(ip, params)
+def ceph_chef_ip_address_to_ceph_chef_address(ip, params)
   if params['family'].eql?('inet')
     return "#{ip}:6789"
   elsif params['family'].eql?('inet6')
@@ -254,14 +254,9 @@ def ceph_ip_address_to_ceph_address(ip, params)
   end
 end
 
-########################
-# TODO: Chef Server 12.5 - search behaves differently!!!!!!!!!
-# Need to validate all searches ASAP
-########################
-
 # For this function to work, this cookbook will need to be part of a wrapper or project that implements ceph-mon role
 # Returns a list of nodes (not hostnames!)
-def ceph_mon_nodes
+def ceph_chef_mon_nodes
   # results = search(:node, "role:#{node['ceph']['mon']['role']} AND chef_environment:#{node.chef_environment}")
   results = search(:node, "tags:#{node['ceph']['mon']['tag']}")
   results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
@@ -271,7 +266,7 @@ def ceph_mon_nodes
   results.sort! { |a, b| a['hostname'] <=> b['hostname'] }
 end
 
-def ceph_osd_nodes
+def ceph_chef_osd_nodes
   # results = search(:node, "role:#{node['ceph']['osd']['role']} AND chef_environment:#{node.chef_environment}")
   results = search(:node, "tags:#{node['ceph']['osd']['tag']}")
   results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
@@ -281,7 +276,7 @@ def ceph_osd_nodes
   results.sort! { |a, b| a['hostname'] <=> b['hostname'] }
 end
 
-def ceph_radosgw_nodes
+def ceph_chef_radosgw_nodes
   # results = search(:node, "role:#{node['ceph']['radosgw']['role']} AND chef_environment:#{node.chef_environment}")
   results = search(:node, "tags:#{node['ceph']['radosgw']['tag']}")
   results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
@@ -291,7 +286,7 @@ def ceph_radosgw_nodes
   results.sort! { |a, b| a['hostname'] <=> b['hostname'] }
 end
 
-def ceph_admin_nodes
+def ceph_chef_admin_nodes
   # results = search(:node, "role:#{node['ceph']['admin']['role']} AND chef_environment:#{node.chef_environment}")
   results = search(:node, "tags:#{node['ceph']['admin']['tag']}")
   results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
@@ -301,7 +296,7 @@ def ceph_admin_nodes
   results.sort! { |a, b| a['hostname'] <=> b['hostname'] }
 end
 
-def ceph_mds_nodes
+def ceph_chef_mds_nodes
   # results = search(:node, "role:#{node['ceph']['mds']['role']} AND chef_environment:#{node.chef_environment}")
   results = search(:node, "tags:#{node['ceph']['mds']['tag']}")
   results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
@@ -311,21 +306,23 @@ def ceph_mds_nodes
   results.sort! { |a, b| a['hostname'] <=> b['hostname'] }
 end
 
-# ex. ceph_get_mon_nodes_ip(ceph_get_mon_nodes)
-def ceph_mon_nodes_ip(nodes)
+# ex. ceph_chef_get_mon_nodes_ip(ceph_chef_get_mon_nodes)
+def ceph_chef_mon_nodes_ip(nodes)
+  mon_ips = []
   nodes.each do |nodish|
-    mon_ips.push(ceph_mon_node_ip(nodish))
+    mon_ips.push(ceph_chef_mon_node_ip(nodish))
   end
   mon_ips
 end
 
-def ceph_mon_node_ip(nodeish)
+def ceph_chef_mon_node_ip(nodeish)
   # Note: A valid cidr block MUST exist!
-  mon_ip = ceph_find_node_ip_in_network(node['ceph']['network']['public']['cidr'], nodeish)
+  mon_ip = ceph_chef_find_node_ip_in_network(node['ceph']['network']['public']['cidr'], nodeish)
   mon_ip
 end
 
-def ceph_mon_nodes_host(nodes)
+def ceph_chef_mon_nodes_host(nodes)
+  mon_hosts = []
   nodes.each do |nodish|
     mon_hosts.push(nodish['hostname'])
   end
@@ -333,29 +330,30 @@ def ceph_mon_nodes_host(nodes)
 end
 
 # Returns a list of ip:port of ceph mon for public network
-def ceph_mon_addresses
+def ceph_chef_mon_addresses
   # if File.exist?("/var/run/ceph/#{node['ceph']['cluster']}-mon.#{node['hostname']}.asok")
-  #   mon_ips = ceph_quorum_members_ips
+  #   mon_ips = ceph_chef_quorum_members_ips
   # else
   #   if node['ceph']['mon']['ips']
   #     mon_ips = node['ceph']['mon']['ips']
   #   else
-  mon_ips = ceph_mon_nodes_ip(ceph_mon_nodes)
+  mon_ips = ceph_chef_mon_nodes_ip(ceph_chef_mon_nodes)
   #   end
   # end
   mon_ips.reject { |m| m.nil? }.uniq
 end
 
-def ceph_mon_hosts
-  mon_hosts = ceph_mon_nodes_host(ceph_mon_nodes)
+def ceph_chef_mon_hosts
+  mon_hosts = ceph_chef_mon_nodes_host(ceph_chef_mon_nodes)
   mon_hosts.reject { |m| m.nil? }.uniq
 end
 
-def ceph_quorum_members_ips
+def ceph_chef_quorum_members_ips
   cmd = Mixlib::ShellOut.new("ceph --admin-daemon /var/run/ceph/#{node['ceph']['cluster']}-mon.#{node['hostname']}.asok mon_status")
   cmd.run_command
   cmd.error!
 
+  mon_ips = []
   mons = JSON.parse(cmd.stdout)['monmap']['mons']
   mons.each do |k|
     mon_ips.push(k['addr'][0..-3])
@@ -363,7 +361,7 @@ def ceph_quorum_members_ips
   mon_ips
 end
 
-def ceph_quorum?
+def ceph_chef_quorum?
   # "ceph auth get-or-create-key" would hang if the monitor wasn't
   # in quorum yet, which is highly likely on the first run. This
   # helper lets us delay the key generation into the next
@@ -385,7 +383,7 @@ end
 
 # Cephx is on by default, but users can disable it.
 # type can be one of 3 values: cluster, service, or client.  If the value is none of the above, set it to cluster
-def ceph_ceph_use_cephx?(type = nil)
+def ceph_chef_ceph_chef_use_cephx?(type = nil)
   # Verify type is valid
   type = 'cluster' if %w(cluster service client).index(type).nil?
 
@@ -396,7 +394,7 @@ def ceph_ceph_use_cephx?(type = nil)
     node['ceph']['config']['global']["auth #{type} required"] == 'cephx'
 end
 
-def ceph_power_of_2(number)
+def ceph_chef_power_of_2(number)
   result = 1
   while result < number
     result <<= 1
@@ -404,7 +402,7 @@ def ceph_power_of_2(number)
   result
 end
 
-def ceph_secure_password(len = 20)
+def ceph_chef_secure_password(len = 20)
   pw = ''
   while pw.length < len
     pw << ::OpenSSL::Random.random_bytes(1).gsub(/\W/, '')
@@ -412,7 +410,7 @@ def ceph_secure_password(len = 20)
   pw
 end
 
-def ceph_secure_password_alphanum_upper(len = 20)
+def ceph_chef_secure_password_alphanum_upper(len = 20)
   # Chef's syntax checker doesn't like multiple exploders in same line. Sigh.
   alphanum_upper = [*'0'..'9']
   alphanum_upper += [*'A'..'Z']

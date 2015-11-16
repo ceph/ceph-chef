@@ -22,7 +22,7 @@ module CephCookbook
   # @since 1.0.0
   module Resource
     class CephPool < Chef::Resource
-      provides(:ceph_pool)
+      provides(:ceph_chef_pool)
 
       actions(:create, :set, :delete)
 

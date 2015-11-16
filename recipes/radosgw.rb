@@ -73,7 +73,7 @@ base_key = "/etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
 # simple by keeping the same ceph.conf the same (except for hostname info) for each rgw node.
 execute 'write ceph-radosgw-secret' do
   command lazy { "ceph-authtool /etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring --create-keyring --name=client.radosgw.#{node['hostname']} --add-key='#{node['ceph']['radosgw-secret']}'" }
-  only_if { ceph_radosgw_secret }
+  only_if { ceph_chef_radosgw_secret }
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
@@ -84,7 +84,7 @@ bash 'gen client-radosgw-secret' do
     ceph-authtool -n client.radosgw.#{node['hostname']} --cap osd 'allow rwx' --cap mon 'allow rw' /etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring
     ceph -k #{base_key} auth add client.radosgw.#{node['hostname']} -i /etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring
   EOH
-  not_if { ceph_radosgw_secret }
+  not_if { ceph_chef_radosgw_secret }
   notifies :create, 'ruby_block[save radosgw_secret]', :immediately
 end
 
@@ -150,14 +150,14 @@ end
 
 # Another way is to use the client producer. This method is less verbose but more work goes on inside the
 # provider code Block. Of course, as always, a provider block is very opinionated on how things are done.
-# ceph_client 'radosgw' do
+# ceph_chef_client 'radosgw' do
 #   caps('mon' => 'allow rw', 'osd' => 'allow rwx')
 # end
 
 # DOCS: End
 
 # TODO: This block is only here as a reminder to update the optimal PG size later...
-# rgw_optimal_pg = ceph_power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['rgw']['replicas']*node['bcpc']['ceph']['rgw']['portion']/100)
+# rgw_optimal_pg = ceph_chef_power_of_2(get_ceph_chef_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['rgw']['replicas']*node['bcpc']['ceph']['rgw']['portion']/100)
 
 =begin
 # check to see if we should up the number of pg's now for the core buckets pool

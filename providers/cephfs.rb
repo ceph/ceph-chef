@@ -53,7 +53,7 @@ def create_client
   filename = "/etc/ceph/ceph.client.#{client_name}.secret"
 
   name = 'cephfs'
-  ceph_client name do
+  ceph_chef_client name do
     filename filename
     caps('mon' => 'allow r', 'osd' => 'allow rw', 'mds' => 'allow')
     as_keyring false

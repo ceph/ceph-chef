@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-include_attribute 'ceph'
+include_attribute 'ceph-chef'
 
 default['ceph']['mds']['init_style'] = node['init_style']
 

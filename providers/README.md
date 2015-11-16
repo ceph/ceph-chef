@@ -1,5 +1,5 @@
 ## providers
-1. ceph_pool.rb
+1. ceph_chef_pool.rb
 This provider is very import to the cookbook. It allows for easy creation, setting and deleting of pools. It allows for setting replica size and types such as replica or erasure coding.
 
 2. client.rb

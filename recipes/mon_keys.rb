@@ -26,7 +26,7 @@
 
 execute 'format bootstrap-osd-secret as keyring' do
   command lazy { "ceph-authtool '/var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring' --create-keyring --name=client.bootstrap-osd --add-key='#{node['ceph']['bootstrap-osd']}'" }
-  only_if { ceph_bootstrap_osd_secret }
+  only_if { ceph_chef_bootstrap_osd_secret }
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
@@ -38,12 +38,12 @@ bash 'save-bootstrap-osd-key' do
         --name=client.bootstrap-osd \
         --add-key="$BOOTSTRAP_KEY"
   EOH
-  not_if { ceph_bootstrap_osd_secret }
+  not_if { ceph_chef_bootstrap_osd_secret }
   notifies :create, 'ruby_block[save bootstrap_osd]', :immediately
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
-# Part of monitor-secret calls above - Also, you can set node['ceph']['monitor-secret'] = ceph_keygen()
+# Part of monitor-secret calls above - Also, you can set node['ceph']['monitor-secret'] = ceph_chef_keygen()
 # in a higher level recipe like the way ceph-chef does it in ceph-mon.rb
 ruby_block 'save bootstrap_osd' do
   block do

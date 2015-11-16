@@ -45,7 +45,7 @@ else
 end
 
 # Failure may occur when the cluster is first created because the peers may no exist yet so ignore it for now
-ceph_mon_addresses.each do |addr|
+ceph_chef_mon_addresses.each do |addr|
   execute "peer #{addr}" do
     command "ceph --admin-daemon /var/run/ceph/#{node['ceph']['cluster']}-mon.#{node['hostname']}.asok add_bootstrap_peer_hint #{addr}"
     ignore_failure true

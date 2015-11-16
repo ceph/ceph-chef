@@ -79,20 +79,20 @@ def file_content(keyname, key, as_keyring)
 end
 
 def get_key(keyname)
-  cmd = "ceph auth print_key #{keyname} --name mon. --key='#{ceph_mon_secret}'"
+  cmd = "ceph auth print_key #{keyname} --name mon. --key='#{ceph_chef_mon_secret}'"
   Mixlib::ShellOut.new(cmd).run_command.stdout
 end
 
 def get_caps(keyname)
   caps = {}
-  cmd = "ceph auth get #{keyname} --name mon. --key='#{ceph_mon_secret}'"
+  cmd = "ceph auth get #{keyname} --name mon. --key='#{ceph_chef_mon_secret}'"
   output = Mixlib::ShellOut.new(cmd).run_command.stdout
   output.scan(/caps\s*(\S+)\s*=\s*"([^"]*)"/) { |k, v| caps[k] = v }
   caps
 end
 
 def delete_entity(keyname)
-  cmd_text = "ceph auth del #{keyname} --name mon. --key='#{ceph_mon_secret}'"
+  cmd_text = "ceph auth del #{keyname} --name mon. --key='#{ceph_chef_mon_secret}'"
   cmd = Mixlib::ShellOut.new(cmd_text)
   cmd.run_command
   cmd.error!
@@ -117,7 +117,7 @@ def create_entity(keyname)
 
   caps = new_resource.caps.map { |k, v| "#{k} '#{v}'" }.join(' ')
 
-  cmd_text = "ceph auth #{key_option} add #{keyname} #{caps} --name mon. --key='#{ceph_mon_secret}'"
+  cmd_text = "ceph auth #{key_option} add #{keyname} #{caps} --name mon. --key='#{ceph_chef_mon_secret}'"
   cmd = Mixlib::ShellOut.new(cmd_text)
   cmd.run_command
   cmd.error!

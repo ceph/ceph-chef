@@ -23,5 +23,5 @@ ruby_block 'gen ceph-fsid-secret' do
     node.set['ceph']['fsid-secret'] = SecureRandom.uuid
     node.save
   end
-  not_if { ceph_fsid_secret }
+  not_if { ceph_chef_fsid_secret }
 end

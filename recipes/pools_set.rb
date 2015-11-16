@@ -40,7 +40,7 @@ if node['ceph']['pools']['active']
       end
 
       # Set...
-      ceph_pool pool_name do
+      ceph_chef_pool pool_name do
         action :set
         key 'size'
         value val

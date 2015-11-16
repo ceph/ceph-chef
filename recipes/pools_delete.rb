@@ -28,7 +28,7 @@ if node['ceph']['pools']['active']
       # pool_name = "#{node['ceph']['cluster']}.#{name}"
       pool_name = ".#{name}"
 
-      ceph_pool pool_name do
+      ceph_chef_pool pool_name do
         action :delete
       end
     end

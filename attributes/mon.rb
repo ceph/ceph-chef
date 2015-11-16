@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-include_attribute 'ceph'
+include_attribute 'ceph-chef'
 
 # The ceph mon ips attribute gets built in a wrapper recipe or chef-repo style environment like ceph-chef
 default['ceph']['mon']['ips'] = nil
@@ -23,7 +23,7 @@ default['ceph']['mon']['ips'] = nil
 # The default is everything on the same OS
 default['ceph']['mon']['init_style'] = node['ceph']['init_style']
 
-default['ceph']['mon']['secret_file'] = '/etc/chef/secrets/ceph_mon'
+default['ceph']['mon']['secret_file'] = '/etc/chef/secrets/ceph_chef_mon'
 
 # MUST be set in the wrapper cookbook or chef-repo like project
 default['ceph']['mon']['role'] = 'search-ceph-mon'
