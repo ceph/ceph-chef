@@ -1,5 +1,7 @@
 # Ceph-Chef cookbook
 
+[![Join the chat at https://gitter.im/ceph/ceph-chef](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ceph/ceph-chef?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ## DESCRIPTION
 
 Installs and configures Ceph, a distributed network storage and filesystem designed to provide excellent performance, reliability, and scalability.
