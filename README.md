@@ -1,10 +1,10 @@
-# Ceph-Chef cookbook
+# Ceph-Chef Cookbook (New Version)
 
 [![Join the chat at https://gitter.im/ceph/ceph-chef](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ceph/ceph-chef?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## DESCRIPTION
 
-Installs and configures Ceph, a distributed network storage and filesystem designed to provide excellent performance, reliability, and scalability.
+Installs and configures Ceph, a distributed network storage and filesystem designed to provide excellent performance, reliability, and scalability. Supports *Hammer* and higher releases (nothing below Hammer is supported in this repo).
 
 The current version is focused on installing and configuring Ceph for Ubuntu, CentOS and RHEL.
 
@@ -17,7 +17,8 @@ Note: The documentation is a WIP along with a few other features. This repo is a
 
 For help, use [Gitter chat](https://gitter.im/ceph/ceph-chef), [mailing-list](mailto:ceph-users-join@lists.ceph.com) or [issues](https://github.com/ceph/ceph-chef/issues)
 
-## REQUIREMENTS
+### NOTE: Users of ceph-cookbook
+The original ceph-cookbook will remain and may continue to be updated (see that repo for specifics). We tried to use some of the interesting features of ceph-cookbook but we added a lot of enhancements and simplifications. Simply replacing ceph-cookbook with ceph-chef will most likely not work without a few modifications. Also, ceph-chef only works with Chef 12+ and Hammer and higher. Nothing below the Hammer release of Ceph is supported in this repo.
 
 ### Chef
 
