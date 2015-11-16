@@ -1,6 +1,6 @@
 name 'ceph-chef'
 maintainer 'Chris Jones'
-maintainer_email 'cjones303@bloomberg.net'
+maintainer_email 'cjones@cloudm2.com'
 license 'Apache 2.0'
 description 'Installs/Configures Ceph (Hammer and above)'
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
