@@ -134,6 +134,19 @@
 <% end -%>
 <% end -%>
 
+<% if @is_rest_api -%>
+[client.restapi.<%= node['hostname'] %>]
+  # public addr = <%= node['hostname'] %>
+  keyring = /etc/ceph/$cluster.client.restapi.keyring
+  restapi base url = <%= node['ceph']['restapi']['base_url'] %>
+  log file = /var/log/ceph/$cluster.client.restapi.<%= node['hostname'] -%>.log
+<% if !node['ceph']['config']['restapi'].nil? -%>
+  <% node['ceph']['config']['restapi'].sort.each do |k, v| %>
+  <%= k %> = <%= v %>
+  <% end %>
+<% end -%>
+<% end -%>
+
 <% node['ceph']['config-sections'].sort.each do |name, sect| %>
 [<%= name %>]
   <% sect.sort.each do |k, v| %>

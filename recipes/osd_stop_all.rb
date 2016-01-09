@@ -31,7 +31,11 @@ if service_type == 'upstart'
     action [:stop]
   end
 else
-  execute 'raw osd stop all' do
-    command 'service ceph stop osd'
+  # execute 'raw osd stop all' do
+  #   command 'service ceph stop osd'
+  # end
+  service 'ceph stop osd' do
+    service_name 'ceph stop osd'
+    action :stop
   end
 end

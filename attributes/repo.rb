@@ -17,6 +17,11 @@
 default['ceph']['branch'] = 'stable' # Can be stable, testing or dev.
 # Major release version to install or gitbuilder branch
 default['ceph']['version'] = 'hammer'
+# NOTE: If the version is greater than 'hammer' then change owner and group to 'ceph'
+default['ceph']['owner'] = 'root'
+default['ceph']['group'] = 'root'
+default['ceph']['mode'] = 0755
+
 default['ceph']['el_version'] = 'el7'
 default['ceph']['el_add_epel'] = true
 default['ceph']['repo_url'] = 'http://ceph.com'

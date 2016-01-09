@@ -19,9 +19,11 @@
 
 # Create the admin user. These variables MUST exist for this to work. The default values can be found in
 # the radosgw.rb attributes file. They can also be overridden in multiple places.
+# Admin user MUST have caps set properly. Without full rights, no admin functions can occur via the admin restful calls.
 ruby_block 'initialize-radosgw-admin-user' do
   block do
     rgw_admin = JSON.parse(%x[radosgw-admin user create --display-name="#{node['ceph']['radosgw']['user']['admin']['name']}" --uid="#{node['ceph']['radosgw']['user']['admin']['uid']}" --access_key="#{node['ceph']['radosgw']['user']['admin']['access_key']}" --secret="#{node['ceph']['radosgw']['user']['admin']['secret']}"])
+    radosgw-admin caps add --uid="#{node['ceph']['radosgw']['user']['admin']['uid']}" --caps="users=*;buckets=*;metadata=*;usage=*;zone=*"
   end
   not_if "radosgw-admin user info --uid='#{node['ceph']['radosgw']['user']['admin']['uid']}'"
 end

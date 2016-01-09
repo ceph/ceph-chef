@@ -22,15 +22,16 @@
 if node['ceph']['pools']['active']
   node['ceph']['pools']['active'].each do |pool|
     # Create pool and set type (replicated or erasure - default is replicated)
-    node['ceph']['pools']["#{pool}"]['names'].each do |name|
+    # #{pool}
+    node['ceph']['pools'][pool]['names'].each do |name|
       pool_name = ".#{name}"
 
       ceph_chef_pool pool_name do
         action :create
-        pg_num node['ceph']['pools']["#{pool}"]['settings']['pg_num']
-        pgp_num node['ceph']['pools']["#{pool}"]['settings']['pgp_num']
-        type node['ceph']['pools']["#{pool}"]['settings']['type']
-        options node['ceph']['pools']["#{pool}"]['settings']['options'] if node['ceph']['pools']["#{pool}"]['settings']['options']
+        pg_num node['ceph']['pools'][pool]['settings']['pg_num']
+        pgp_num node['ceph']['pools'][pool]['settings']['pgp_num']
+        type node['ceph']['pools'][pool]['settings']['type']
+        options node['ceph']['pools'][pool]['settings']['options'] if node['ceph']['pools'][pool]['settings']['options']
       end
 
       # TODO: Need to add for calculated PGs options

@@ -1,7 +1,6 @@
 #
-# Author:: Chris Jones <cjones303@bloomberg.net>
 # Cookbook Name:: ceph
-# Recipe:: osd
+# Attributes:: restapi
 #
 # Copyright 2015, Bloomberg Finance L.P.
 #
@@ -16,27 +15,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
 
-# Starts ALL of the OSDs on a given node.
+include_attribute 'ceph-chef'
 
-service_type = node['ceph']['osd']['init_style']
+default['ceph']['restapi']['port'] = 5080
+default['ceph']['restapi']['base_url'] = '/api/v0.1'
+default['ceph']['restapi']['log']['level'] = 'warning'
 
-if service_type == 'upstart'
-  service 'ceph_osd' do
-    case service_type
-    when 'upstart'
-      service_name 'ceph-osd-all-starter'
-      provider Chef::Provider::Service::Upstart
-    end
-    action [:enable, :start]
-    supports :restart => true
-  end
-else
-  # execute 'raw osd start' do
-  #   command 'service ceph start osd'
-  # end
-  service 'ceph osd start' do
-    service_name 'ceph osd start'
-    action [:enable, :start]
-  end
-end
+default['ceph']['restapi']['role'] = 'search-ceph-restapi'
+
+default['ceph']['restapi']['secret_file'] = '/etc/chef/secrets/ceph_chef_restapi'

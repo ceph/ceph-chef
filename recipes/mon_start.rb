@@ -38,8 +38,12 @@ else
       command 'systemctl start ceph.target'
     end
   else
-    execute 'raw mon start' do
-      command 'service ceph start mon'
+    # execute 'raw mon start' do
+    #   command 'service ceph start mon'
+    # end
+    service 'ceph mon start' do
+      service_name 'ceph mon start'
+      action [:enable, :start]
     end
   end
 end

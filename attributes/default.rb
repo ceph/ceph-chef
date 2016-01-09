@@ -37,6 +37,7 @@ default['ceph']['radosgw']['tag'] = 'ceph-rgw'
 default['ceph']['mon']['tag'] = 'ceph-mon'
 default['ceph']['osd']['tag'] = 'ceph-osd'
 default['ceph']['mds']['tag'] = 'ceph-mds'
+default['ceph']['restapi']['tag'] = 'ceph-restapi'
 
 default['ceph']['install_repo'] = true
 default['ceph']['btrfs'] = false
