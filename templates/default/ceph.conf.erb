@@ -116,10 +116,10 @@
 [client.radosgw.<%= node['hostname'] %>]
   host = <%= node['hostname'] %>
   keyring = /etc/ceph/$cluster.client.radosgw.keyring
-  <% if node['ceph']['radosgw']['rgw_port'] == false %>
+  <% if node['ceph']['radosgw']['port'].nil? %>
   rgw frontends = civetweb port=80
   <% else -%>
-  rgw frontends = civetweb port=<%= node['ceph']['radosgw']['rgw_port'] %>
+  rgw frontends = civetweb port=<%= node['ceph']['radosgw']['port'] %>
   <% end -%>
   # rgw enable ops log = false
   # rgw enable usage log = false

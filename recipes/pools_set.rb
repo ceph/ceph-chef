@@ -33,17 +33,19 @@ if node['ceph']['pools']['active']
       # TODO: Need to add crush_rule_set
       # TODO: Add other options later for EC etc...
 
-      if node['ceph']['pools'][pool]['settings']['size']
-        val = node['ceph']['pools'][pool]['settings']['size']
-      else
-        val = node['ceph']['osd']['size']['max']
-      end
+      if node['ceph']['pools'][pool]['settings']['type'] == 'replicated'
+        if node['ceph']['pools'][pool]['settings']['size']
+          val = node['ceph']['pools'][pool]['settings']['size']
+        else
+          val = node['ceph']['osd']['size']['max']
+        end
 
-      # Set...
-      ceph_chef_pool pool_name do
-        action :set
-        key 'size'
-        value val
+        # Set replicas...
+        ceph_chef_pool pool_name do
+          action :set
+          key 'size'
+          value val
+        end
       end
     end
   end
