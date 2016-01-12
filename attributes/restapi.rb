@@ -1,6 +1,6 @@
 #
-# Author: Chris Jones <cjones303@bloomberg.net>
-# Cookbook: ceph
+# Cookbook Name:: ceph
+# Attributes:: restapi
 #
 # Copyright 2015, Bloomberg Finance L.P.
 #
@@ -17,20 +17,12 @@
 # limitations under the License.
 #
 
-include_recipe 'ceph-chef::repo' if node['ceph']['install_repo']
-include_recipe 'ceph-chef::conf'
+include_attribute 'ceph-chef'
 
-# Tools needed by cookbook
-node['ceph']['packages'].each do |pck|
-  package pck
-end
+default['ceph']['restapi']['port'] = 5080
+default['ceph']['restapi']['base_url'] = '/api/v0.1'
+default['ceph']['restapi']['log']['level'] = 'warning'
 
-# Can't put compile_time false because of templates
-# Since the cookbook will run where no net access exists then you should pre-install netaddr so check to see if it exists.
-#netadd = Mixlib::ShellOut.new('gem list | grep netaddr')
-#netadd.run_command
-#if !netadd.stdout
-#  chef_gem 'netaddr'
-#end
+default['ceph']['restapi']['role'] = 'search-ceph-restapi'
 
-chef_gem 'netaddr'
+default['ceph']['restapi']['secret_file'] = '/etc/chef/secrets/ceph_chef_restapi'

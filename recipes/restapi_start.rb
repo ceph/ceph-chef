@@ -1,7 +1,6 @@
 #
 # Author:: Chris Jones <cjones303@bloomberg.net>
 # Cookbook Name:: ceph
-# Recipe:: osd
 #
 # Copyright 2015, Bloomberg Finance L.P.
 #
@@ -16,28 +15,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
 
-# Starts ALL of the OSDs on a given node.
+service_type = node['ceph']['mon']['init_style']
 
-service_type = node['ceph']['osd']['init_style']
-
-if service_type == 'upstart'
-  service 'ceph_osd' do
-    case service_type
-    when 'upstart'
-      service_name 'ceph-osd-all-starter'
-      provider Chef::Provider::Service::Upstart
-    end
-    action [:enable, :start]
-    supports :restart => true
-  end
-else
-  # execute 'raw osd start' do
-  #   command 'service ceph start osd'
-  # end
-  service 'ceph_osd' do
-    service_name 'ceph'
-    supports :restart => true, :status => true
-    action [:enable, :start]
-  end
+execute 'restapi-start' do
+  command 'nohup ceph-rest-api &'
+  not_if 'pgrep ceph-rest-api'
 end

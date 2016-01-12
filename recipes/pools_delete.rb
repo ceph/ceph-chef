@@ -24,7 +24,7 @@
 
 if node['ceph']['pools']['active']
   node['ceph']['pools']['active'].each do |pool|
-    node['ceph']['pools']["#{pool}"]['names'].each do |name|
+    node['ceph']['pools'][pool]['names'].each do |name|
       # pool_name = "#{node['ceph']['cluster']}.#{name}"
       pool_name = ".#{name}"
 

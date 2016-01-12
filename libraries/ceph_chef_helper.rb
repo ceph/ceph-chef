@@ -55,6 +55,18 @@ def ceph_chef_is_radosgw_node
   val
 end
 
+def ceph_chef_is_restapi_node
+  val = false
+  nodes = ceph_chef_restapi_nodes
+  nodes.each do |n|
+    if n['hostname'] == node['hostname']
+      val = true
+      break
+    end
+  end
+  val
+end
+
 def ceph_chef_is_admin_node
   val = false
   nodes = ceph_chef_admin_nodes
@@ -202,6 +214,27 @@ def ceph_chef_save_radosgw_secret(secret)
   secret
 end
 
+def ceph_chef_restapi_secret
+  if node['ceph']['encrypted_data_bags']
+    secret = Chef::EncryptedDataBagItem.load_secret(node['ceph']['restapi']['secret_file'])
+    Chef::EncryptedDataBagItem.load('ceph', 'restapi', secret)['secret']
+  elsif !ceph_chef_restapi_nodes.empty?
+    ceph_chef_save_restapi_secret(ceph_chef_restapi_nodes[0]['ceph']['restapi-secret'])
+    ceph_chef_restapi_nodes[0]['ceph']['restapi-secret']
+  elsif node['ceph']['restapi-secret']
+    node['ceph']['restapi-secret']
+  else
+    Chef::Log.info('No restapi secret found')
+    nil
+  end
+end
+
+def ceph_chef_save_restapi_secret(secret)
+  node.set['ceph']['restapi-secret'] = secret
+  node.save
+  secret
+end
+
 # If public_network is specified with one or more networks, we need to
 # search for a matching monitor IP in the node environment.
 # 1. For each public network specified:
@@ -257,7 +290,6 @@ end
 # For this function to work, this cookbook will need to be part of a wrapper or project that implements ceph-mon role
 # Returns a list of nodes (not hostnames!)
 def ceph_chef_mon_nodes
-  # results = search(:node, "role:#{node['ceph']['mon']['role']} AND chef_environment:#{node.chef_environment}")
   results = search(:node, "tags:#{node['ceph']['mon']['tag']}")
   results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
   if !results.include?(node) && node.run_list.roles.include?(node['ceph']['mon']['role'])
@@ -267,7 +299,6 @@ def ceph_chef_mon_nodes
 end
 
 def ceph_chef_osd_nodes
-  # results = search(:node, "role:#{node['ceph']['osd']['role']} AND chef_environment:#{node.chef_environment}")
   results = search(:node, "tags:#{node['ceph']['osd']['tag']}")
   results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
   if !results.include?(node) && node.run_list.roles.include?(node['ceph']['osd']['role'])
@@ -277,7 +308,6 @@ def ceph_chef_osd_nodes
 end
 
 def ceph_chef_radosgw_nodes
-  # results = search(:node, "role:#{node['ceph']['radosgw']['role']} AND chef_environment:#{node.chef_environment}")
   results = search(:node, "tags:#{node['ceph']['radosgw']['tag']}")
   results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
   if !results.include?(node) && node.run_list.roles.include?(node['ceph']['radosgw']['role'])
@@ -286,8 +316,16 @@ def ceph_chef_radosgw_nodes
   results.sort! { |a, b| a['hostname'] <=> b['hostname'] }
 end
 
+def ceph_chef_restapi_nodes
+  results = search(:node, "tags:#{node['ceph']['restapi']['tag']}")
+  results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
+  if !results.include?(node) && node.run_list.roles.include?(node['ceph']['restapi']['role'])
+    results.push(node)
+  end
+  results.sort! { |a, b| a['hostname'] <=> b['hostname'] }
+end
+
 def ceph_chef_admin_nodes
-  # results = search(:node, "role:#{node['ceph']['admin']['role']} AND chef_environment:#{node.chef_environment}")
   results = search(:node, "tags:#{node['ceph']['admin']['tag']}")
   results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
   if !results.include?(node) && node.run_list.roles.include?(node['ceph']['admin']['role'])
@@ -297,7 +335,6 @@ def ceph_chef_admin_nodes
 end
 
 def ceph_chef_mds_nodes
-  # results = search(:node, "role:#{node['ceph']['mds']['role']} AND chef_environment:#{node.chef_environment}")
   results = search(:node, "tags:#{node['ceph']['mds']['tag']}")
   results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
   if !results.include?(node) && node.run_list.roles.include?(node['ceph']['mds']['role'])

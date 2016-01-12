@@ -116,10 +116,10 @@
 [client.radosgw.<%= node['hostname'] %>]
   host = <%= node['hostname'] %>
   keyring = /etc/ceph/$cluster.client.radosgw.keyring
-  <% if node['ceph']['radosgw']['rgw_port'] == false %>
+  <% if node['ceph']['radosgw']['port'].nil? %>
   rgw frontends = civetweb port=80
   <% else -%>
-  rgw frontends = civetweb port=<%= node['ceph']['radosgw']['rgw_port'] %>
+  rgw frontends = civetweb port=<%= node['ceph']['radosgw']['port'] %>
   <% end -%>
   # rgw enable ops log = false
   # rgw enable usage log = false
@@ -129,6 +129,19 @@
   debug rgw = 1/0
 <% if !node['ceph']['config']['rgw'].nil? -%>
   <% node['ceph']['config']['rgw'].sort.each do |k, v| %>
+  <%= k %> = <%= v %>
+  <% end %>
+<% end -%>
+<% end -%>
+
+<% if @is_rest_api -%>
+[client.restapi]
+  public addr = <%= node['ipaddress'] %>:<%= node['ceph']['restapi']['port'] %>
+  keyring = /etc/ceph/$cluster.client.restapi.keyring
+  restapi base url = <%= node['ceph']['restapi']['base_url'] %>
+  log file = /var/log/ceph/$cluster.client.restapi.log
+<% if !node['ceph']['config']['restapi'].nil? -%>
+  <% node['ceph']['config']['restapi'].sort.each do |k, v| %>
   <%= k %> = <%= v %>
   <% end %>
 <% end -%>

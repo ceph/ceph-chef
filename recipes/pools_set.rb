@@ -25,25 +25,27 @@
 if node['ceph']['pools']['active']
   node['ceph']['pools']['active'].each do |pool|
     # Create pool and set type (replicated or erasure - default is replicated)
-    node['ceph']['pools']["#{pool}"]['names'].each do |name|
-      cluster = ".#{node['ceph']['cluster']}" unless "#{node['ceph']['cluster']}".downcase == 'ceph'
+    node['ceph']['pools'][pool]['names'].each do |name|
+      cluster = ".#{node['ceph']['cluster']}" unless node['ceph']['cluster'].downcase == 'ceph'
       pool_name = "#{cluster}.#{name}"
 
       # TODO: Need to add for calculated PGs options
       # TODO: Need to add crush_rule_set
       # TODO: Add other options later for EC etc...
 
-      if node['ceph']['pools']["#{pool}"]['settings']['size']
-        val = node['ceph']['pools']["#{pool}"]['settings']['size']
-      else
-        val = node['ceph']['osd']['size']['max']
-      end
+      if node['ceph']['pools'][pool]['settings']['type'] == 'replicated'
+        if node['ceph']['pools'][pool]['settings']['size']
+          val = node['ceph']['pools'][pool]['settings']['size']
+        else
+          val = node['ceph']['osd']['size']['max']
+        end
 
-      # Set...
-      ceph_chef_pool pool_name do
-        action :set
-        key 'size'
-        value val
+        # Set replicas...
+        ceph_chef_pool pool_name do
+          action :set
+          key 'size'
+          value val
+        end
       end
     end
   end
