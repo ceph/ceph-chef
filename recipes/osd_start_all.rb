@@ -35,8 +35,9 @@ else
   # execute 'raw osd start' do
   #   command 'service ceph start osd'
   # end
-  service 'ceph osd start' do
-    service_name 'ceph osd start'
+  service 'ceph_osd' do
+    service_name 'ceph'
+    supports :restart => true, :status => true
     action [:enable, :start]
   end
 end

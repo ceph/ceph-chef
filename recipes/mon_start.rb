@@ -38,11 +38,9 @@ else
       command 'systemctl start ceph.target'
     end
   else
-    # execute 'raw mon start' do
-    #   command 'service ceph start mon'
-    # end
-    service 'ceph mon start' do
-      service_name 'ceph mon start'
+    service 'ceph_mon' do
+      service_name 'ceph'
+      supports :restart => true, :status => true
       action [:enable, :start]
     end
   end

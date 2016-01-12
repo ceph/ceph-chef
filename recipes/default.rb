@@ -27,8 +27,10 @@ end
 
 # Can't put compile_time false because of templates
 # Since the cookbook will run where no net access exists then you should pre-install netaddr so check to see if it exists.
-netadd = Mixlib::ShellOut.new('gem list | grep netaddr')
-netadd.run_command
-if !netadd.stdout
-  chef_gem 'netaddr'
-end
+#netadd = Mixlib::ShellOut.new('gem list | grep netaddr')
+#netadd.run_command
+#if !netadd.stdout
+#  chef_gem 'netaddr'
+#end
+
+chef_gem 'netaddr'

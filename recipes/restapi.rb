@@ -32,26 +32,25 @@ directory "/var/lib/ceph/restapi/#{node['ceph']['cluster']}-restapi" do
 end
 
 base_key = "/etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
+keyring = "/etc/ceph/#{node['ceph']['cluster']}.client.restapi.keyring"
 
 # NOTE: If the restapi keyring exists and you are using the same key on for different nodes (load balancing) then
 # this method will work well. Since the key is already part of the cluster the only thing needed is to copy it
 # to the correct area (where ever the ceph.conf settings are pointing to on the given node). You can keep things
 # simple by keeping the same ceph.conf the same (except for hostname info) for each restapi node.
 execute 'write ceph-restapi-secret' do
-  command lazy { "ceph-authtool /etc/ceph/#{node['ceph']['cluster']}.client.restapi.keyring --create-keyring --name=client.restapi --add-key='#{node['ceph']['restapi-secret']}'" }
+  command lazy { "ceph-authtool #{keyring} --create-keyring --name=client.restapi --add-key='#{node['ceph']['restapi-secret']}'" }
   only_if { ceph_chef_restapi_secret }
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
-bash 'gen client-restapi-secret' do
-  code <<-EOH
-    ceph-authtool --create-keyring /etc/ceph/#{node['ceph']['cluster']}.client.restapi.keyring
-    ceph-authtool /etc/ceph/#{node['ceph']['cluster']}.client.restapi.keyring -n client.restapi --gen-key
-    ceph-authtool -n client.restapi --cap osd 'allow *' --cap mon '*' /etc/ceph/#{node['ceph']['cluster']}.client.restapi.keyring
-    ceph -k #{base_key} auth add client.radosgw -i /etc/ceph/#{node['ceph']['cluster']}.client.restapi.keyring
-  EOH
+# command lazy { "ceph-authtool --create-keyring #{keyring} -n client.restapi.#{node['hostname']} --gen-key --cap osd 'allow *' --cap mon 'allow *'" }
+execute 'gen client-restapi-secret' do
+  command lazy { "ceph auth get-or-create client.restapi osd 'allow *' mon 'allow *' -o #{keyring}" }
+  creates keyring
   not_if { ceph_chef_restapi_secret }
   notifies :create, 'ruby_block[save restapi_secret]', :immediately
+  sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
 # This ruby_block saves the key if it is needed at any other point plus this and all node data is saved on the

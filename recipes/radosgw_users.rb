@@ -23,7 +23,7 @@
 ruby_block 'initialize-radosgw-admin-user' do
   block do
     rgw_admin = JSON.parse(%x[radosgw-admin user create --display-name="#{node['ceph']['radosgw']['user']['admin']['name']}" --uid="#{node['ceph']['radosgw']['user']['admin']['uid']}" --access_key="#{node['ceph']['radosgw']['user']['admin']['access_key']}" --secret="#{node['ceph']['radosgw']['user']['admin']['secret']}"])
-    radosgw-admin caps add --uid="#{node['ceph']['radosgw']['user']['admin']['uid']}" --caps="users=*;buckets=*;metadata=*;usage=*;zone=*"
+    rgw_admin_cap = JSON.parse(%x[radosgw-admin caps add --uid="#{node['ceph']['radosgw']['user']['admin']['uid']}" --caps="users=*;buckets=*;metadata=*;usage=*;zone=*"])
   end
   not_if "radosgw-admin user info --uid='#{node['ceph']['radosgw']['user']['admin']['uid']}'"
 end
@@ -32,7 +32,8 @@ end
 if node['ceph']['radosgw']['user']['test']['uid']
   ruby_block 'initialize-radosgw-test-user' do
     block do
-      rgw_admin = JSON.parse(%x[radosgw-admin user create --display-name="#{node['ceph']['radosgw']['user']['test']['name']}" --uid="#{node['ceph']['radosgw']['user']['test']['uid']}" --max-buckets=node['ceph']['radosgw']['user']['test']['max_buckets'] --access_key="#{node['ceph']['radosgw']['user']['test']['access_key']}" --secret="#{node['ceph']['radosgw']['user']['test']['secret']}" --caps="#{node['ceph']['radosgw']['user']['test']['caps']}"])
+      rgw_tester = JSON.parse(%x[radosgw-admin user create --display-name="#{node['ceph']['radosgw']['user']['test']['name']}" --uid="#{node['ceph']['radosgw']['user']['test']['uid']}" --max-buckets=node['ceph']['radosgw']['user']['test']['max_buckets'] --access_key="#{node['ceph']['radosgw']['user']['test']['access_key']}" --secret="#{node['ceph']['radosgw']['user']['test']['secret']}" --caps="#{node['ceph']['radosgw']['user']['test']['caps']}"])
+      rgw_tester_cap = JSON.parse(%x[radosgw-admin caps add --uid="#{node['ceph']['radosgw']['user']['test']['uid']}" --caps="#{node['ceph']['radosgw']['user']['test']['caps']}"])
     end
     not_if "radosgw-admin user info --uid='#{node['ceph']['radosgw']['user']['test']['uid']}'"
   end

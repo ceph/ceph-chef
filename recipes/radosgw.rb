@@ -66,33 +66,36 @@ include_recipe "ceph-chef::radosgw_#{node['ceph']['radosgw']['webserver']}"
 
 # NOTE: This base_key can also be the bootstrap-rgw key (ceph.keyring) if desired. Just change it here.
 base_key = "/etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
+keyring = "/etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring"
 
 # NOTE: If the rgw keyring exists and you are using the same key on for different nodes (load balancing) then
 # this method will work well. Since the key is already part of the cluster the only thing needed is to copy it
 # to the correct area (where ever the ceph.conf settings are pointing to on the given node). You can keep things
 # simple by keeping the same ceph.conf the same (except for hostname info) for each rgw node.
+
 execute 'write ceph-radosgw-secret' do
-  command lazy { "ceph-authtool /etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring --create-keyring --name=client.radosgw.#{node['hostname']} --add-key='#{node['ceph']['radosgw-secret']}'" }
+  command lazy { "ceph-authtool #{keyring} --create-keyring --name=client.radosgw.#{node['hostname']} --add-key='#{node['ceph']['radosgw-secret']}'" }
+  creates keyring
   only_if { ceph_chef_radosgw_secret }
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
-bash 'gen client-radosgw-secret' do
-  code <<-EOH
-    ceph-authtool --create-keyring /etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring
-    ceph-authtool /etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring -n client.radosgw.#{node['hostname']} --gen-key
-    ceph-authtool -n client.radosgw.#{node['hostname']} --cap osd 'allow rwx' --cap mon 'allow rw' /etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring
+execute 'gen client-radosgw-secret' do
+  command <<-EOH
+    ceph-authtool --create-keyring #{keyring} -n client.radosgw.#{node['hostname']} --gen-key --cap osd 'allow rwx' --cap mon 'allow rw'
     ceph -k #{base_key} auth add client.radosgw.#{node['hostname']} -i /etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring
   EOH
+  creates keyring
   not_if { ceph_chef_radosgw_secret }
   notifies :create, 'ruby_block[save radosgw_secret]', :immediately
+  sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
 # This ruby_block saves the key if it is needed at any other point plus this and all node data is saved on the
 # Chef Server for this given node
 ruby_block 'save radosgw_secret' do
   block do
-    fetch = Mixlib::ShellOut.new("ceph-authtool /etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring --print-key")
+    fetch = Mixlib::ShellOut.new("ceph-authtool #{keyring} --print-key")
     fetch.run_command
     key = fetch.stdout
     node.set['ceph']['radosgw-secret'] = key.delete!("\n")

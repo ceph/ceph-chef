@@ -17,17 +17,22 @@
 # limitations under the License.
 #
 
+keyring = "/etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
+
 # This will execute on other nodes besides the first mon node.
 execute 'format ceph-admin-secret as keyring' do
-  command lazy { "ceph-authtool --create-keyring /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring --name=client.admin --add-key='#{node['ceph']['admin-secret']}' --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *'" }
+  command lazy { "ceph-authtool --create-keyring #{keyring} --name=client.admin --add-key='#{node['ceph']['admin-secret']}' --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *'" }
+  creates keyring
   only_if { ceph_chef_admin_secret }
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
 execute 'gen ceph-admin-secret' do
-  command lazy { "ceph-authtool --create-keyring /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring --gen-key -n client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *'" }
+  command lazy { "ceph-authtool --create-keyring #{keyring} --gen-key -n client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *'" }
+  creates keyring
   not_if { ceph_chef_admin_secret }
   notifies :create, 'ruby_block[save ceph_chef_admin_secret]', :immediately
+  sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
 ruby_block 'save ceph_chef_admin_secret' do

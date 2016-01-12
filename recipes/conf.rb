@@ -48,7 +48,7 @@ template "/etc/ceph/#{node['ceph']['cluster']}.conf" do
       :mon_addresses => ceph_chef_mon_addresses,
       :is_rbd => node['ceph']['is_rbd'],
       :is_rgw => ceph_chef_is_radosgw_node,
-      :is_rest_api => ceph_is_rest_api_node
+      :is_rest_api => ceph_chef_is_restapi_node
     }
   }
   mode '0644'
