@@ -10,6 +10,7 @@ depends	'apache2', '>= 1.1.12'
 depends 'apt'
 depends 'yum', '>= 3.8.1'
 depends 'yum-epel'
+depends 'poise', '>= 2.5.0'
 
 supports 'ubuntu', '>= 14.04'
 supports 'redhat', '>= 7.1'
