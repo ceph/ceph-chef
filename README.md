@@ -18,7 +18,9 @@ Note: The documentation is a WIP along with a few other features. This repo is a
 For help, use [Gitter chat](https://gitter.im/ceph/ceph-chef), [mailing-list](mailto:ceph-users-join@lists.ceph.com) or [issues](https://github.com/ceph/ceph-chef/issues)
 
 ### NOTE: Users of ceph-cookbook
-The original ceph-cookbook will remain and may continue to be updated (see that repo for specifics). We tried to use some of the interesting features of ceph-cookbook but we added a lot of enhancements and simplifications. Simply replacing ceph-cookbook with ceph-chef will most likely not work without a few modifications. Also, ceph-chef only works with Chef 12+ and Hammer and higher. Nothing below the Hammer release of Ceph is supported in this repo.
+The original ceph-cookbook will remain and may continue to be updated (see that repo for specifics). We tried to use some of the interesting features of ceph-cookbook but we added a lot of enhancements and simplifications. Simply replacing ceph-cookbook with ceph-chef will most likely not work without a few modifications. Also, ceph-chef only works with Chef 12+ and Hammer and higher. Nothing below the Hammer release of Ceph is supported in this repo. In addition, only civitweb is used going forward (not Apache).
+
+NOTE: The current LWRP are using the style prior to Chef version 12.5. There will a new release shortly that will support the now recommended way of handling custom resources. To make that change easier we will be using a helper cookbook called Poise. Using Poise makes creating customer resources and common services very simple.
 
 ### Chef
 
@@ -42,6 +44,7 @@ https://supermarket.chef.io/
 * [apache2](https://supermarket.chef.io/cookbooks/apache2)
 * [yum](https://supermarket.chef.io/cookbooks/yum)
 * [ntp](https://supermarket.chef.io/cookbooks/ntp)
+* [poise](https://supermarket.chef.io/cookbooks/poise)
 
 ## TEMPLATES
 

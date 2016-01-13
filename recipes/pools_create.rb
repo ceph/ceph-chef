@@ -36,7 +36,6 @@ if node['ceph']['pools']['active']
 
       # TODO: Need to add for calculated PGs options
       # TODO: Need to add crush_rule_set
-      # TODO: Add other options later for EC etc...
       # Set...
     end
   end
