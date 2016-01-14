@@ -1,6 +1,8 @@
-# Ceph-Chef Cookbook (New Version)
+# Ceph-Chef Cookbook
 
 [![Join the chat at https://gitter.im/ceph/ceph-chef](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ceph/ceph-chef?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Cookbook Version](https://img.shields.io/cookbook-0.9.5-blue.svg)](https://supermarket.chef.io/cookbooks/ceph-chef)
+[![License](https://img.shields.io/badge/license-Apache_2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 ## DESCRIPTION
 
@@ -8,23 +10,23 @@ Installs and configures Ceph, a distributed network storage and filesystem desig
 
 The current version is focused on installing and configuring Ceph for Ubuntu, CentOS and RHEL.
 
-For documentation on how to use this cookbook, refer to the [USAGE](#USAGE) section.
+For documentation on how to use this cookbook, refer to the **[USAGE](#USAGE)** section.
 
 ### Recommendation
-Also, you can look at https://github.com/bloomberg/chef-bcs. That Chef App (repo) uses this repo for Bloomberg's large clusters. The chef-bcs repo is an S3 Object Store Cluster used in multiple data centers.
+Also, you can look at **[https://github.com/bloomberg/chef-bcs](https://github.com/bloomberg/chef-bcs)**. That Chef App (repo) uses this repo for Bloomberg's large clusters. The **chef-bcs repo** is an S3 Object Store Cluster used in multiple data centers.
 
 Note: The documentation is a WIP along with a few other features. This repo is actively managed.  
 
-For help, use [Gitter chat](https://gitter.im/ceph/ceph-chef), [mailing-list](mailto:ceph-users-join@lists.ceph.com) or [issues](https://github.com/ceph/ceph-chef/issues)
+For help, use **[Gitter chat](https://gitter.im/ceph/ceph-chef)**, **[mailing-list](mailto:ceph-users-join@lists.ceph.com)** or **[issues](https://github.com/ceph/ceph-chef/issues)** here in this repo.
 
 ### NOTE: Users of ceph-cookbook
-The original ceph-cookbook will remain and may continue to be updated (see that repo for specifics). We tried to use some of the interesting features of ceph-cookbook but we added a lot of enhancements and simplifications. Simply replacing ceph-cookbook with ceph-chef will most likely not work without a few modifications. Also, ceph-chef only works with Chef 12+ and Hammer and higher. Nothing below the Hammer release of Ceph is supported in this repo. In addition, only civitweb is used going forward (not Apache).
+The original ceph-cookbook will remain and may continue to be updated (see that repo for specifics). We tried to use some of the interesting features of ceph-cookbook but we added a lot of enhancements and simplifications. Simply replacing ceph-cookbook with ceph-chef will not work without a few modifications. Also, ceph-chef only works with Chef 12.5+ and Hammer and higher. Nothing below the Hammer release of Ceph is supported in this repo. In addition, only **civitweb** is used going forward (not Apache).
 
-NOTE: The current LWRP are using the style prior to Chef version 12.5. There will a new release shortly that will support the now recommended way of handling custom resources. To make that change easier we will be using a helper cookbook called Poise. Using Poise makes creating customer resources and common services very simple.
+NOTE: The current LWRP are using the style prior to Chef version 12.5. There will a new release shortly that will support the now recommended way of handling custom resources. To make that change easier we will be using a helper cookbook called Poise. Using Poise makes creating custom resources and common services very simple.
 
 ### Chef
 
-\>= 12+
+\>= 12.5+
 
 ### Platform
 
@@ -46,37 +48,38 @@ https://supermarket.chef.io/
 * [ntp](https://supermarket.chef.io/cookbooks/ntp)
 * [poise](https://supermarket.chef.io/cookbooks/poise)
 
-## TEMPLATES
-
 ## USAGE
 
-Ceph cluster design is beyond the scope of this README, please turn to the
+Ceph cluster design and Ceph support are beyond the scope of this README, please turn to the:
+
 public wiki, mailing lists, visit our IRC channel, or contact Red Hat:
 
 http://ceph.com/docs/master
 http://ceph.com/resources/mailing-list-irc/
 
-This cookbook can be used to implement a chosen cluster design. Most of the configuration is retrieved from node attributes, which can be set by an environment or by a wrapper cookbook. A basic cluster configuration will need most of the following attributes:
+NOTE: The recommendation above on the Bloomberg Cluster repo will give you a solid design and/or provide ideas and guidance on laying out your Ceph cluster at scale.
+
+This cookbook can be used to implement a chosen cluster design. Most of the configuration is retrieved from node attributes, which can be set by an environment json file or by a wrapper cookbook that updates the attributes directly. A basic cluster configuration will need most of the following attributes:
 
 * `node['ceph']['config']['fsid']` - the cluster UUID
 * `node['ceph']['config]'['global']['public network']` - a CIDR specification of the public network
 * `node['ceph']['config]'['global']['cluster network']` - a CIDR specification of a separate cluster replication network
 * `node['ceph']['config]'['global']['rgw dns name']` -  the main domain of the radosgw daemon
 
-Most notably, the configuration does _NOT_ need to set the `mon_initial_members`, because the cookbook does a node search to find other mons in the same environment.
+Most notably, the configuration does **NOT** need to set the `mon_initial_members`, because the cookbook does a node search based on tags to find other mons in the same environment.
 
 The other set of attributes that this recipe needs is `node['ceph']['osd_devices']`, which is an array of OSD definitions, similar to the following:
 
 * {'device' => '/dev/sdb'} - Use a full disk for the OSD, with a small partition for the journal
 * {'type' => 'directory', 'device' => '/src/node/sdb1/ceph'} - Use a directory, and have a small file for the journal
 * {'device' => '/dev/sde', 'dmcrypt' => true} - Store the data encrypted by passing --dmcrypt to `ceph-disk-prepare`
-* {'device' => '/dev/sdc', 'journal' => '/dev/sdd2'} - use a full disk for the OSD with a custom partition for the journal
+* {'device' => '/dev/sdc', 'journal' => '/dev/sdd2'} - use a full disk for the OSD with a custom partition for the journal on another device such as an SSD or NMVe
 
 ### Using a Policy Wrapper Cookbook
 
 To automate setting several of these node attributes, it is recommended to use a policy wrapper cookbook. This allows the ability to use Chef Server cookbook versions along with environment version restrictions to roll out configuration changes in an ordered fashion.
 
-It also can help with automating some settings. For example, a wrapper cookbook could peek at the list of harddrives that ohai has found and populate node['ceph']['osd_devices'] accordingly, instead of manually typing them all in:
+It also can help with automating some settings. For example, a wrapper cookbook could peek at the list of hard drives that `ohai` has found and populate node['ceph']['osd_devices'] accordingly, instead of manually typing them all in:
 
 ```ruby
 node.override['ceph']['osd_devices'] = node['block_device'].each.reject{ |name, data| name !~ /^sd[b-z]/}.sort.map { |name, data| {'journal' => "/dev/#{name}"} }
@@ -108,9 +111,9 @@ Includes:
 
 * ceph-chef::default
 
-### Ceph Rados Gateway
+### Ceph RADOS Gateway (RGW)
 
-Ceph Rados Gateway nodes should use the ceph-radosgw role
+Ceph RGW nodes should use the ceph-radosgw role
 
 ## ATTRIBUTES
 
@@ -130,7 +133,7 @@ Ceph Rados Gateway nodes should use the ceph-radosgw role
 
 ### Ceph MON
 
-* `node['ceph']['config']['mon']` - a hash of settings to save in ceph.conf in the [mon] section, such as `'mon osd nearfull ratio' => '0.70'`
+* `node['ceph']['config']['mon']` - a hash of settings to save in ceph.conf in the [mon] section, such as `'mon osd nearfull ratio' => '0.75'`
 
 ### Ceph OSD
 
@@ -144,7 +147,7 @@ Ceph Rados Gateway nodes should use the ceph-radosgw role
 * `node['ceph']['cephfs_mount']` - where the cephfs recipe should mount CephFS
 * `node['ceph']['cephfs_use_fuse']` - whether the cephfs recipe should use the fuse cephfs client. It will default to heuristics based on the kernel version
 
-### Ceph Rados Gateway (RGW)
+### Ceph RADOS Gateway (RGW)
 ### Note: Only supports the newer 'civetweb' version of RGW (not Apache)
 
 * `node['ceph']['radosgw']['api_fqdn']` - what vhost to configure in the web server
@@ -181,9 +184,9 @@ The ceph\_cephfs LWRP provides an easy way to mount CephFS. It will automaticall
 
 #### Actions
 
-- :mount - mounts CephFS
-- :umount - unmounts CephFS
-- :remount - remounts CephFS
+- :mount - mount CephFS
+- :umount - unmount CephFS
+- :remount - remount CephFS
 - :enable - adds an fstab entry to mount CephFS
 - :disable - removes an fstab entry to mount CephFS
 
@@ -236,7 +239,7 @@ This cookbook uses Test Kitchen to verify functionality. A Pull Request can't be
 ## LICENSE AND AUTHORS
 * Author: Chris Jones <cjones303@bloomberg.net>
 
-* Copyright 2015, Bloomberg Finance L.P.
+* Copyright 2016, Bloomberg Finance L.P.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
