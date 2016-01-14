@@ -1,7 +1,6 @@
 # Ceph-Chef Cookbook
 
 [![Join the chat at https://gitter.im/ceph/ceph-chef](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ceph/ceph-chef?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Cookbook Version](https://img.shields.io/cookbook-0.9.5-blue.svg)](https://supermarket.chef.io/cookbooks/ceph-chef)
 [![License](https://img.shields.io/badge/license-Apache_2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 ## DESCRIPTION
