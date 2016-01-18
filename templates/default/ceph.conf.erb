@@ -80,6 +80,7 @@
   <% end %>
   <% end -%>
 
+<% if @is_mon -%>
 [mon]
   host = <%= node['hostname'] %>
   <% if !node['ceph']['mon']['clock_drift_allowed'].nil? -%>
@@ -91,6 +92,7 @@
   <%= k %> = <%= v %>
   <% end %>
   <% end -%>
+<% end -%>
 
 <% if !node['ceph']['config']['mds'].nil? -%>
 [mds]
@@ -99,39 +101,49 @@
   <% end -%>
 <% end -%>
 
-# Have other client here such as glance, cinder ... if using openstack and wanting to have different settings than the default 'client'
-
 [client]
+  <% if @is_rbd -%>
   rbd cache = true
   rbd cache writethrough until flush = true
-  # admin socket must be writable by QEMU and allowed by SELinux or AppArmor
-#  admin socket = /var/run/ceph/$cluster-$type.$id.$pid.$cctid.asok
-  log file = /var/log/qemu/qemu-guest-$pid.log
   rbd concurrent management ops = 20
+  log file = /var/log/qemu/qemu-guest-$pid.log
+  <% end -%>
+  # admin socket must be writable by QEMU and allowed by SELinux or AppArmor
+  admin socket = /var/run/ceph/$cluster-$type.$id.$pid.$cctid.asok
 
+<% if @is_admin -%>
 [client.admin]
   keyring = /etc/ceph/$cluster.client.admin.keyring
+<% end -%>
 
 <% if @is_rgw -%>
 [client.radosgw.<%= node['hostname'] %>]
   host = <%= node['hostname'] %>
   keyring = /etc/ceph/$cluster.client.radosgw.keyring
-  <% if node['ceph']['radosgw']['port'].nil? %>
-  rgw frontends = civetweb port=80
-  <% else -%>
+  rgw num rados handles = <%= node['ceph']['radosgw']['rgw_num_rados_handles'] %>
   rgw frontends = civetweb port=<%= node['ceph']['radosgw']['port'] %>
-  <% end -%>
   # rgw enable ops log = false
   # rgw enable usage log = false
   pid file = /var/run/ceph/$name.pid
   log file = /var/log/radosgw/$cluster.client.radosgw.<%= node['hostname'] -%>.log
   # Increased to 1 to log HTTP return codes - http://tracker.ceph.com/issues/12432
   debug rgw = 1/0
-<% if !node['ceph']['config']['rgw'].nil? -%>
+  <% if node['ceph']['radosgw']['keystone_auth'] %>
+  rgw keystone url = <%= node['ceph']['radosgw']['keystone_url'] %>:<%= node['ceph']['radosgw']['keystone_url_port'] %>
+  rgw keystone admin token = <%= node['ceph']['radosgw']['keystone_admin_token'] %>
+  rgw keystone accepted roles = admin Member _member_
+  rgw keystone token cache size = 1000
+  rgw keystone revocation interval = 1200
+  rgw s3 auth use keystone = true
+  <% end %>
+  <% if !node['ceph']['radosgw']['dns_name'].nil? -%>
+  rgw dns name = <%= node['ceph']['radosgw']['dns_name'] %>
+  <% end %>
+  <% if !node['ceph']['config']['rgw'].nil? -%>
   <% node['ceph']['config']['rgw'].sort.each do |k, v| %>
   <%= k %> = <%= v %>
   <% end %>
-<% end -%>
+  <% end -%>
 <% end -%>
 
 <% if @is_rest_api -%>

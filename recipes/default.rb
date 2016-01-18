@@ -25,12 +25,13 @@ node['ceph']['packages'].each do |pck|
   package pck
 end
 
-# Can't put compile_time false because of templates
-# Since the cookbook will run where no net access exists then you should pre-install netaddr so check to see if it exists.
-#netadd = Mixlib::ShellOut.new('gem list | grep netaddr')
-#netadd.run_command
-#if !netadd.stdout
-#  chef_gem 'netaddr'
-#end
+chef_gem 'netaddr' do
+  source '/tmp/netaddr-1.5.0.gem'
+  action :install
+  only_if 'test -f /tmp/netaddr-1.5.0.gem'
+end
 
-chef_gem 'netaddr'
+chef_gem 'netaddr' do
+  action :install
+  not_if 'test -f /tmp/netaddr-1.5.0.gem'
+end

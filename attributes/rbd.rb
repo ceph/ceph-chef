@@ -16,18 +16,19 @@
 
 include_attribute 'ceph-chef'
 
-default['ceph']['mds']['init_style'] = node['init_style']
+default['ceph']['rbd']['init_style'] = node['init_style']
 
-default['ceph']['mds']['secret_file'] = '/etc/chef/secrets/ceph_chef_mds'
+default['ceph']['rbd']['secret_file'] = '/etc/chef/secrets/ceph_chef_rbd'
 
 # MUST be set in the wrapper cookbook or chef-repo like project
-default['ceph']['mds']['role'] = 'search-ceph-mds'
+default['ceph']['rbd']['role'] = 'search-ceph-rbd'
 
+# NOTE: Add libvirtd??
 case node['platform_family']
 when 'debian'
-  packages = ['ceph-mds']
+  packages = []
   packages += debug_packages(packages) if node['ceph']['install_debug']
-  default['ceph']['mds']['packages'] = packages
+  default['ceph']['rbd']['packages'] = packages
 else
-  default['ceph']['mds']['packages'] = []
+  default['ceph']['rbd']['packages'] = []
 end

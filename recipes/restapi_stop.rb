@@ -1,4 +1,7 @@
 #
+# Author:: Chris Jones <cjones303@bloomberg.net>
+# Cookbook Name:: ceph
+#
 # Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,20 +17,18 @@
 # limitations under the License.
 #
 
-include_attribute 'ceph-chef'
-
-default['ceph']['mds']['init_style'] = node['init_style']
-
-default['ceph']['mds']['secret_file'] = '/etc/chef/secrets/ceph_chef_mds'
-
-# MUST be set in the wrapper cookbook or chef-repo like project
-default['ceph']['mds']['role'] = 'search-ceph-mds'
+service_type = node['ceph']['mon']['init_style']
 
 case node['platform_family']
+when 'rhel'
+  service 'ceph_rest_api' do
+    service_name 'ceph-rest-api'
+    provider Chef::Provider::Service::Systemd
+    action [:stop]
+  end
 when 'debian'
-  packages = ['ceph-mds']
-  packages += debug_packages(packages) if node['ceph']['install_debug']
-  default['ceph']['mds']['packages'] = packages
-else
-  default['ceph']['mds']['packages'] = []
+  execute 'restapi-start' do
+    command 'hup ceph-rest-api &'
+    only_if 'pgrep ceph-rest-api'
+  end
 end

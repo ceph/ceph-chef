@@ -31,7 +31,6 @@ if node['ceph']['pools']['active']
 
       # TODO: Need to add for calculated PGs options
       # TODO: Need to add crush_rule_set
-      # TODO: Add other options later for EC etc...
 
       if node['ceph']['pools'][pool]['settings']['type'] == 'replicated'
         if node['ceph']['pools'][pool]['settings']['size']
