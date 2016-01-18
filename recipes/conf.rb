@@ -29,7 +29,7 @@ include_recipe 'ceph-chef::fsid'
 directory '/etc/ceph' do
   owner node['ceph']['owner']
   group node['ceph']['group']
-  mode '0644'
+  mode node['ceph']['mode']
   action :create
   not_if "test -f /etc/ceph"
 end

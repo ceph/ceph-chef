@@ -60,9 +60,9 @@ service_type = node['ceph']['osd']['init_style']
 # Create the scripts directory within the /etc/ceph directory. This is not standard Ceph. It's included here as
 # a place to hold helper scripts mainly for OSD and Journal maintenance
 directory '/etc/ceph/scripts' do
-  owner 'root'
-  group 'root'
-  mode '0755'
+  owner node['ceph']['owner']
+  group node['ceph']['group']
+  mode node['ceph']['mode']
   recursive true
   action :create
   not_if "test -d /etc/ceph/scripts"
@@ -71,16 +71,22 @@ end
 # Add ceph_journal.sh helper script to all OSD nodes and place it in /etc/ceph
 cookbook_file '/etc/ceph/scripts/ceph_journal.sh' do
   source 'ceph_journal.sh'
-  owner 'root'
-  group 'root'
-  mode '0755'
+  # owner 'root'
+  # group 'root'
+  # mode '0755'
+  owner node['ceph']['owner']
+  group node['ceph']['group']
+  mode node['ceph']['mode']
   not_if "test -f /etc/ceph/scripts/ceph_journal.sh"
 end
 
 directory '/var/lib/ceph/bootstrap-osd' do
-  owner 'root'
-  group 'root'
-  mode '0755'
+  # owner 'root'
+  # group 'root'
+  # mode '0755'
+  owner node['ceph']['owner']
+  group node['ceph']['group']
+  mode node['ceph']['mode']
   recursive true
   action :create
   not_if "test -d /var/lib/ceph/bootstrap-osd"
@@ -88,9 +94,12 @@ end
 
 # Default data location - do not modify
 directory '/var/lib/ceph/osd' do
-  owner 'root'
-  group 'root'
-  mode '0755'
+  # owner 'root'
+  # group 'root'
+  # mode '0755'
+  owner node['ceph']['owner']
+  group node['ceph']['group']
+  mode node['ceph']['mode']
   recursive true
   action :create
   not_if "test -d /var/lib/ceph/osd"
