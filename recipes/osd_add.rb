@@ -39,8 +39,10 @@ if node['ceph']['osd']['add']['devices']
     # end
 
     directory osd_device['device'] do
-      owner 'root'
-      group 'root'
+      # owner 'root'
+      # group 'root'
+      owner node['ceph']['owner']
+      group node['ceph']['group']
       recursive true
       only_if { osd_device['type'] == 'directory' }
     end
@@ -61,7 +63,8 @@ if node['ceph']['osd']['add']['devices']
         fi
         sleep 2
       EOH
-      # not_if "sgdisk -i1 #{osd_device['device']}#{partitions} | grep -i 4fbd7e29-9d25-41b8-afd0-062c0ceff05d"
+      not_if "sgdisk -i1 #{osd_device['device']} | grep -i 4fbd7e29-9d25-41b8-afd0-062c0ceff05d" if !dmcrypt
+      not_if "sgdisk -i1 #{osd_device['device']} | grep -i 4fbd7e29-9d25-41b8-afd0-5ec00ceff05d" if dmcrypt
       # Only if there is no 'ceph *' found in the label. The recipe os_remove_zap should be called to remove/zap
       # all devices if you are wanting to add all of the devices again (if this is not the initial setup)
       only_if "parted --script #{osd_device['device']} print | egrep -sq '^ 1.*ceph'"

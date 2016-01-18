@@ -26,9 +26,10 @@ service_type = node['ceph']['mon']['init_style']
 directory "/var/lib/ceph/restapi/#{node['ceph']['cluster']}-restapi" do
   owner node['ceph']['owner']
   group node['ceph']['group']
-  mode node['ceph']['mode']
+  mode 0755
   recursive true
   action :create
+  not_if "test -d /var/lib/ceph/restapi/#{node['ceph']['cluster']}-restapi"
 end
 
 base_key = "/etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
@@ -41,6 +42,7 @@ keyring = "/etc/ceph/#{node['ceph']['cluster']}.client.restapi.keyring"
 execute 'write ceph-restapi-secret' do
   command lazy { "ceph-authtool #{keyring} --create-keyring --name=client.restapi --add-key='#{node['ceph']['restapi-secret']}'" }
   only_if { ceph_chef_restapi_secret }
+  not_if "test -f #{keyring}"
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
@@ -49,6 +51,7 @@ execute 'gen client-restapi-secret' do
   command lazy { "ceph auth get-or-create client.restapi osd 'allow *' mon 'allow *' -o #{keyring}" }
   creates keyring
   not_if { ceph_chef_restapi_secret }
+  not_if "test -f #{keyring}"
   notifies :create, 'ruby_block[save restapi_secret]', :immediately
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end

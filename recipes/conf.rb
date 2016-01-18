@@ -20,16 +20,18 @@
 # All versions of Ceph below Infernalis needs selinux disabled or in Permissive mode
 execute 'set selinux' do
   command 'setenforce 0'
+  not_if "getenforce | grep Permissive"
 end
 
 include_recipe 'ceph-chef::fsid'
 
 # Main ceph configuration location
 directory '/etc/ceph' do
-  owner 'root'
-  group 'root'
-  mode '0755'
+  owner node['ceph']['owner']
+  group node['ceph']['group']
+  mode '0644'
   action :create
+  not_if "test -f /etc/ceph"
 end
 
 cookbook_file '/usr/bin/ceph-remove-clean' do
@@ -38,6 +40,7 @@ cookbook_file '/usr/bin/ceph-remove-clean' do
   owner 'root'
   group 'root'
   mode '0755'
+  not_if "test -f /usr/bin/ceph-remove-clean"
 end
 
 template "/etc/ceph/#{node['ceph']['cluster']}.conf" do
@@ -46,10 +49,14 @@ template "/etc/ceph/#{node['ceph']['cluster']}.conf" do
     {
       :fsid_secret => ceph_chef_fsid_secret,
       :mon_addresses => ceph_chef_mon_addresses,
-      :is_rbd => node['ceph']['is_rbd'],
+      :is_mon => ceph_chef_is_mon_node,
       :is_rgw => ceph_chef_is_radosgw_node,
+      :is_rbd => ceph_chef_is_rbd_node,
+      :is_mds => ceph_chef_is_mds_node,
+      :is_admin => ceph_chef_is_admin_node,
       :is_rest_api => ceph_chef_is_restapi_node
     }
   }
   mode '0644'
+  not_if "test -f /etc/ceph/#{node['ceph']['cluster']}.conf"
 end

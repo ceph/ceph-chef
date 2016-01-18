@@ -23,11 +23,12 @@ include_recipe 'ceph-chef::mds_install'
 cluster = 'ceph'
 
 directory "/var/lib/ceph/mds/#{cluster}-#{node['hostname']}" do
-  owner 'root'
-  group 'root'
-  mode 00755
+  owner node['ceph']['owner']
+  group node['ceph']['group']
+  mode node['ceph']['mode']
   recursive true
   action :create
+  not_if "test -d /var/lib/ceph/mds/#{cluster}-#{node['hostname']}"
 end
 
 ceph_client 'mds' do
@@ -37,8 +38,8 @@ ceph_client 'mds' do
 end
 
 file "/var/lib/ceph/mds/#{cluster}-#{node['hostname']}/done" do
-  owner 'root'
-  group 'root'
+  owner node['ceph']['owner']
+  group node['ceph']['group']
   mode 00644
 end
 
@@ -51,8 +52,8 @@ else
   filename = 'sysvinit'
 end
 file "/var/lib/ceph/mds/#{cluster}-#{node['hostname']}/#{filename}" do
-  owner 'root'
-  group 'root'
+  owner node['ceph']['owner']
+  group node['ceph']['group']
   mode 00644
 end
 

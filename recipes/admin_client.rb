@@ -24,6 +24,7 @@ execute 'format ceph-admin-secret as keyring' do
   command lazy { "ceph-authtool --create-keyring #{keyring} --name=client.admin --add-key='#{node['ceph']['admin-secret']}' --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *'" }
   creates keyring
   only_if { ceph_chef_admin_secret }
+  not_if "test -f #{keyring}"
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
@@ -31,13 +32,14 @@ execute 'gen ceph-admin-secret' do
   command lazy { "ceph-authtool --create-keyring #{keyring} --gen-key -n client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *'" }
   creates keyring
   not_if { ceph_chef_admin_secret }
+  not_if "test -f #{keyring}"
   notifies :create, 'ruby_block[save ceph_chef_admin_secret]', :immediately
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
 ruby_block 'save ceph_chef_admin_secret' do
   block do
-    fetch = Mixlib::ShellOut.new("ceph-authtool /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring --print-key")
+    fetch = Mixlib::ShellOut.new("ceph-authtool #{keyring} --print-key")
     fetch.run_command
     key = fetch.stdout
     puts key
@@ -49,5 +51,5 @@ end
 
 execute 'set permissions' do
   command lazy { "chmod 0644 /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring" }
-  only_if "test -f /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
+  only_if "test -f #{keyring}"
 end

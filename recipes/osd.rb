@@ -65,6 +65,7 @@ directory '/etc/ceph/scripts' do
   mode '0755'
   recursive true
   action :create
+  not_if "test -d /etc/ceph/scripts"
 end
 
 # Add ceph_journal.sh helper script to all OSD nodes and place it in /etc/ceph
@@ -73,15 +74,7 @@ cookbook_file '/etc/ceph/scripts/ceph_journal.sh' do
   owner 'root'
   group 'root'
   mode '0755'
-end
-
-# If not using rbd then this is not required but it's included anyway
-directory '/var/lib/qemu' do
-  owner 'root'
-  group 'root'
-  mode '0755'
-  recursive true
-  action :create
+  not_if "test -f /etc/ceph/scripts/ceph_journal.sh"
 end
 
 directory '/var/lib/ceph/bootstrap-osd' do
@@ -90,6 +83,7 @@ directory '/var/lib/ceph/bootstrap-osd' do
   mode '0755'
   recursive true
   action :create
+  not_if "test -d /var/lib/ceph/bootstrap-osd"
 end
 
 # Default data location - do not modify
@@ -99,6 +93,7 @@ directory '/var/lib/ceph/osd' do
   mode '0755'
   recursive true
   action :create
+  not_if "test -d /var/lib/ceph/osd"
 end
 
 bash 'osd-write-bootstrap-osd-key' do
@@ -142,8 +137,10 @@ if node['ceph']['osd']['devices']
     partitions = 1
 
     directory osd_device['device'] do
-      owner 'root'
-      group 'root'
+      # owner 'root'
+      # group 'root'
+      owner node['ceph']['owner']
+      group node['ceph']['group']
       recursive true
       only_if { osd_device['type'] == 'directory' }
     end
@@ -170,10 +167,9 @@ if node['ceph']['osd']['devices']
       # NOTE: The meaning of the uuids used here are listed above
       not_if "sgdisk -i1 #{osd_device['device']} | grep -i 4fbd7e29-9d25-41b8-afd0-062c0ceff05d" if !dmcrypt
       not_if "sgdisk -i1 #{osd_device['device']} | grep -i 4fbd7e29-9d25-41b8-afd0-5ec00ceff05d" if dmcrypt
-      # TODO: Remove the comments below in final product so as not to confuse...
       # Only if there is no 'ceph *' found in the label. The recipe os_remove_zap should be called to remove/zap
       # all devices if you are wanting to add all of the devices again (if this is not the initial setup)
-      # not_if "parted --script #{osd_device['device']} print | egrep -sq '^ 1.*ceph'"
+      not_if "parted --script #{osd_device['device']} print | egrep -sq '^ 1.*ceph'"
       action :run
     end
 

@@ -25,40 +25,44 @@ include_recipe 'ceph-chef::radosgw_install'
 service_type = node['ceph']['mon']['init_style']
 
 directory '/var/log/radosgw' do
-  owner 'root'
-  group 'root'
-  mode '0755'
+  owner node['ceph']['owner']
+  group node['ceph']['group']
+  mode node['ceph']['mode']
   action :create
+  not_if "test -d /var/log/radosgw"
 end
 
 file "/var/log/radosgw/#{node['ceph']['cluster']}.client.radosgw.#{node['hostname']}.log" do
-  owner 'root'
-  group 'root'
+  owner node['ceph']['owner']
+  group node['ceph']['group']
 end
 
 # If the directory does not exist already (on a dedicated node)
 directory '/var/run/ceph' do
-  owner 'root'
-  group 'root'
-  mode '0755'
+  owner node['ceph']['owner']
+  group node['ceph']['group']
+  mode node['ceph']['mode']
   action :create
+  not_if "test -d /var/run/ceph"
 end
 
 # This directory is only needed if you use the bootstrap-rgw key as part of the key generation for rgw.
 # All bootstrap-xxx keys are created during the mon key creation in mon_keys.rb.
 directory '/var/lib/ceph/bootstrap-rgw' do
-  owner 'root'
-  group 'root'
-  mode '0755'
+  owner node['ceph']['owner']
+  group node['ceph']['group']
+  mode node['ceph']['mode']
   action :create
+  not_if "test -d /var/lib/ceph/bootstrap-rgw"
 end
 
 directory "/var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}" do
-  owner 'root'
-  group 'root'
-  mode '0755'
+  owner node['ceph']['owner']
+  group node['ceph']['group']
+  mode node['ceph']['mode']
   recursive true
   action :create
+  not_if "test -d /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}"
 end
 
 # IF you want specific recipes for civetweb then put them in the recipe referenced here.
@@ -77,6 +81,7 @@ execute 'write ceph-radosgw-secret' do
   command lazy { "ceph-authtool #{keyring} --create-keyring --name=client.radosgw.#{node['hostname']} --add-key='#{node['ceph']['radosgw-secret']}'" }
   creates keyring
   only_if { ceph_chef_radosgw_secret }
+  not_if "test -f #{keyring}"
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
@@ -87,6 +92,7 @@ execute 'gen client-radosgw-secret' do
   EOH
   creates keyring
   not_if { ceph_chef_radosgw_secret }
+  not_if "test -f #{keyring}"
   notifies :create, 'ruby_block[save radosgw_secret]', :immediately
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end

@@ -1,4 +1,7 @@
 #
+# Author: Chris Jones <cjones303@bloomberg.net>
+# Cookbook: ceph
+#
 # Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,20 +17,23 @@
 # limitations under the License.
 #
 
-include_attribute 'ceph-chef'
-
-default['ceph']['mds']['init_style'] = node['init_style']
-
-default['ceph']['mds']['secret_file'] = '/etc/chef/secrets/ceph_chef_mds'
-
-# MUST be set in the wrapper cookbook or chef-repo like project
-default['ceph']['mds']['role'] = 'search-ceph-mds'
-
-case node['platform_family']
-when 'debian'
-  packages = ['ceph-mds']
-  packages += debug_packages(packages) if node['ceph']['install_debug']
-  default['ceph']['mds']['packages'] = packages
-else
-  default['ceph']['mds']['packages'] = []
+directory "/var/run/ceph/guests/" do
+  owner node['ceph']['owner']
+  group node['ceph']['group']
+  mode  node['ceph']['mode']
 end
+
+directory '/var/lib/qemu' do
+  owner 'root'
+  group 'root'
+  mode '0755'
+  recursive true
+  action :create
+end
+
+# libvirtd...
+# directory "/var/log/qemu/" do
+#   owner "libvirt-qemu"
+#   group "libvirtd"
+#   mode  "0755"
+# end

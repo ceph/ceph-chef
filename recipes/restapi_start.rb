@@ -17,9 +17,25 @@
 # limitations under the License.
 #
 
+# IMPORTANT: The ceph-rest-api process is a Python script running with WSGI. This is ok for fairly small number of
+# requests. Since this is only for Admin functionaility it should not be hit a lot. IF you plan on this process to
+# hit from a high number of clients with a good number of requests then it's recommend that you create multiple
+# processes and use something like NGINX in front so that it proxies to collection of processes. This will provide
+# a more scalable option.
+
 service_type = node['ceph']['mon']['init_style']
 
-execute 'restapi-start' do
-  command 'nohup ceph-rest-api &'
-  not_if 'pgrep ceph-rest-api'
+case node['platform_family']
+when 'rhel'
+  service 'ceph_rest_api' do
+    service_name 'ceph-rest-api'
+    provider Chef::Provider::Service::Systemd
+    supports :restart => true, :status => true
+    action [:enable, :start]
+  end
+when 'debian'
+  execute 'restapi-start' do
+    command 'nohup ceph-rest-api &'
+    not_if 'pgrep ceph-rest-api'
+  end
 end

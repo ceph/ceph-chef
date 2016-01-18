@@ -34,8 +34,13 @@ if service_type == 'upstart'
   end
 else
   if node['ceph']['version'] != 'hammer'
-    execute 'systemctl mon start' do
-      command 'systemctl start ceph.target'
+    #execute 'systemctl mon start' do
+    #  command 'systemctl start ceph.target'
+    #end
+    service 'ceph.target' do
+      service_name 'ceph.target'
+      provider Chef::Provider::Service::Systemd
+      action [:enable, :start]
     end
   else
     service 'ceph_mon' do

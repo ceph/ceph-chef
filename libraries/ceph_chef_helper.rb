@@ -67,6 +67,18 @@ def ceph_chef_is_restapi_node
   val
 end
 
+def ceph_chef_is_rbd_node
+  val = false
+  nodes = ceph_chef_rbd_nodes
+  nodes.each do |n|
+    if n['hostname'] == node['hostname']
+      val = true
+      break
+    end
+  end
+  val
+end
+
 def ceph_chef_is_admin_node
   val = false
   nodes = ceph_chef_admin_nodes
@@ -320,6 +332,15 @@ def ceph_chef_restapi_nodes
   results = search(:node, "tags:#{node['ceph']['restapi']['tag']}")
   results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
   if !results.include?(node) && node.run_list.roles.include?(node['ceph']['restapi']['role'])
+    results.push(node)
+  end
+  results.sort! { |a, b| a['hostname'] <=> b['hostname'] }
+end
+
+def ceph_chef_rbd_nodes
+  results = search(:node, "tags:#{node['ceph']['rbd']['tag']}")
+  results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
+  if !results.include?(node) && node.run_list.roles.include?(node['ceph']['rbd']['role'])
     results.push(node)
   end
   results.sort! { |a, b| a['hostname'] <=> b['hostname'] }

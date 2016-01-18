@@ -26,3 +26,5 @@ default['ceph']['restapi']['log']['level'] = 'warning'
 default['ceph']['restapi']['role'] = 'search-ceph-restapi'
 
 default['ceph']['restapi']['secret_file'] = '/etc/chef/secrets/ceph_chef_restapi'
+
+default['ceph']['restapi']['packages'] = []
