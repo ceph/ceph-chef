@@ -109,11 +109,14 @@
   log file = /var/log/qemu/qemu-guest-$pid.log
   <% end -%>
   # admin socket must be writable by QEMU and allowed by SELinux or AppArmor
-  admin socket = /var/run/ceph/$cluster-$type.$id.$pid.$cctid.asok
+  # admin socket = /var/run/ceph/$cluster-$type.$id.$pid.$cctid.asok
+  admin socket = /var/run/ceph/$cluster-$type.$id.$pid.asok
 
 <% if @is_admin -%>
 [client.admin]
   keyring = /etc/ceph/$cluster.client.admin.keyring
+  # Force the admin to have a socket 
+  admin socket =
 <% end -%>
 
 <% if @is_rgw -%>
@@ -121,11 +124,11 @@
   host = <%= node['hostname'] %>
   keyring = /etc/ceph/$cluster.client.radosgw.keyring
   rgw num rados handles = <%= node['ceph']['radosgw']['rgw_num_rados_handles'] %>
-  rgw frontends = civetweb port=<%= node['ceph']['radosgw']['port'] %>
+  rgw frontends = civetweb port=<%= node['ceph']['radosgw']['port'] %> num_threads=<%= node['ceph']['radosgw']['civetweb_num_threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %> access_log_file=<%= node['ceph']['radosgw']['civetweb_access_log_file'] %>
   # rgw enable ops log = false
   # rgw enable usage log = false
   pid file = /var/run/ceph/$name.pid
-  log file = /var/log/radosgw/$cluster.client.radosgw.<%= node['hostname'] -%>.log
+  log file = /var/log/radosgw/$cluster.client.radosgw.log
   # Increased to 1 to log HTTP return codes - http://tracker.ceph.com/issues/12432
   debug rgw = 1/0
   <% if node['ceph']['radosgw']['keystone_auth'] %>

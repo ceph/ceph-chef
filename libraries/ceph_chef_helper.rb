@@ -19,6 +19,42 @@
 
 require 'json'
 
+# NOTE: To create radosgw federated pools we need to override the default node['ceph']['pools']['radosgw']['names']
+# by rebuilding the structure dynamically based on the federated options.
+def ceph_chef_build_federated_pool(pool)
+  node['ceph']['pools'][pool]['federated_regions'].each do |region|
+    node['ceph']['pools'][pool]['federated_zones'].each do |zone|
+      node['ceph']['pools'][pool]['federated_instances'].each do |instance|
+        node['ceph']['pools'][pool]['names'].each do |name|
+          # name should already have '.' as first character so don't add it to formating here
+          federated_name = ".#{region}-#{zone}-#{instance}#{name}"
+          if !node['ceph']['pools'][pool]['federated_names'].include? federated_name
+            node['ceph']['pools'][pool]['federated_names'] << federated_name
+          end
+        end
+      end
+    end
+  end
+end
+
+def ceph_chef_create_pool(pool)
+  if !node['ceph']['pools'][pool]['federated_names'].empty?
+    node_loop = node['ceph']['pools'][pool]['federated_names']
+  else
+    node_loop = node['ceph']['pools'][pool]['names']
+  end
+
+  node_loop.each do |name|
+    ceph_chef_pool name do
+      action :create
+      pg_num node['ceph']['pools'][pool]['settings']['pg_num']
+      pgp_num node['ceph']['pools'][pool]['settings']['pgp_num']
+      type node['ceph']['pools'][pool]['settings']['type']
+      options node['ceph']['pools'][pool]['settings']['options'] if node['ceph']['pools'][pool]['settings']['options']
+    end
+  end
+end
+
 def ceph_chef_is_mon_node
   val = false
   nodes = ceph_chef_mon_nodes

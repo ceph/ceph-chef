@@ -32,7 +32,9 @@ directory '/var/log/radosgw' do
   not_if "test -d /var/log/radosgw"
 end
 
-file "/var/log/radosgw/#{node['ceph']['cluster']}.client.radosgw.#{node['hostname']}.log" do
+# file "/var/log/radosgw/#{node['ceph']['cluster']}.client.radosgw.#{node['hostname']}.log" do
+# No need to for hostname as part of log file. It makes log collection easier.
+file "/var/log/radosgw/#{node['ceph']['cluster']}.client.radosgw.log" do
   owner node['ceph']['owner']
   group node['ceph']['group']
 end
@@ -66,7 +68,7 @@ directory "/var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['host
 end
 
 # IF you want specific recipes for civetweb then put them in the recipe referenced here.
-include_recipe "ceph-chef::radosgw_#{node['ceph']['radosgw']['webserver']}"
+include_recipe "ceph-chef::radosgw_civetweb"
 
 # NOTE: This base_key can also be the bootstrap-rgw key (ceph.keyring) if desired. Just change it here.
 base_key = "/etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"

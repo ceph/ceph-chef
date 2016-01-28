@@ -22,21 +22,14 @@
 if node['ceph']['pools']['active']
   node['ceph']['pools']['active'].each do |pool|
     # Create pool and set type (replicated or erasure - default is replicated)
-    # #{pool}
-    node['ceph']['pools'][pool]['names'].each do |name|
-      pool_name = ".#{name}"
-
-      ceph_chef_pool pool_name do
-        action :create
-        pg_num node['ceph']['pools'][pool]['settings']['pg_num']
-        pgp_num node['ceph']['pools'][pool]['settings']['pgp_num']
-        type node['ceph']['pools'][pool]['settings']['type']
-        options node['ceph']['pools'][pool]['settings']['options'] if node['ceph']['pools'][pool]['settings']['options']
-      end
-
-      # TODO: Need to add for calculated PGs options
-      # TODO: Need to add crush_rule_set
-      # Set...
+    if pool == 'radosgw' && !node['ceph']['pools']['radosgw']['federated_regions'].empty?
+      # NOTE: *Must* have federated_regions and federated_zones if doing any federated processing!
+      ceph_chef_build_federated_pool(pool)
     end
+
+    ceph_chef_create_pool(pool)
+    # TODO: Need to add for calculated PGs options
+    # TODO: Need to add crush_rule_set
+    # Set...
   end
 end

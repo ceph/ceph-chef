@@ -36,7 +36,14 @@ include_attribute 'ceph-chef'
 default['ceph']['radosgw']['api_fqdn'] = 'localhost'
 default['ceph']['radosgw']['admin_email'] = 'admin@example.com'
 default['ceph']['radosgw']['port'] = 80
-default['ceph']['radosgw']['webserver'] = 'civetweb'
+# default['ceph']['radosgw']['webserver'] = 'civetweb'
+# IMPORTANT: The civetweb user manual is a good place to look for custom config for civetweb:
+# https://github.com/civetweb/civetweb/blob/master/docs/UserManual.md
+# Add the options to the single line of the 'frontends etc...'
+# NOTE: Change the number of default threads that civetweb uses per node
+default['ceph']['radosgw']['civetweb_num_threads'] = 10
+default['ceph']['radosgw']['civetweb_access_log_file'] = '/var/log/radosgw/civetweb.access.log'
+default['ceph']['radosgw']['civetweb_error_log_file'] = '/var/log/radosgw/civetweb.error.log'
 
 # OpenStack Keystone specific
 default['ceph']['radosgw']['keystone_admin_token'] = nil
@@ -44,6 +51,8 @@ default['ceph']['radosgw']['keystone_url'] = nil
 default['ceph']['radosgw']['keystone_url_port'] = 35358
 
 default['ceph']['radosgw']['dns_name'] = nil
+
+# NOTE: For radosgw pools, see pools.rb attributes.
 
 # Number of RADOS handles RGW has access to - system default = 1
 default['ceph']['radosgw']['rgw_num_rados_handles'] = 5

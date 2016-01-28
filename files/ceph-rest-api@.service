@@ -4,7 +4,8 @@ Description=Ceph RESTful API for admin purposes
 [Service]
 Type=Simple
 ExecStart=/usr/bin/python /bin/ceph-rest-api
-Restart=always
+ExecReload=/bin/kill -HUP $MAINPID
+#Restart=always
 
 [Install]
 WantedBy=default.target

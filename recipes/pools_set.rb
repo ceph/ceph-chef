@@ -26,8 +26,12 @@ if node['ceph']['pools']['active']
   node['ceph']['pools']['active'].each do |pool|
     # Create pool and set type (replicated or erasure - default is replicated)
     node['ceph']['pools'][pool]['names'].each do |name|
-      cluster = ".#{node['ceph']['cluster']}" unless node['ceph']['cluster'].downcase == 'ceph'
-      pool_name = "#{cluster}.#{name}"
+      unless node['ceph']['cluster'].downcase == 'ceph'
+        cluster = ".#{node['ceph']['cluster']}"
+        pool_name = "#{cluster}.#{name}"
+      else
+        pool_name = "#{name}"
+      end
 
       # TODO: Need to add for calculated PGs options
       # TODO: Need to add crush_rule_set

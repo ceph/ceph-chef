@@ -38,7 +38,7 @@ if node['ceph']['osd']['add']['devices']
     #   next
     # end
 
-    directory osd_device['device'] do
+    directory osd_device['data'] do
       # owner 'root'
       # group 'root'
       owner node['ceph']['owner']
@@ -51,23 +51,23 @@ if node['ceph']['osd']['add']['devices']
 
     # is_device - Is the device a partition or not
     # is_ceph - Does the device contain a 'ceph data' or 'ceph journal' label
-    execute "ceph-disk-prepare on #{osd_device['device']}" do
+    execute "ceph-disk-prepare on #{osd_device['data']}" do
       command <<-EOH
-        is_device=$(echo '#{osd_device['device']}' | egrep '/dev/(([a-z]{3,4}[0-9]$)|(cciss/c[0-9]{1}d[0-9]{1}p[0-9]$))')
-        is_ceph=$(parted --script #{osd_device['device']} print | egrep -sq '^ 1.*ceph')
-        ceph-disk -v prepare --cluster #{node['ceph']['cluster']} #{dmcrypt} --fs-type #{node['ceph']['osd']['fs_type']} #{osd_device['device']} #{osd_device['journal']}
+        is_device=$(echo '#{osd_device['data']}' | egrep '/dev/(([a-z]{3,4}[0-9]$)|(cciss/c[0-9]{1}d[0-9]{1}p[0-9]$))')
+        is_ceph=$(parted --script #{osd_device['data']} print | egrep -sq '^ 1.*ceph')
+        ceph-disk -v prepare --cluster #{node['ceph']['cluster']} #{dmcrypt} --fs-type #{node['ceph']['osd']['fs_type']} #{osd_device['data']} #{osd_device['journal']}
         if [[ ! -z $is_device ]]; then
-          ceph-disk -v activate #{osd_device['device']}#{partitions}
+          ceph-disk -v activate #{osd_device['data']}#{partitions}
         else
-          ceph-disk -v activate #{osd_device['device']}
+          ceph-disk -v activate #{osd_device['data']}
         fi
         sleep 2
       EOH
-      not_if "sgdisk -i1 #{osd_device['device']} | grep -i 4fbd7e29-9d25-41b8-afd0-062c0ceff05d" if !dmcrypt
-      not_if "sgdisk -i1 #{osd_device['device']} | grep -i 4fbd7e29-9d25-41b8-afd0-5ec00ceff05d" if dmcrypt
+      not_if "sgdisk -i1 #{osd_device['data']} | grep -i 4fbd7e29-9d25-41b8-afd0-062c0ceff05d" if !dmcrypt
+      not_if "sgdisk -i1 #{osd_device['data']} | grep -i 4fbd7e29-9d25-41b8-afd0-5ec00ceff05d" if dmcrypt
       # Only if there is no 'ceph *' found in the label. The recipe os_remove_zap should be called to remove/zap
       # all devices if you are wanting to add all of the devices again (if this is not the initial setup)
-      only_if "parted --script #{osd_device['device']} print | egrep -sq '^ 1.*ceph'"
+      only_if "parted --script #{osd_device['data']} print | egrep -sq '^ 1.*ceph'"
       action :run
       # notifies :create, "ruby_block[save osd_device status #{index}]", :immediately
     end
@@ -85,5 +85,5 @@ if node['ceph']['osd']['add']['devices']
     # end
   end
 else
-  Log.info("node['ceph']['osd']['add']['devices'] empty")
+  Log.info("node['ceph']['osd']['add']['data'] empty")
 end

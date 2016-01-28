@@ -35,3 +35,7 @@ chef_gem 'netaddr' do
   action :install
   not_if 'test -f /tmp/netaddr-1.5.0.gem'
 end
+
+if node['ceph']['pools']['radosgw']['federated_regions']
+  ceph_chef_build_federated_pool('radosgw')
+end
