@@ -65,9 +65,9 @@ This cookbook can be used to implement a chosen cluster design. Most of the conf
 * `node['ceph']['config]'['global']['cluster network']` - a CIDR specification of a separate cluster replication network
 * `node['ceph']['config]'['global']['rgw dns name']` -  the main domain of the radosgw daemon
 
-Most notably, the configuration does **NOT** need to set the `mon_initial_members`, because the cookbook does a node search based on tags to find other mons in the same environment.
+Most notably, the configuration does **NOT** need to set the `mon initial members`, because the cookbook does a node search based on TAGS to find other mons in the same environment. However, you can add them to `node['ceph']['config']['global']['mon initial members'] = <whatever mon ip list you want>`
 
-The other set of attributes that this recipe needs is `node['ceph']['osd_devices']`, which is an array of OSD definitions, similar to the following:
+The other set of attributes that this recipe needs is `node['ceph']['osd']['devices']`, which is an array of OSD definitions, similar to the following:
 
 * {'device' => '/dev/sdb'} - Use a full disk for the OSD, with a small partition for the journal
 * {'type' => 'directory', 'device' => '/src/node/sdb1/ceph'} - Use a directory, and have a small file for the journal
@@ -149,12 +149,8 @@ Ceph RGW nodes should use the ceph-radosgw role
 ### Ceph RADOS Gateway (RGW)
 ### Note: Only supports the newer 'civetweb' version of RGW (not Apache)
 
-* `node['ceph']['radosgw']['api_fqdn']` - what vhost to configure in the web server
-* `node['ceph']['radosgw']['admin_email']` - the admin email address to configure in the web server
 * `node['ceph']['radosgw']['port']` - Port of the rgw. Defaults to 80
-* `node['ceph']['radosgw']['webserver_companion']` - defaults to 'apache2', but it can be set to 'civetweb', or to false in order to leave it unconfigured
-* `node['ceph']['radosgw']['path']` - where to save the s3gw.fcgi file
-* `node['ceph']['config']['global']['rgw dns name']` -  the main domain of the radosgw daemon, to calculate the bucket name from a subdomain
+* `node['ceph']['radosgw']['rgw_dns_name']` -  the main domain of the radosgw daemon, to calculate the bucket name from a subdomain
 
 ## Resources/Providers
 

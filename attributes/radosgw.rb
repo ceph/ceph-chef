@@ -2,7 +2,7 @@
 # Cookbook Name:: ceph
 # Attributes:: radosgw
 #
-# Copyright 2015, Bloomberg Finance L.P.
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,8 +33,6 @@
 
 include_attribute 'ceph-chef'
 
-default['ceph']['radosgw']['api_fqdn'] = 'localhost'
-default['ceph']['radosgw']['admin_email'] = 'admin@example.com'
 default['ceph']['radosgw']['port'] = 80
 # default['ceph']['radosgw']['webserver'] = 'civetweb'
 # IMPORTANT: The civetweb user manual is a good place to look for custom config for civetweb:
@@ -46,11 +44,14 @@ default['ceph']['radosgw']['civetweb_access_log_file'] = '/var/log/radosgw/civet
 default['ceph']['radosgw']['civetweb_error_log_file'] = '/var/log/radosgw/civetweb.error.log'
 
 # OpenStack Keystone specific
-default['ceph']['radosgw']['keystone_admin_token'] = nil
-default['ceph']['radosgw']['keystone_url'] = nil
-default['ceph']['radosgw']['keystone_url_port'] = 35358
-
-default['ceph']['radosgw']['dns_name'] = nil
+# Will radosgw integrate with OpenStack Keystone - true/false
+default['ceph']['radosgw']['keystone']['auth'] = false
+default['ceph']['radosgw']['keystone']['admin']['token'] = nil
+default['ceph']['radosgw']['keystone']['admin']['url'] = nil
+default['ceph']['radosgw']['keystone']['admin']['port'] = 35357
+default['ceph']['radosgw']['keystone']['accepted_roles'] = 'admin Member _member_'
+default['ceph']['radosgw']['keystone']['token_cache_size'] = 1000
+default['ceph']['radosgw']['keystone']['revocation_interval'] = 1200
 
 # NOTE: For radosgw pools, see pools.rb attributes.
 

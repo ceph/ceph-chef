@@ -51,11 +51,8 @@ end
 
 # Override these in your environment file or here if you wish. Don't put them in the 'ceph''config''global' section.
 # The public and cluster network settings are critical for proper operations.
-default['ceph']['network']['public']['cidr'] = '10.0.101.0/24'
-default['ceph']['network']['cluster']['cidr'] = '192.168.101.0/24'
-
-# Will radosgw integrate with OpenStack Keystone - true/false
-default['ceph']['radosgw']['keystone_auth'] = false
+default['ceph']['network']['public']['cidr'] = ['10.121.1.0/24']
+default['ceph']['network']['cluster']['cidr'] = ['10.121.2.0/24']
 
 # Tags are used to identify nodes for searching.
 # IMPORTANT

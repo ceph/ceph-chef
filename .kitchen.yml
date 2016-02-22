@@ -27,8 +27,6 @@ suites:
     ceph:
       config:
         fsid: ae3f1d03-bacd-4a90-b869-1a4fabb107f2
-        mon_initial_members:
-          - "127.0.0.1"
 - name: osd
   run_list:
     - "role[ceph-osd]"

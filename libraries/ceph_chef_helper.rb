@@ -287,17 +287,27 @@ end
 # search for a matching monitor IP in the node environment.
 # 1. For each public network specified:
 #    a. We look if the network is IPv6 or IPv4
-#    b. We look for a route matching the network
+#    b. We look for a route matching the network. You can't assume all nodes will be part of the same subnet but they
+# MUST be part of the same aggregate subnet. For example, if you have 10.121.1.0/24 (class C) as your public IP block
+# and all of you racks/nodes are spanning the same CIDR block then all is well. However, if you have the same public IP
+# block and your racks/nodes are each routable (L3) then those racks/nodes MUST be part of the aggregate CIDR which is
+# 10.121.1.0/24 in the example here. So, you could have each rack of nodes on their own subnet like /27 which will give
+# you a max of 8 subnets under the aggregate of /24. For example, rack1 could be 10.121.1.0/27, rack2 - 10.121.1.32/27,
+# rack3 - 10.121.1.64/27 ... up to 8 racks in this example.
 #    c. If we found match, we return the IP with the port
-def ceph_chef_find_node_ip_in_network(network, nodeish = nil)
+# This function is important because we TAG nodes for specific roles and then search for those tags to dynamically
+# update the node data. Of course, another way would be to create node data specific to a given role such as mon, osd ...
+def ceph_chef_find_node_ip_in_network(networks, nodeish = nil)
   require 'netaddr'
   nodeish = node unless nodeish
-  network.split(/\s*,\s*/).each do |n|
-    net = NetAddr::CIDR.create(n)
-    nodeish['network']['interfaces'].each do |_iface, addrs|
-      addresses = addrs['addresses'] || []
-      addresses.each do |ip, params|
-        return ceph_chef_ip_address_to_ceph_chef_address(ip, params) if ceph_chef_ip_address_in_network?(ip, params, net)
+  networks.each do |network|
+    network.split(/\s*,\s*/).each do |n|
+      net = NetAddr::CIDR.create(n)
+      nodeish['network']['interfaces'].each do |_iface, addrs|
+        addresses = addrs['addresses'] || []
+        addresses.each do |ip, params|
+          return ceph_chef_ip_address_to_ceph_chef_address(ip, params) if ceph_chef_ip_address_in_network?(ip, params, net)
+        end
       end
     end
   end
@@ -319,19 +329,21 @@ def ceph_chef_ip_address_in_network?(ip, params, net)
   end
 end
 
+# To get subcidr blocks to work within a supercidr aggregate the logic has to change
+# from params['prefixlen'].to_i == net.bits to removing it
 def ceph_chef_ip4_address_in_network?(ip, params, net)
-  net.contains?(ip) && params.key?('broadcast') && params['prefixlen'].to_i == net.bits
+  net.contains?(ip) && params.key?('broadcast')
 end
 
 def ceph_chef_ip6_address_in_network?(ip, params, net)
-  net.contains?(ip) && params['prefixlen'].to_i == net.bits
+  net.contains?(ip) # && params['prefixlen'].to_i == net.bits
 end
 
 def ceph_chef_ip_address_to_ceph_chef_address(ip, params)
   if params['family'].eql?('inet')
-    return "#{ip}:6789"
+    return "#{ip}:#{node['ceph']['mon']['port']}"
   elsif params['family'].eql?('inet6')
-    return "[#{ip}]:6789"
+    return "[#{ip}]:#{node['ceph']['mon']['port']}"
   end
 end
 
@@ -425,15 +437,7 @@ end
 
 # Returns a list of ip:port of ceph mon for public network
 def ceph_chef_mon_addresses
-  # if File.exist?("/var/run/ceph/#{node['ceph']['cluster']}-mon.#{node['hostname']}.asok")
-  #   mon_ips = ceph_chef_quorum_members_ips
-  # else
-  #   if node['ceph']['mon']['ips']
-  #     mon_ips = node['ceph']['mon']['ips']
-  #   else
   mon_ips = ceph_chef_mon_nodes_ip(ceph_chef_mon_nodes)
-  #   end
-  # end
   mon_ips.reject { |m| m.nil? }.uniq
 end
 

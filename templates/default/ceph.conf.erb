@@ -20,15 +20,12 @@
   cephx sign messages = true
   # Note: mon host (required) and mon initial members (optional) should be in global section in addition
   # to the cluster and public network options since they are all critical to every node.
-  <% if node['ceph']['config']['mon_initial_members'] %>
-  mon initial members = <%= node['ceph']['config']['mon_initial_members'] %>
-  <% end -%>
   # List of all of the monitor nodes in the given cluster
   mon host = <%= @mon_addresses.sort.join(', ') %>
   # Suppress warning of too many pgs
   mon pg warn max per osd = 0
-  cluster network = <%= node['ceph']['network']['cluster']['cidr'] %>
-  public network = <%= node['ceph']['network']['public']['cidr'] %>
+  cluster network = <%= @node['ceph']['network']['cluster']['cidr'].join(',') %>
+  public network = <%= @node['ceph']['network']['public']['cidr'].join(',') %>
 <% if !node['ceph']['config']['global'].nil? -%>
   # This is very flexible section. You can add more options OR override options from above simply by
   # specifying the values in your wrapper cookbook or your "chef-repo". If you override values then
@@ -84,8 +81,6 @@
 [mon]
   host = <%= node['hostname'] %>
   <% if !node['ceph']['mon']['clock_drift_allowed'].nil? -%>
-  # Default is .050 out of box but 15 in ceph cookbook. VMs (used in development) often drift so set this in the environment file if desired to override the defaults
-  mon clock drift allowed = <%= node['ceph']['mon']['clock_drift_allowed'] %>
   <% end -%>
   <% if !node['ceph']['config']['mon'].nil? -%>
   <% node['ceph']['config']['mon'].sort.each do |k, v| %>
@@ -115,7 +110,7 @@
 <% if @is_admin -%>
 [client.admin]
   keyring = /etc/ceph/$cluster.client.admin.keyring
-  # Force the admin to have a socket 
+  # Force the admin to have a socket
   admin socket =
 <% end -%>
 
@@ -131,19 +126,17 @@
   log file = /var/log/radosgw/$cluster.client.radosgw.log
   # Increased to 1 to log HTTP return codes - http://tracker.ceph.com/issues/12432
   debug rgw = 1/0
-  <% if node['ceph']['radosgw']['keystone_auth'] %>
-  rgw keystone url = <%= node['ceph']['radosgw']['keystone_url'] %>:<%= node['ceph']['radosgw']['keystone_url_port'] %>
-  rgw keystone admin token = <%= node['ceph']['radosgw']['keystone_admin_token'] %>
-  rgw keystone accepted roles = admin Member _member_
-  rgw keystone token cache size = 1000
-  rgw keystone revocation interval = 1200
+  rgw dns name = <%= node['fqdn'] %>
+  <% if node['ceph']['radosgw']['keystone']['auth'] %>
+  rgw keystone url = <%= node['ceph']['radosgw']['keystone']['admin']['url'] %>:<%= node['ceph']['radosgw']['keystone']['admin']['port'] %>
+  rgw keystone admin token = <%= node['ceph']['radosgw']['keystone']['admin']['token'] %>
+  rgw keystone accepted roles = <%= node['ceph']['radosgw']['keystone']['accepted_roles'] %>
+  rgw keystone token cache size = <%= node['ceph']['radosgw']['keystone']['token_cache_size'] %>
+  rgw keystone revocation interval = <%= node['ceph']['radosgw']['keystone']['revocation_interval'] %>
   rgw s3 auth use keystone = true
   <% end %>
-  <% if !node['ceph']['radosgw']['dns_name'].nil? -%>
-  rgw dns name = <%= node['ceph']['radosgw']['dns_name'] %>
-  <% end %>
-  <% if !node['ceph']['config']['rgw'].nil? -%>
-  <% node['ceph']['config']['rgw'].sort.each do |k, v| %>
+  <% if !node['ceph']['config']['radosgw'].nil? -%>
+  <% node['ceph']['config']['radosgw'].sort.each do |k, v| %>
   <%= k %> = <%= v %>
   <% end %>
   <% end -%>
