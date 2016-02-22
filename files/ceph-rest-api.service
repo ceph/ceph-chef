@@ -1,10 +1,13 @@
 [Unit]
 Description=Ceph RESTful API for admin purposes
+After=network-online.target local-fs.target
+Wants=network-online.target local-fs.target
 
 [Service]
-Type=Simple
+Type=Notify
 ExecStart=/usr/bin/python /bin/ceph-rest-api
+ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target

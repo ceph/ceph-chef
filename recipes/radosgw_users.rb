@@ -26,6 +26,7 @@ ruby_block 'initialize-radosgw-admin-user' do
     rgw_admin_cap = JSON.parse(%x[radosgw-admin caps add --uid="#{node['ceph']['radosgw']['user']['admin']['uid']}" --caps="users=*;buckets=*;metadata=*;usage=*;zone=*"])
   end
   not_if "radosgw-admin user info --uid='#{node['ceph']['radosgw']['user']['admin']['uid']}'"
+  ignore_failure true
 end
 
 # Create a test user unless you have overridden the attribute and removed the test user.
@@ -36,5 +37,6 @@ if node['ceph']['radosgw']['user']['test']['uid']
       rgw_tester_cap = JSON.parse(%x[radosgw-admin caps add --uid="#{node['ceph']['radosgw']['user']['test']['uid']}" --caps="#{node['ceph']['radosgw']['user']['test']['caps']}"])
     end
     not_if "radosgw-admin user info --uid='#{node['ceph']['radosgw']['user']['test']['uid']}'"
+    ignore_failure true
   end
 end

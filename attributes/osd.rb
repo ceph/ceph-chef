@@ -35,11 +35,11 @@ default['ceph']['osd']['role'] = 'search-ceph-osd'
 # Example of how to set this up via attributes file. Change to support your naming, the correct OSD info etc. this
 # is ONLY an example.
 default['ceph']['osd']['remove']['devices'] = [
-  { 'node' => 'ceph-vm3', 'osd' => 11, 'zap' => false, 'partition' => 1, 'device' => '/dev/sdf', 'journal' => '/dev/sdf' }
+  { 'node' => 'ceph-vm3', 'osd' => 11, 'zap' => false, 'partition' => 1, 'data' => '/dev/sdf', 'journal' => '/dev/sdf' }
 ]
 
 default['ceph']['osd']['add']['devices'] = [
-  { 'node' => 'ceph-vm3', 'type' => 'hdd', 'device' => '/dev/sde', 'journal' => '/dev/sde' }
+  { 'node' => 'ceph-vm3', 'type' => 'hdd', 'data' => '/dev/sde', 'journal' => '/dev/sde' }
 ]
 
 case node['platform_family']

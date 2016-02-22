@@ -16,8 +16,7 @@
 
 include_attribute 'ceph-chef'
 
-# The ceph mon ips attribute gets built in a wrapper recipe or chef-repo style environment like ceph-chef
-default['ceph']['mon']['ips'] = nil
+default['ceph']['mon']['port'] = 6789
 
 # init_style in each major section is allowed so that radosgw or osds or mons etc could be a different OS if required.
 # The default is everything on the same OS
@@ -27,9 +26,6 @@ default['ceph']['mon']['secret_file'] = '/etc/chef/secrets/ceph_chef_mon'
 
 # MUST be set in the wrapper cookbook or chef-repo like project
 default['ceph']['mon']['role'] = 'search-ceph-mon'
-
-# Default of 15 seconds but change to nil for default of .050 or set it to .050
-default['ceph']['mon']['clock_drift_allowed'] = 15
 
 case node['platform_family']
 when 'debian', 'rhel', 'fedora'
