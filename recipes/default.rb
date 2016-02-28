@@ -2,7 +2,7 @@
 # Author: Chris Jones <cjones303@bloomberg.net>
 # Cookbook: ceph
 #
-# Copyright 2015, Bloomberg Finance L.P.
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,11 +28,13 @@ end
 chef_gem 'netaddr' do
   source '/tmp/netaddr-1.5.0.gem'
   action :install
+  compile_time false
   only_if 'test -f /tmp/netaddr-1.5.0.gem'
 end
 
 chef_gem 'netaddr' do
   action :install
+  compile_time false
   not_if 'test -f /tmp/netaddr-1.5.0.gem'
 end
 

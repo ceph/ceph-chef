@@ -2,7 +2,7 @@
 # Author: Chris Jones <cjones303@bloomberg.net>
 # Cookbook: ceph
 #
-# Copyright 2015, Bloomberg Finance L.P.
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -76,4 +76,5 @@ ruby_block 'restapi-finalize' do
       ::File.open("/var/lib/ceph/restapi/#{node['ceph']['cluster']}-restapi/#{ack}", 'w').close
     end
   end
+  not_if "test -f /var/lib/ceph/restapi/#{node['ceph']['cluster']}-restapi/done"
 end
