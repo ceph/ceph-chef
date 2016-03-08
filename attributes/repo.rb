@@ -17,6 +17,7 @@
 default['ceph']['el_version'] = 'el7'
 default['ceph']['el_add_epel'] = true
 default['ceph']['repo_url'] = 'http://download.ceph.com'
+default['ceph']['repo']['create'] = true
 # Hammer or maybe Giant forward doesn't use extras
 # default['ceph']['extras_repo_url'] = 'http://ceph.com/packages/ceph-extras'
 # default['ceph']['extras_repo'] = false

@@ -37,9 +37,11 @@ if branch == 'dev' && platform_family != 'centos' && platform_family != 'fedora'
   fail "Dev branch for #{platform_family} is not yet supported"
 end
 
-yum_repository 'ceph' do
-  baseurl node['ceph'][platform_family][branch]['repository']
-  gpgkey node['ceph'][platform_family][branch]['repository_key']
+if node['ceph']['repo']['create']
+  yum_repository 'ceph' do
+    baseurl node['ceph'][platform_family][branch]['repository']
+    gpgkey node['ceph'][platform_family][branch]['repository_key']
+  end
 end
 
 # Only if ceph extras repo is true

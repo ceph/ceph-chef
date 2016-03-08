@@ -25,16 +25,19 @@ node['ceph']['packages'].each do |pck|
   package pck
 end
 
+# NOTE: The location of netaddr-1.5.0.gem is defaulted to /tmp. If one exists there then it will install that gem. If not,
+# then it will install from the net. The purpose is to be able to supply all pre-reqs for those environments that
+# are not allowed to access the net.
 chef_gem 'netaddr' do
   source '/tmp/netaddr-1.5.0.gem'
   action :install
-  compile_time false
+  compile_time true
   only_if 'test -f /tmp/netaddr-1.5.0.gem'
 end
 
 chef_gem 'netaddr' do
   action :install
-  compile_time false
+  compile_time true
   not_if 'test -f /tmp/netaddr-1.5.0.gem'
 end
 
