@@ -40,7 +40,6 @@ cookbook_file '/usr/bin/ceph-remove-clean' do
   owner 'root'
   group 'root'
   mode '0755'
-  not_if "test -f /usr/bin/ceph-remove-clean"
 end
 
 template "/etc/ceph/#{node['ceph']['cluster']}.conf" do
@@ -58,5 +57,4 @@ template "/etc/ceph/#{node['ceph']['cluster']}.conf" do
     }
   }
   mode '0644'
-  not_if "test -f /etc/ceph/#{node['ceph']['cluster']}.conf"
 end

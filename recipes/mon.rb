@@ -3,7 +3,7 @@
 # Cookbook: ceph
 # Recipe: mon
 #
-# Copyright 2015, Bloomberg Finance L.P.
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -113,12 +113,13 @@ include_recipe 'ceph-chef::admin_client'
 # Add admin key to monitor key and put a copy in the /var/lib/ceph/mon/... area
 # Admin key is required on any host that may perform 'ceph' related calls such as 'ceph -s'
 # In this case, all monitors have admin keys
+# grep -Fxq 'admin'
 
 execute 'make sure monitor key is in mon data' do
   command <<-EOH
     ceph-authtool #{keyring} --import-keyring /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring
   EOH
-  not_if "grep -Fxq 'admin' #{keyring}"
+  not_if "grep 'admin' #{keyring}"
 end
 
 execute 'ceph-mon mkfs' do
@@ -133,4 +134,5 @@ ruby_block 'mon-finalize' do
       ::File.open("/var/lib/ceph/mon/#{node['ceph']['cluster']}-#{node['hostname']}/#{ack}", 'w').close
     end
   end
+  not_if "test -f /var/lib/ceph/mon/#{node['ceph']['cluster']}-#{node['hostname']}/done"
 end

@@ -3,7 +3,7 @@
 # Cookbook: ceph
 # Recipe: mon_keys
 #
-# Copyright 2015, Bloomberg Finance L.P.
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -68,6 +68,7 @@ ruby_block 'save bootstrap_rgw' do
     node.set['ceph']['bootstrap-rgw'] = key
     node.save
   end
+  not_if "#{node['ceph']['bootstrap-rgw']}"
   ignore_failure true
 end
 
@@ -80,5 +81,6 @@ ruby_block 'save bootstrap_mds' do
     node.set['ceph']['bootstrap-mds'] = key
     node.save
   end
+  not_if "#{node['ceph']['bootstrap-mds']}"
   ignore_failure true
 end

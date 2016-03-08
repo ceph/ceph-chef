@@ -48,6 +48,8 @@ if node['ceph']['pools']['active']
           action :set
           key 'size'
           value val
+          # Opposite
+          only_if "ceph osd pool #{pool_name} size | grep #{val}"
         end
       end
     end

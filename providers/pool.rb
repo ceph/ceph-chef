@@ -2,7 +2,7 @@
 # Author: Chris Jones <cjones303@bloomberg.net>
 # Cookbook: ceph
 #
-# Copyright 2015, Bloomberg Finance L.P.
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,6 +47,12 @@ action :set do
   end
 end
 
+action :get do
+  converge_by("Getting #{@new_resource}") do
+    get_pool
+  end
+end
+
 action :delete do
   if @current_resource.exists
     converge_by("Deleting #{@new_resource}") do
@@ -78,6 +84,11 @@ def set_pool
   cmd.run_command
   cmd.error!
   Chef::Log.debug "Pool updated: #{cmd.stderr}"
+end
+
+def get_pool
+  cmd = shell_out("ceph osd pool get #{new_resource.name} #{new_resource.key}")
+  cmd.stdout
 end
 
 def delete_pool

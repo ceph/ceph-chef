@@ -3,7 +3,7 @@
 # Cookbook: ceph
 # Recipe: mon_start
 #
-# Copyright 2015, Bloomberg Finance L.P.
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ if service_type == 'upstart'
     provider Chef::Provider::Service::Upstart
     supports :status => true
     action [:enable, :start]
+    subscribes :restart, "template[/etc/ceph/#{node['ceph']['cluster']}.conf]"
   end
 else
   if node['ceph']['version'] != 'hammer'
@@ -41,17 +42,20 @@ else
       service_name 'ceph.target'
       provider Chef::Provider::Service::Systemd
       action [:enable, :start]
+      subscribes :restart, "template[/etc/ceph/#{node['ceph']['cluster']}.conf]"
     end
   else
     service 'ceph_mon' do
       service_name 'ceph'
       supports :restart => true, :status => true
       action [:enable, :start]
+      subscribes :restart, "template[/etc/ceph/#{node['ceph']['cluster']}.conf]"
     end
   end
 end
 
-# Failure may occur when the cluster is first created because the peers may no exist yet so ignore it for now
+# Failure may occur when the cluster is first created because the peers may no exist yet so ignore it.
+# Gets executed each time chef-client is ran which is ok
 ceph_chef_mon_addresses.each do |addr|
   execute "peer #{addr}" do
     command "ceph --admin-daemon /var/run/ceph/#{node['ceph']['cluster']}-mon.#{node['hostname']}.asok add_bootstrap_peer_hint #{addr}"

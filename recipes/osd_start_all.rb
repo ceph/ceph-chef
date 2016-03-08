@@ -3,7 +3,7 @@
 # Cookbook Name:: ceph
 # Recipe:: osd
 #
-# Copyright 2015, Bloomberg Finance L.P.
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ if service_type == 'upstart'
     end
     action [:enable, :start]
     supports :restart => true
+    subscribes :restart, "template[/etc/ceph/#{node['ceph']['cluster']}.conf]"
   end
 else
   # execute 'raw osd start' do
@@ -39,5 +40,6 @@ else
     service_name 'ceph'
     supports :restart => true, :status => true
     action [:enable, :start]
+    subscribes :restart, "template[/etc/ceph/#{node['ceph']['cluster']}.conf]"
   end
 end

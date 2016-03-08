@@ -1,5 +1,5 @@
 #
-# Copyright 2015, Bloomberg Finance L.P.
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,8 @@
 
 default['ceph']['el_version'] = 'el7'
 default['ceph']['el_add_epel'] = true
-default['ceph']['repo_url'] = 'http://ceph.com'
+default['ceph']['repo_url'] = 'http://download.ceph.com'
+default['ceph']['repo']['create'] = true
 # Hammer or maybe Giant forward doesn't use extras
 # default['ceph']['extras_repo_url'] = 'http://ceph.com/packages/ceph-extras'
 # default['ceph']['extras_repo'] = false
@@ -30,9 +31,6 @@ when 'debian'
   default['ceph']['debian']['testing']['repository_key'] = 'https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/release.asc'
   default['ceph']['debian']['dev']['repository'] = "http://gitbuilder.ceph.com/ceph-deb-#{node['lsb']['codename']}-x86_64-basic/ref/#{node['ceph']['version']}"
   default['ceph']['debian']['dev']['repository_key'] = 'https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/autobuild.asc'
-  # Hammer or maybe Giant forward doesn't use extras
-  # default['ceph']['debian']['extras']['repository'] = "#{node['ceph']['extras_repo_url']}/debian/"
-  # default['ceph']['debian']['extras']['repository_key'] = 'https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/release.asc'
 when 'rhel'
   # Redhat/CentOS default repositories
   default['ceph']['rhel']['stable']['repository'] = "#{node['ceph']['repo_url']}/rpm-#{node['ceph']['version']}/#{node['ceph']['el_version']}/x86_64/"
@@ -40,11 +38,8 @@ when 'rhel'
   # default['ceph']['rhel']['stable']['repository_key'] = 'https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/release.asc'
   default['ceph']['rhel']['testing']['repository'] = "#{node['ceph']['repo_url']}/rpm-testing/#{node['ceph']['el_version']}/x86_64/"
   default['ceph']['rhel']['testing']['repository_key'] = 'https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/autobuild.asc'
-  # Hammer or maybe Giant forward doesn't use extras
   default['ceph']['rhel']['dev']['repository'] = "http://gitbuilder.ceph.com/ceph-rpm-centos7.1-x86_64-basic/ref/#{node['ceph']['version']}/x86_64/"
   default['ceph']['rhel']['dev']['repository_key'] = 'https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/autobuild.asc'
-  # default['ceph']['rhel']['extras']['repository'] = "#{node['ceph']['extras_repo_url']}/rpm/#{node['ceph']['el_version']}/x86_64/"
-  # default['ceph']['rhel']['extras']['repository_key'] = 'file:///etc/pki/rpm-gpg/release.asc'
 when 'fedora'
   # Fedora default repositories
   default['ceph']['fedora']['stable']['repository'] = "#{node['ceph']['repo_url']}/rpm-#{node['ceph']['version']}/fc#{node['platform_version']}/x86_64/"
@@ -54,9 +49,6 @@ when 'fedora'
   default['ceph']['fedora']['testing']['repository_key'] = 'https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/autobuild.asc'
   default['ceph']['fedora']['dev']['repository'] = "http://gitbuilder.ceph.com/ceph-rpm-fc#{node['platform_version']}-x86_64-basic/ref/#{node['ceph']['version']}/RPMS/x86_64/"
   default['ceph']['fedora']['dev']['repository_key'] = 'https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/autobuild.asc'
-  # Hammer or maybe Giant forward doesn't use extras
-  # default['ceph']['fedora']['extras']['repository'] = "#{node['ceph']['extras_repo_url']}/rpm/fedora#{node['platform_version']}/x86_64/"
-  # default['ceph']['fedora']['extras']['repository_key'] = 'https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/release.asc'
 when 'suse'
   # (Open)SuSE default repositories
   # Chef doesn't make a difference between suse and opensuse
@@ -66,7 +58,6 @@ when 'suse'
 
   default['ceph']['suse']['stable']['repository'] = "#{node['ceph']['repo_url']}/rpm-#{node['ceph']['version']}/#{suse_version}/x86_64/ceph-release-1-0.#{suse_version}.noarch.rpm"
   default['ceph']['suse']['testing']['repository'] = "#{node['ceph']['repo_url']}/rpm-testing/#{suse_version}/x86_64/ceph-release-1-0.#{suse_version}.noarch.rpm"
-  # default['ceph']['suse']['extras']['repository'] = "#{node['ceph']['extras_repo_url']}/rpm/#{suse_version}/x86_64/"
 else
   fail "#{node['platform_family']} is not supported"
 end
