@@ -2,7 +2,7 @@
 # Author: Chris Jones <cjones303@bloomberg.net>
 # Cookbook: ceph
 #
-# Copyright 2015, Bloomberg Finance L.P.
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,8 @@
 # All versions of Ceph below Infernalis needs selinux disabled or in Permissive mode
 execute 'set selinux' do
   command 'setenforce 0'
-  not_if "getenforce | grep Permissive"
+  not_if "getenforce | grep 'Permissive\|Disabled'"
+  ignore_failure true
 end
 
 include_recipe 'ceph-chef::fsid'
