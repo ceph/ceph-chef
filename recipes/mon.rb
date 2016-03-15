@@ -72,6 +72,16 @@ directory "/var/lib/ceph/mon/#{node['ceph']['cluster']}-#{node['hostname']}" do
   not_if "test -d /var/lib/ceph/mon/#{node['ceph']['cluster']}-#{node['hostname']}"
 end
 
+# Used by mon_keys.rb
+directory '/var/lib/ceph/bootstrap-rgw' do
+  owner node['ceph']['owner']
+  group node['ceph']['group']
+  mode node['ceph']['mode']
+  recursive true
+  action :create
+  not_if "test -d /var/lib/ceph/bootstrap-rgw"
+end
+
 # Create in a scratch area
 keyring = "/etc/ceph/#{node['ceph']['cluster']}.mon.keyring"
 
