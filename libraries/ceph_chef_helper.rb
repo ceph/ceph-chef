@@ -199,13 +199,14 @@ def ceph_chef_save_mon_secret(secret)
   secret
 end
 
+# Change ceph_chef_osd_nodes to ceph_chef_mon_nodes
 def ceph_chef_bootstrap_osd_secret
   if node['ceph']['encrypted_data_bags']
     secret = Chef::EncryptedDataBagItem.load_secret(node['ceph']['bootstrap-osd']['secret_file'])
     Chef::EncryptedDataBagItem.load('ceph', 'bootstrap_osd', secret)['secret']
-  elsif !ceph_chef_osd_nodes.empty?
-    ceph_chef_save_bootstrap_osd_secret(ceph_chef_osd_nodes[0]['ceph']['bootstrap-osd'])
-    ceph_chef_osd_nodes[0]['ceph']['bootstrap-osd']
+  elsif !ceph_chef_mon_nodes.empty?
+    ceph_chef_save_bootstrap_osd_secret(ceph_chef_mon_nodes[0]['ceph']['bootstrap-osd'])
+    ceph_chef_mon_nodes[0]['ceph']['bootstrap-osd']
   elsif node['ceph']['bootstrap-osd']
     node['ceph']['bootstrap-osd']
   else
