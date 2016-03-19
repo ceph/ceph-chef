@@ -41,7 +41,7 @@ bash 'save-bootstrap-osd-key' do
   EOH
   not_if { ceph_chef_bootstrap_osd_secret }
   not_if "test -f /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring"
-  notifies :create, 'ruby_block[save bootstrap_osd]', :immediately
+  notifies :create, 'ruby_block[save_bootstrap_osd]', :immediately
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 

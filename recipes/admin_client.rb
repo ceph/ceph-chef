@@ -43,7 +43,7 @@ ruby_block 'save ceph_chef_admin_secret' do
     fetch.run_command
     key = fetch.stdout
     puts key
-    node.set['ceph']['admin-secret'] = key
+    node.set['ceph']['admin-secret'] = key.delete!("\n")
     node.save
   end
   action :nothing

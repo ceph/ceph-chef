@@ -105,21 +105,36 @@ directory '/var/lib/ceph/osd' do
   not_if "test -d /var/lib/ceph/osd"
 end
 
-bash 'osd-write-bootstrap-osd-key' do
-  code <<-EOH
-    BOOTSTRAP_KEY=`ceph --name mon. --keyring '/etc/ceph/#{node['ceph']['cluster']}.mon.keyring' auth get-or-create-key client.bootstrap-osd mon 'allow profile bootstrap-osd'`
-    ceph-authtool "/var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring" \
-        --create-keyring \
-        --name=client.bootstrap-osd \
-        --add-key="$BOOTSTRAP_KEY"
-  EOH
-  not_if "test -f /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring"
-  notifies :create, 'ruby_block[save bootstrap_osd_key]', :immediately
+execute 'osd-create-key-mon-client-in-directory' do
+  command lazy { "ceph-authtool /etc/ceph/#{node['ceph']['cluster']}.mon.keyring --create-keyring --name=mon. --add-key=#{ceph_chef_mon_secret} --cap mon 'allow *'" }
+  not_if "test -f /etc/ceph/#{node['ceph']['cluster']}.mon.keyring"
 end
+
+execute 'osd-create-key-admin-client-in-directory' do
+  command lazy { "ceph-authtool /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring --create-keyring --name=client.admin --add-key=#{ceph_chef_admin_secret} --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *'" }
+  not_if "test -f /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
+end
+
+execute 'osd-create-key-bootstrap-in-directory' do
+  command lazy { "ceph-authtool /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring --create-keyring --name=client.bootstrap-osd --add-key=#{ceph_chef_bootstrap_osd_secret}" }
+  not_if "test -f /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring"
+end
+
+#bash 'osd-write-bootstrap-osd-key' do
+#  code <<-EOH
+#    BOOTSTRAP_KEY=`ceph --name mon. --keyring '/etc/ceph/#{node['ceph']['cluster']}.mon.keyring' auth get-or-create-key client.bootstrap-osd mon 'allow profile bootstrap-osd'`
+#    ceph-authtool "/var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring" \
+#        --create-keyring \
+#        --name=client.bootstrap-osd \
+#        --add-key="$BOOTSTRAP_KEY"
+#  EOH
+#  not_if "test -f /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring"
+#  notifies :create, 'ruby_block[save_bootstrap_osd_key]', :immediately
+#end
 
 # Blocks like this are used in many places so as to save the values that are generated from bash commands like the one
 # above. The saved value may be used later in other recipes.
-ruby_block 'save bootstrap_osd_key' do
+ruby_block 'save_bootstrap_osd_key' do
   block do
     fetch = Mixlib::ShellOut.new("ceph-authtool /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring --print-key")
     fetch.run_command
