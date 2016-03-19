@@ -47,7 +47,7 @@ end
 
 # Part of monitor-secret calls above - Also, you can set node['ceph']['monitor-secret'] = ceph_chef_keygen()
 # in a higher level recipe like the way ceph-chef does it in ceph-mon.rb
-ruby_block 'save bootstrap_osd' do
+ruby_block 'save_bootstrap_osd' do
   block do
     fetch = Mixlib::ShellOut.new("ceph-authtool '/var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring' --print-key --name=client.bootstrap-osd")
     fetch.run_command
@@ -60,7 +60,7 @@ end
 
 # IF the bootstrap key for bootstrap-rgw exists then save it so it's available if wanted later. All bootstrap
 # keys are created during this recipe process!
-ruby_block 'save bootstrap_rgw' do
+ruby_block 'save_bootstrap_rgw' do
   block do
     fetch = Mixlib::ShellOut.new("ceph-authtool '/var/lib/ceph/bootstrap-rgw/#{node['ceph']['cluster']}.keyring' --print-key --name=client.bootstrap-rgw")
     fetch.run_command
@@ -73,7 +73,7 @@ ruby_block 'save bootstrap_rgw' do
 end
 
 # IF the bootstrap key for bootstrap-mds exists then save it so it's available if wanted later
-ruby_block 'save bootstrap_mds' do
+ruby_block 'save_bootstrap_mds' do
   block do
     fetch = Mixlib::ShellOut.new("ceph-authtool '/var/lib/ceph/bootstrap-mds/#{node['ceph']['cluster']}.keyring' --print-key --name=client.bootstrap-mds")
     fetch.run_command

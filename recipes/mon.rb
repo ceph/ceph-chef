@@ -82,6 +82,15 @@ directory '/var/lib/ceph/bootstrap-rgw' do
   not_if "test -d /var/lib/ceph/bootstrap-rgw"
 end
 
+directory '/var/lib/ceph/bootstrap-mds' do
+  owner node['ceph']['owner']
+  group node['ceph']['group']
+  mode node['ceph']['mode']
+  recursive true
+  action :create
+  not_if "test -d /var/lib/ceph/bootstrap-mds"
+end
+
 # Create in a scratch area
 keyring = "/etc/ceph/#{node['ceph']['cluster']}.mon.keyring"
 
