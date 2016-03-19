@@ -74,6 +74,16 @@ include_recipe "ceph-chef::radosgw_civetweb"
 base_key = "/etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
 keyring = "/etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring"
 
+execute 'osd-create-key-mon-client-in-directory' do
+  command lazy { "ceph-authtool /etc/ceph/#{node['ceph']['cluster']}.mon.keyring --create-keyring --name=mon. --add-key=#{ceph_chef_mon_secret} --cap mon 'allow *'" }
+  not_if "test -f /etc/ceph/#{node['ceph']['cluster']}.mon.keyring"
+end
+
+execute 'osd-create-key-admin-client-in-directory' do
+  command lazy { "ceph-authtool /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring --create-keyring --name=client.admin --add-key=#{ceph_chef_admin_secret} --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *'" }
+  not_if "test -f /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
+end
+
 # NOTE: If the rgw keyring exists and you are using the same key on for different nodes (load balancing) then
 # this method will work well. Since the key is already part of the cluster the only thing needed is to copy it
 # to the correct area (where ever the ceph.conf settings are pointing to on the given node). You can keep things
