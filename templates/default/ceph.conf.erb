@@ -38,6 +38,7 @@
   paxos propose interval = 60
 <% end %>
 
+<% if @is_osd -%>
 [osd]
   host = <%= node['hostname'] %>
   keyring = /var/lib/ceph/osd/$cluster-$id/keyring
@@ -76,6 +77,7 @@
   <%= k %> = <%= v %>
   <% end %>
   <% end -%>
+<% end -%>
 
 <% if @is_mon -%>
 [mon]

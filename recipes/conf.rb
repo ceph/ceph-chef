@@ -54,6 +54,7 @@ template "/etc/ceph/#{node['ceph']['cluster']}.conf" do
       :is_rbd => ceph_chef_is_rbd_node,
       :is_mds => ceph_chef_is_mds_node,
       :is_admin => ceph_chef_is_admin_node,
+      :is_osd => ceph_chef_is_osd_node,
       :is_rest_api => ceph_chef_is_restapi_node
     }
   }

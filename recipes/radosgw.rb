@@ -84,6 +84,11 @@ execute 'osd-create-key-admin-client-in-directory' do
   not_if "test -f /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
 end
 
+execute 'change-admin-mode' do
+  command lazy { "chmod 0644 /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring" }
+  only_if "test -f /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
+end
+
 # NOTE: If the rgw keyring exists and you are using the same key on for different nodes (load balancing) then
 # this method will work well. Since the key is already part of the cluster the only thing needed is to copy it
 # to the correct area (where ever the ceph.conf settings are pointing to on the given node). You can keep things
