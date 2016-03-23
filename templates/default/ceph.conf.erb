@@ -98,16 +98,16 @@
   <% end -%>
 <% end -%>
 
+<% if @is_rbd -%>
 [client]
-  <% if @is_rbd -%>
   rbd cache = true
   rbd cache writethrough until flush = true
   rbd concurrent management ops = 20
   log file = /var/log/qemu/qemu-guest-$pid.log
-  <% end -%>
   # admin socket must be writable by QEMU and allowed by SELinux or AppArmor
   # admin socket = /var/run/ceph/$cluster-$type.$id.$pid.$cctid.asok
-  admin socket = /var/run/ceph/$cluster-$type.$id.$pid.asok
+  # admin socket = /var/run/ceph/$cluster-$type.$id.$pid.asok
+<% end -%>
 
 <% if @is_admin -%>
 [client.admin]
