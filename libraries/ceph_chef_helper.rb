@@ -200,6 +200,10 @@ def ceph_chef_save_mon_secret(secret)
 end
 
 # Change ceph_chef_osd_nodes to ceph_chef_mon_nodes
+# Ceph MONs set the keys so everything should pull from those and set their own node value to equal the given attribute
+# Since data bags are not used, setting *ALL* mon node attributes will assure the secrets are kept even if your mon
+# nodes die. If a new secret for anything is re-generated then Ceph will not work correctly.
+# You can also get the secret value and store it in a data bag of the chef-repo wrapper that uses this cookbook.
 def ceph_chef_bootstrap_osd_secret
   if node['ceph']['encrypted_data_bags']
     secret = Chef::EncryptedDataBagItem.load_secret(node['ceph']['bootstrap-osd']['secret_file'])
@@ -215,6 +219,8 @@ def ceph_chef_bootstrap_osd_secret
   end
 end
 
+# NOTE: It's also best to store the keyring files of ceph in a neutral location so that if needed you can easily
+# retrieve them.
 def ceph_chef_save_bootstrap_osd_secret(secret)
   node.set['ceph']['bootstrap-osd'] = secret
   node.save
@@ -226,6 +232,7 @@ def ceph_chef_admin_secret
     secret = Chef::EncryptedDataBagItem.load_secret(node['ceph']['admin']['secret_file'])
     Chef::EncryptedDataBagItem.load('ceph', 'admin', secret)['secret']
   elsif !ceph_chef_admin_nodes.empty?
+    #ceph_chef_get_item('admin-secret')
     ceph_chef_save_admin_secret(ceph_chef_admin_nodes[0]['ceph']['admin-secret'])
     ceph_chef_admin_nodes[0]['ceph']['admin-secret']
   elsif node['ceph']['admin-secret']
@@ -239,6 +246,7 @@ end
 def ceph_chef_save_admin_secret(secret)
   node.set['ceph']['admin-secret'] = secret
   node.save
+  #ceph_chef_set_item('admin-secret', secret)
   secret
 end
 
@@ -247,6 +255,7 @@ def ceph_chef_radosgw_secret
     secret = Chef::EncryptedDataBagItem.load_secret(node['ceph']['radosgw']['secret_file'])
     Chef::EncryptedDataBagItem.load('ceph', 'radowgw', secret)['secret']
   elsif !ceph_chef_radosgw_nodes.empty?
+    #ceph_chef_get_item('radosgw-secret')
     ceph_chef_save_radosgw_secret(ceph_chef_radosgw_nodes[0]['ceph']['radosgw-secret'])
     ceph_chef_radosgw_nodes[0]['ceph']['radosgw-secret']
   elsif node['ceph']['radosgw-secret']
@@ -260,6 +269,7 @@ end
 def ceph_chef_save_radosgw_secret(secret)
   node.set['ceph']['radosgw-secret'] = secret
   node.save
+  #ceph_chef_set_item('radosgw-secret', secret)
   secret
 end
 
@@ -268,6 +278,7 @@ def ceph_chef_restapi_secret
     secret = Chef::EncryptedDataBagItem.load_secret(node['ceph']['restapi']['secret_file'])
     Chef::EncryptedDataBagItem.load('ceph', 'restapi', secret)['secret']
   elsif !ceph_chef_restapi_nodes.empty?
+    #ceph_chef_get_item('restapi-secret')
     ceph_chef_save_restapi_secret(ceph_chef_restapi_nodes[0]['ceph']['restapi-secret'])
     ceph_chef_restapi_nodes[0]['ceph']['restapi-secret']
   elsif node['ceph']['restapi-secret']
@@ -281,6 +292,7 @@ end
 def ceph_chef_save_restapi_secret(secret)
   node.set['ceph']['restapi-secret'] = secret
   node.save
+  #ceph_chef_set_item('restapi-secret', secret)
   secret
 end
 
@@ -524,4 +536,47 @@ def ceph_chef_secure_password_alphanum_upper(len = 20)
     pw << alphanum_upper[raw_pw.bytes.to_a[pw.length] % alphanum_upper.length]
   end
   pw
+end
+
+def ceph_chef_init_config
+    if not Chef::DataBag.list.key?('ceph_configs')
+        bag = Chef::DataBag.new
+        bag.name('ceph_configs')
+        bag.save
+    end rescue nil
+    begin
+        $dbi = Chef::DataBagItem.load('ceph_configs', node.chef_environment)
+        $edbi = Chef::EncryptedDataBagItem.load('ceph_configs', node.chef_environment) if node['ceph']['encrypted_data_bags']
+    rescue
+        $dbi = Chef::DataBagItem.new
+        $dbi.data_bag('ceph_configs')
+        $dbi.raw_data = { 'id' => node.chef_environment }
+        $dbi.save
+        $edbi = Chef::EncryptedDataBagItem.load('ceph_configs', node.chef_environment) if node['ceph']['encrypted_data_bags']
+    end
+end
+
+def ceph_chef_set_item(key, value, force=false)
+    ceph_chef_init_config if $dbi.nil?
+    if $dbi[key].nil? or force
+        $dbi[key] = (node['chef-bcs']['enabled']['encrypt_data_bag']) ? Chef::EncryptedDataBagItem.encrypt_value(value, Chef::EncryptedDataBagItem.load_secret) : value
+        $dbi.save
+        $edbi = Chef::EncryptedDataBagItem.load('ceph_configs', node.chef_environment) if node['ceph']['encrypted_data_bags']
+        return value
+    else
+        return (node['ceph']['encrypted_data_bags']) ? $edbi[key] : $dbi[key]
+    end
+end
+
+def ceph_chef_is_defined(key)
+    ceph_chef_init_config if $dbi.nil?
+    result = (node['ceph']['encrypted_data_bags']) ? $edbi[key] : $dbi[key]
+    return !result.nil?
+end
+
+def ceph_chef_get_item(key)
+    ceph_chef_init_config if $dbi.nil?
+    result = (node['ceph']['encrypted_data_bags']) ? $edbi[key] : $dbi[key]
+    raise "No config found for ceph_chef_ceph_chef_get_item(#{key})!!!" if result.nil?
+    return result
 end

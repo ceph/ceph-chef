@@ -2,7 +2,7 @@
 # Author: Chris Jones <cjones303@bloomberg.net>
 # Cookbook: ceph
 #
-# Copyright 2015, Bloomberg Finance L.P.
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,8 +20,7 @@
 ruby_block 'gen ceph-fsid-secret' do
   block do
     require 'securerandom'
-    node.set['ceph']['fsid-secret'] = SecureRandom.uuid
-    node.save
+    ceph_chef_save_fsid_secret(SecureRandom.uuid)
   end
   not_if { ceph_chef_fsid_secret }
 end

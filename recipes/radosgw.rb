@@ -121,6 +121,7 @@ ruby_block 'save radosgw_secret' do
     fetch = Mixlib::ShellOut.new("ceph-authtool #{keyring} --print-key")
     fetch.run_command
     key = fetch.stdout
+    #ceph_chef_set_item('radosgw-secret', key.delete!("\n"))
     node.set['ceph']['radosgw-secret'] = key.delete!("\n")
     node.save
   end

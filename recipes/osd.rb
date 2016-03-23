@@ -122,7 +122,7 @@ end
 
 execute 'osd-create-key-bootstrap-in-directory' do
   command lazy { "ceph-authtool /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring --create-keyring --name=client.bootstrap-osd --add-key=#{ceph_chef_bootstrap_osd_secret}" }
-  not_if "test -f /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring"
+  only_if {ceph_chef_bootstrap_osd_secret}
 end
 
 bash 'osd-write-bootstrap-osd-key' do
@@ -133,7 +133,8 @@ bash 'osd-write-bootstrap-osd-key' do
         --name=client.bootstrap-osd \
         --add-key="$BOOTSTRAP_KEY"
   EOH
-  not_if "test -f /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring"
+  #not_if "test -f /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring"
+  not_if {ceph_chef_bootstrap_osd_secret}
   notifies :create, 'ruby_block[save_bootstrap_osd_key]', :immediately
 end
 
@@ -144,8 +145,7 @@ ruby_block 'save_bootstrap_osd_key' do
     fetch = Mixlib::ShellOut.new("ceph-authtool /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring --print-key")
     fetch.run_command
     key = fetch.stdout
-    node.set['ceph']['bootstrap_osd_key'] = key.delete!("\n")
-    node.save
+    ceph_chef_save_bootstrap_osd_secret(key.delete!("\n"))
   end
   action :nothing
 end
