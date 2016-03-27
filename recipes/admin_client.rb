@@ -49,7 +49,7 @@ ruby_block 'save ceph_chef_admin_secret' do
   action :nothing
 end
 
-execute 'set permissions' do
-  command lazy { "chmod 0644 /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring" }
-  only_if "test -f #{keyring}"
+# Verifies or sets the correct mode only
+file "/etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring" do
+  mode '0644'
 end

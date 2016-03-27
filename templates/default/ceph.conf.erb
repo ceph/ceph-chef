@@ -1,7 +1,6 @@
 #######################################################################
 # Maintained by ceph cookbook
 # Please do not modify by hand. Changes will get overridden.
-# Author: Chris Jones
 # Copyright 2016, Bloomberg Finance L.P.
 #######################################################################
 
@@ -9,7 +8,6 @@
   # This value must be set before the mon.rb recipe is called. Do this in your own recipe where you set your owner
   # variables. For an example, see ceph-chef/recipes/ceph-mon.rb
   fsid = <%= @fsid_secret %>
-  host = <%= node['hostname'] %>
   keyring = /etc/ceph/$cluster.$name.keyring
   auth cluster required = cephx
   auth service required = cephx
@@ -21,11 +19,18 @@
   # Note: mon host (required) and mon initial members (optional) should be in global section in addition
   # to the cluster and public network options since they are all critical to every node.
   # List of all of the monitor nodes in the given cluster
+  <% #Check ALL of the important vars before modifying them just in case their values are empty or nil. -%>
+  <% if !@mon_addresses.nil? && !@mon_addresses.empty? -%>
   mon host = <%= @mon_addresses.sort.join(', ') %>
+  <% end -%>
   # Suppress warning of too many pgs
   mon pg warn max per osd = 0
+  <% if !node['ceph']['network']['cluster']['cidr'].nil? && !node['ceph']['network']['cluster']['cidr'].empty? %>
   cluster network = <%= @node['ceph']['network']['cluster']['cidr'].join(',') %>
+  <% end -%>
+  <% if !node['ceph']['network']['public']['cidr'].nil? && !node['ceph']['network']['public']['cidr'].empty? %>
   public network = <%= @node['ceph']['network']['public']['cidr'].join(',') %>
+  <% end -%>
 <% if !node['ceph']['config']['global'].nil? -%>
   # This is very flexible section. You can add more options OR override options from above simply by
   # specifying the values in your wrapper cookbook or your "chef-repo". If you override values then
@@ -34,38 +39,39 @@
   <%= k %> = <%= v %>
   <% end %>
 <% end -%>
-<% if !node['ceph']['config']['rebalance'].nil? and @node['ceph']['config']['rebalance'] %>
+<% if !node['ceph']['config']['rebalance'].nil? and !node['ceph']['config']['rebalance'].empty? %>
   paxos propose interval = 60
 <% end %>
 
 <% if @is_osd -%>
 [osd]
-  host = <%= node['hostname'] %>
   keyring = /var/lib/ceph/osd/$cluster-$id/keyring
+  <% # If the 'config''osd' key/value pairs are nil then use these values as defaults other wise be SURE to have at least these defined in your custom key/value OSD array -%>
   <% if node['ceph']['config']['osd'].nil? -%>
   # Set the default values here if no values provided to override them
   filestore xattr use omap = true
   filestore flusher = false
-  osd journal size = 2000 # 10000
+  osd journal size = <%= node['ceph']['osd']['journal']['size'] %>
   osd mkfs type = xfs
   osd mkfs options xfs = -f -i size=2048 -n size=65536
   osd mount options xfs = noexec,nodev,noatime,nodiratime,barrier=0,discard
   # IMPORTANT: If you modify the crush map with the automation then uncomment the line below (osd crush update ...)
-  # otherwise the crush map will not get created correctly and the PGs will stay in inactive/unclean state
-  # osd crush update on start = false
+  # otherwise the crush map will not get created correctly and the PGs will stay in inactive/unclean state.
+  # In a production system it's good to set this value to 'false' and modify the crush map to fit your environment.
+  ## osd crush update on start = false
   osd client up priority = 63
   # You can change the replica count via config or cli
-  osd pool default size = 3
-  osd pool default min size = 2
-  osd pool default pg num = 128
-  osd pool default pgp num = 128
+  osd pool default size = <%= node['ceph']['osd']['size']['max'] %>
+  osd pool default min size = <%= node['ceph']['osd']['size']['min'] %>
+  osd pool default pg num = <%= node['ceph']['pools']['pgs']['num'] %>
+  osd pool default pgp num = <%= node['ceph']['pools']['pgs']['num'] %>
   osd pool default crush rule = 0
   osd backfill full ratio = 0.70
   # Host
-  osd crush chooseleaf type = 1
+  osd crush chooseleaf type = <%= node['ceph']['osd']['crush']['chooseleaf_type'] %>
   # Note: All of these values can be overridden in you wrapper cookbook or "chef-repo" project
   <% end -%>
-  <% if !node['ceph']['config']['rebalance'].nil? and @node['ceph']['config']['rebalance'] %>
+  <% if !node['ceph']['config']['rebalance'].nil? and !node['ceph']['config']['rebalance'].empty? %>
   osd recovery max active = 1
   osd max backfills  = 1
   osd op threads = 10
@@ -81,7 +87,6 @@
 
 <% if @is_mon -%>
 [mon]
-  host = <%= node['hostname'] %>
   <% if !node['ceph']['mon']['clock_drift_allowed'].nil? -%>
   <% end -%>
   <% if !node['ceph']['config']['mon'].nil? -%>
@@ -92,36 +97,73 @@
 <% end -%>
 
 <% if !node['ceph']['config']['mds'].nil? -%>
+# NOTE: Only needed for CephFS
 [mds]
   <% node['ceph']['config']['mds'].sort.each do |key, value| -%>
   <%= key %> = <%= value %>
   <% end -%>
 <% end -%>
 
-<% if @is_rbd -%>
+<% if @is_rbd || @is_admin || @is_rgw || @is_rest_api -%>
+# Any items in the 'client' section will apply to all sub-client sections unless overridden in the sub-client section.
 [client]
+  <% if @is_rbd -%>
   rbd cache = true
   rbd cache writethrough until flush = true
   rbd concurrent management ops = 20
   log file = /var/log/qemu/qemu-guest-$pid.log
+  # NOTE: If using RBD and OpenStack then you can add two additional sub-client for Cinder and Glance below this one.
+  <% end -%>
   # admin socket must be writable by QEMU and allowed by SELinux or AppArmor
   # admin socket = /var/run/ceph/$cluster-$type.$id.$pid.$cctid.asok
-  # admin socket = /var/run/ceph/$cluster-$type.$id.$pid.asok
+  admin socket = /var/run/ceph/$cluster-$type.$id.$pid.asok
 <% end -%>
 
 <% if @is_admin -%>
+# NOTE: You can null out the 'admin socket' below if you wish. If present, when running ceph -s without being 'sudo'
+# you will receive an 'unable to bind error msg'.
 [client.admin]
   keyring = /etc/ceph/$cluster.client.admin.keyring
-  # Force the admin to have a socket
   admin socket =
+  log file =
 <% end -%>
 
 <% if @is_rgw -%>
+<% if @is_federated -%>
+<% node['ceph']['pools']['radosgw']['federated_instances'].each do |inst| %>
+[client.radosgw.<%= node['hostname'] %>.<%= inst['name'] %>]
+  host = <%= node['hostname'] %>
+  keyring = /etc/ceph/$cluster.client.radosgw.<%= inst['name'] %>.keyring
+  rgw num rados handles = <%= node['ceph']['radosgw']['rgw_num_rados_handles'] %>
+  rgw frontends = civetweb port=<%= inst['port'] %> num_threads=<%= node['ceph']['radosgw']['civetweb_num_threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.<%= inst['name'] %>.log access_log_file=<%= node['ceph']['radosgw']['civetweb_access_log_file'] %>.<%= inst['name'] %>.log
+  # rgw enable ops log = false
+  # rgw enable usage log = false
+  pid file = /var/run/ceph/$name.<%= inst['name'] %>.pid
+  log file = /var/log/radosgw/$cluster.client.radosgw.<%= inst['name'] %>.log
+  # Increased to 1 to log HTTP return codes - http://tracker.ceph.com/issues/12432
+  debug rgw = 1/0
+  rgw dns name = <%= node['fqdn'] %>
+  <% if node['ceph']['radosgw']['keystone']['auth'] %>
+  rgw keystone url = <%= node['ceph']['radosgw']['keystone']['admin']['url'] %>:<%= node['ceph']['radosgw']['keystone']['admin']['port'] %>
+  rgw keystone admin token = <%= node['ceph']['radosgw']['keystone']['admin']['token'] %>
+  rgw keystone accepted roles = <%= node['ceph']['radosgw']['keystone']['accepted_roles'] %>
+  rgw keystone token cache size = <%= node['ceph']['radosgw']['keystone']['token_cache_size'] %>
+  rgw keystone revocation interval = <%= node['ceph']['radosgw']['keystone']['revocation_interval'] %>
+  rgw s3 auth use keystone = true
+  <% end %>
+  <% if !node['ceph']['config']['radosgw'].nil? -%>
+  <% node['ceph']['config']['radosgw'].sort.each do |k, v| %>
+  <%= k %> = <%= v %>
+  <% end %>
+  <% end -%>
+
+<% end %>
+<% else %>
 [client.radosgw.<%= node['hostname'] %>]
   host = <%= node['hostname'] %>
   keyring = /etc/ceph/$cluster.client.radosgw.keyring
   rgw num rados handles = <%= node['ceph']['radosgw']['rgw_num_rados_handles'] %>
-  rgw frontends = civetweb port=<%= node['ceph']['radosgw']['port'] %> num_threads=<%= node['ceph']['radosgw']['civetweb_num_threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %> access_log_file=<%= node['ceph']['radosgw']['civetweb_access_log_file'] %>
+  rgw frontends = civetweb port=<%= node['ceph']['radosgw']['port'] %> num_threads=<%= node['ceph']['radosgw']['civetweb_num_threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.log access_log_file=<%= node['ceph']['radosgw']['civetweb_access_log_file'] %>.log
   # rgw enable ops log = false
   # rgw enable usage log = false
   pid file = /var/run/ceph/$name.pid
@@ -142,6 +184,7 @@
   <%= k %> = <%= v %>
   <% end %>
   <% end -%>
+<% end -%>
 <% end -%>
 
 <% if @is_rest_api -%>

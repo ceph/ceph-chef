@@ -35,9 +35,6 @@ if service_type == 'upstart'
   end
 else
   if node['ceph']['version'] != 'hammer'
-    #execute 'systemctl mon start' do
-    #  command 'systemctl start ceph.target'
-    #end
     service 'ceph.target' do
       service_name 'ceph.target'
       provider Chef::Provider::Service::Systemd
@@ -45,8 +42,7 @@ else
       subscribes :restart, "template[/etc/ceph/#{node['ceph']['cluster']}.conf]"
     end
   else
-    service 'ceph_mon' do
-      service_name 'ceph'
+    service 'ceph' do
       supports :restart => true, :status => true
       action [:enable, :start]
       subscribes :restart, "template[/etc/ceph/#{node['ceph']['cluster']}.conf]"
@@ -54,11 +50,4 @@ else
   end
 end
 
-# Failure may occur when the cluster is first created because the peers may no exist yet so ignore it.
-# Gets executed each time chef-client is ran which is ok
-ceph_chef_mon_addresses.each do |addr|
-  execute "peer #{addr}" do
-    command "ceph --admin-daemon /var/run/ceph/#{node['ceph']['cluster']}-mon.#{node['hostname']}.asok add_bootstrap_peer_hint #{addr}"
-    ignore_failure true
-  end
-end
+# Can include mon_bootstrap_peer_hint recipe here or include it in roles after mon_install.

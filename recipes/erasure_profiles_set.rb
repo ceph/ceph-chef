@@ -1,5 +1,5 @@
 #
-# Copyright 2015, Bloomberg Finance L.P.
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,12 +23,14 @@
 
 include_recipe 'ceph-chef'
 
-# Example use
-
-ceph_chef_erasure 'mytest' do
-  action :set
-  plugin node['ceph']['erasure_code']['plugin']
-  directory node['ceph']['erasure_code']['directory']
-  key_value node['ceph']['erasure_code']['key_value']
-  force node['ceph']['erasure_code']['force']
+# Creates (sets) the specified erasure coding profile to be used by the pools
+node['ceph']['pools']['erasure_coding']['profiles'].each do | profile |
+  ceph_chef_erasure "#{profile['profile']}" do
+    plugin profile['plugin']
+    directory profile['directory']
+    key_value profile['key_value']
+    force profile['force']
+    action :set
+    not_if "ceph osd erasure-code-profile get #{profile['profile']}"
+  end
 end

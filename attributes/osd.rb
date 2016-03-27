@@ -29,16 +29,35 @@ default['ceph']['osd']['secret_file'] = '/etc/chef/secrets/ceph_chef_osd'
 default['ceph']['osd']['size']['max'] = 3
 default['ceph']['osd']['size']['min'] = 2
 
+# Default to 10G
+default['ceph']['osd']['journal']['size'] = 10000
+
+# Host
+default['ceph']['osd']['crush']['chooseleaf_type'] = 1
+
+# NOTE: Crush map bucket types: (Context of bucket is not the same as a bucket in RGW)
+# type 0 osd
+# type 1 host
+# type 2 chassis
+# type 3 rack
+# type 4 row
+# type 5 pdu
+# type 6 pod
+# type 7 room
+# type 8 datacenter
+# type 9 region
+# type 10 root
+
 # MUST be set in the wrapper cookbook or chef-repo like project
 default['ceph']['osd']['role'] = 'search-ceph-osd'
 
 # Example of how to set this up via attributes file. Change to support your naming, the correct OSD info etc. this
 # is ONLY an example.
-default['ceph']['osd']['remove']['devices'] = [
+default['ceph']['osd']['remove'] = [
   { 'node' => 'ceph-vm3', 'osd' => 11, 'zap' => false, 'partition' => 1, 'data' => '/dev/sdf', 'journal' => '/dev/sdf' }
 ]
 
-default['ceph']['osd']['add']['devices'] = [
+default['ceph']['osd']['add'] = [
   { 'node' => 'ceph-vm3', 'type' => 'hdd', 'data' => '/dev/sde', 'journal' => '/dev/sde' }
 ]
 
