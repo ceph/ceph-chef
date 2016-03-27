@@ -34,14 +34,16 @@
 include_attribute 'ceph-chef'
 
 default['ceph']['radosgw']['port'] = 80
-# default['ceph']['radosgw']['webserver'] = 'civetweb'
+# NOTE: If using federated options then look at 'pools' attributes file for federated ports.
+
 # IMPORTANT: The civetweb user manual is a good place to look for custom config for civetweb:
 # https://github.com/civetweb/civetweb/blob/master/docs/UserManual.md
 # Add the options to the single line of the 'frontends etc...'
 # NOTE: Change the number of default threads that civetweb uses per node
 default['ceph']['radosgw']['civetweb_num_threads'] = 10
-default['ceph']['radosgw']['civetweb_access_log_file'] = '/var/log/radosgw/civetweb.access.log'
-default['ceph']['radosgw']['civetweb_error_log_file'] = '/var/log/radosgw/civetweb.error.log'
+# NOTE: DO NOT append '.log' to these log files because the conf recipe adds it because of the possible use of federation.
+default['ceph']['radosgw']['civetweb_access_log_file'] = '/var/log/radosgw/civetweb.access'
+default['ceph']['radosgw']['civetweb_error_log_file'] = '/var/log/radosgw/civetweb.error'
 
 # OpenStack Keystone specific
 # Will radosgw integrate with OpenStack Keystone - true/false
@@ -79,7 +81,7 @@ default['ceph']['radosgw']['user']['test']['caps'] = 'usage=read; user=read; buc
 
 default['ceph']['radosgw']['secret_file'] = '/etc/chef/secrets/ceph_chef_rgw'
 
-# MUST be set in the wrapper cookbook or chef-repo like project
+# No longer used
 default['ceph']['radosgw']['role'] = 'search-ceph-radosgw'
 
 case node['platform_family']
@@ -88,7 +90,7 @@ when 'debian'
   packages += debug_packages(packages) if node['ceph']['install_debug']
   default['ceph']['radosgw']['packages'] = packages
 when 'rhel', 'fedora', 'suse'
-  default['ceph']['radosgw']['packages'] = ['ceph-radosgw', 'mailcap', 'python-boto'] # NOTE: mailcap should have been a dependency in Ceph. radosgw-agent later
+  default['ceph']['radosgw']['packages'] = ['ceph-radosgw', 'mailcap'] # NOTE: mailcap should have been a dependency in Ceph. radosgw-agent later
 else
   default['ceph']['radosgw']['packages'] = []
 end

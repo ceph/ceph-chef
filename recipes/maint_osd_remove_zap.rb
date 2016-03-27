@@ -2,7 +2,7 @@
 # Author:: Chris Jones <cjones303@bloomberg.net>
 # Cookbook Name:: ceph
 #
-# Copyright 2015, Bloomberg Finance L.P.
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,8 +30,8 @@
 
 service_type = node['ceph']['osd']['init_style']
 
-if node['ceph']['osd']['remove']['devices']
-  devices = node['ceph']['osd']['remove']['devices']
+if node['ceph']['osd']['remove']
+  devices = node['ceph']['osd']['remove']
 
   devices = Hash[(0...devices.size).zip devices] unless devices.is_a? Hash
 
@@ -102,5 +102,5 @@ if node['ceph']['osd']['remove']['devices']
 
   include_recipe 'ceph-chef::osd_scrubbing_on'
 else
-  Log.info("node['ceph']['osd']['remove']['devices'] empty")
+  Log.info("node['ceph']['osd']['remove'] empty")
 end

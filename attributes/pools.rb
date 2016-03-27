@@ -19,32 +19,49 @@
 
 include_attribute 'ceph-chef'
 
-# NOTE: Override the values below in your environment.yaml file
 # NOTE: The values you set in pools are critical to a well balanced system.
+
+##### Erasure coding
+# NOTE: This is already created so don't try to set it again. Also, add to the key_value hash if more options are needed.
+default['ceph']['pools']['erasure_coding']['profiles'] = [{"profile" => "custom-default", "directory" => "/usr/lib64/ceph/erasure-code", "plugin" => "SHEC", "force" => true, "key_value" => {"k" => 8, "m" => 3}}]
+# NOTE: Override the above array with the profile(s) you want for your environment. The above is simply an example!!
+
+# There may be more but at the initial time of this code the following are valid plugins:
+# jerasure (default), SHEC, isa, lrc
+# You can check the following docs http://docs.ceph.com/docs/master/rados/operations/erasure-code-profile/
+# If you want to override settings of an existing profile then set the 'force' to true (default is false)
+
+# NOTE: Each plugin has it's own set of unique parameters so handle this use the following hash variable
+# to add the unique values. For example, {"k" => 8, "m" => 3}. Add more to the hash if needed.
+#####
 
 # RADOSGW - Rados Gateway section
 # Update these if you want to setup federated regions and zones
 # {region name}-{zone name}-{instance} -- Naming convention used but you can change it
+default['ceph']['pools']['radosgw']['federated_enable'] = false
 default['ceph']['pools']['radosgw']['federated_regions'] = []
 # NOTE: If you use a region then you *must* have at least 1 zone defined and if you use a zone then must at least 1
 # region defined.
 default['ceph']['pools']['radosgw']['federated_zones'] = []
 # Default for federated_instances is 1. If you would like to run multiple instances of radosgw per node then increase
 # the federated_instances count. NOTE: When you do this, make sure if you use a load balancer that you account
-# for the additional instance(s). Also, instances count *must* never be below 1.
-default['ceph']['pools']['radosgw']['federated_instances'] = 1
+# for the additional instance(s). Also, there *MUST* always be at least 1 instance value (change the values if desired)
+default['ceph']['pools']['radosgw']['federated_instances'] = [{"name" => "inst1", "port" => 8080}]
 
 # These two values *must* be set in your wrapper cookbook if using federated region/zone. They will be the root pool
-# name used. For example, region - .us.rgw.root, zone - .us-east.rgw.root (these do not inlcude instances).
+# name used. For example, region - .us.rgw.root, zone - .us-east.rgw.root (these do not include instances).
 default['ceph']['pools']['radosgw']['federated_region_root_pool_name'] = nil
 default['ceph']['pools']['radosgw']['federated_zone_root_pool_name'] = nil
 
-# The cluster name will be prefixed to each name during the processing so please only include the actual name.
+# The cluster name will be prefixed to each name during the processing so only include the actual name.
 default['ceph']['pools']['radosgw']['names'] = [
   '.rgw', '.rgw.control', '.rgw.gc', '.rgw.root', '.users.uid',
   '.users.email', '.users.swift', '.users', '.usage', '.log', '.intent-log', '.rgw.buckets', '.rgw.buckets.index',
   '.rgw.buckets.extra'
 ]
+
+# If pool names exist in this array they will be removed from Ceph
+default['ceph']['pools']['radosgw']['remove']['names'] = []
 
 # NOTE: *DO NOT* modify this structure! This is an internal structure that gets dynamically updated IF federated
 # options above are updated by wrapper cookbook etc.
@@ -55,18 +72,21 @@ default['ceph']['pools']['rbd']['federated_names'] = []
 # NOTE: The radosgw names above will be appended to the federated region/zone names if they are present else just
 # the radosgw names will be used.
 
-# The 'ceph''osd''size''max' value will be used if no 'size' value is given in the pools settings!
+# The 'ceph''osd''size''max' value will be used if no 'size' value is given in the pools settings! Size represents replicas.
 default['ceph']['pools']['radosgw']['settings'] = {
   'pg_num' => 128, 'pgp_num' => 128, 'options' => '', 'force' => false,
-  'calc' => true, 'size' => 3, 'crush_rule_set' => 3, 'chooseleaf' => 'host', 'type' => 'replicated'
+  'calc' => true, 'size' => 3, 'crush_rule_set' => 3, 'chooseleaf' => 'host',
+  'type' => 'replicated'
 }
+
+default['ceph']['pools']['pgs']['num'] = 128
 
 # RBD - Rados Block Device section
 # The cluster name will be prefixed to each name during the processing so please only include the actual name.
 # No leading cluster name or leading '.' character.
 
 default['ceph']['pools']['rbd']['names'] = []
-
+default['ceph']['pools']['rbd']['remove']['names'] = []
 default['ceph']['pools']['rbd']['settings'] = {}
 
 # List of pools to process

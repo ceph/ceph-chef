@@ -1,5 +1,5 @@
 #
-# Copyright 2015, Bloomberg Finance L.P.
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
 
 include_recipe 'ceph-chef'
 
-# Example use
+# Example use - Shows how to delete a given profile.
 
 ceph_chef_erasure 'mytest' do
   action :delete

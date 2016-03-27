@@ -27,7 +27,7 @@
 execute 'format bootstrap-osd-secret as keyring' do
   command lazy { "ceph-authtool '/var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring' --create-keyring --name=client.bootstrap-osd --add-key=#{ceph_chef_bootstrap_osd_secret}" }
   only_if { ceph_chef_bootstrap_osd_secret }
-  #not_if "test -f /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring"
+  not_if "test -f /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring"
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
@@ -40,7 +40,7 @@ bash 'save-bootstrap-osd-key' do
         --add-key="$BOOTSTRAP_KEY"
   EOH
   not_if { ceph_chef_bootstrap_osd_secret }
-  #not_if "test -f /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring"
+  not_if "test -f /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring"
   notifies :create, 'ruby_block[save_bootstrap_osd]', :immediately
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
@@ -57,6 +57,18 @@ ruby_block 'save_bootstrap_osd' do
   action :nothing
 end
 
+# Make sure the bootstrap-osd key is set for the node. Could have a wrapper move the file to the correct place but the var is not set.
+ruby_block 'check_bootstrap_osd' do
+  block do
+    fetch = Mixlib::ShellOut.new("ceph-authtool '/var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring' --print-key --name=client.bootstrap-osd")
+    fetch.run_command
+    key = fetch.stdout
+    ceph_chef_save_bootstrap_osd_secret(key.delete!("\n"))
+  end
+  not_if { ceph_chef_bootstrap_osd_secret }
+  only_if "test -f /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring"
+end
+
 # IF the bootstrap key for bootstrap-rgw exists then save it so it's available if wanted later. All bootstrap
 # keys are created during this recipe process!
 ruby_block 'save_bootstrap_rgw' do
@@ -64,11 +76,10 @@ ruby_block 'save_bootstrap_rgw' do
     fetch = Mixlib::ShellOut.new("ceph-authtool '/var/lib/ceph/bootstrap-rgw/#{node['ceph']['cluster']}.keyring' --print-key --name=client.bootstrap-rgw")
     fetch.run_command
     key = fetch.stdout
-    #ceph_chef_set_item('bootstrap-rgw', key.delete!("\n"))
-    node.set['ceph']['bootstrap-rgw'] = key
-    node.save
+    ceph_chef_save_bootstrap_rgw_secret(key.delete!("\n"))
   end
-  not_if "#{node['ceph']['bootstrap-rgw']}"
+  not_if { ceph_chef_bootstrap_rgw_secret }
+  only_if "test -f /var/lib/ceph/bootstrap-rgw/#{node['ceph']['cluster']}.keyring"
   ignore_failure true
 end
 
@@ -78,10 +89,9 @@ ruby_block 'save_bootstrap_mds' do
     fetch = Mixlib::ShellOut.new("ceph-authtool '/var/lib/ceph/bootstrap-mds/#{node['ceph']['cluster']}.keyring' --print-key --name=client.bootstrap-mds")
     fetch.run_command
     key = fetch.stdout
-    #ceph_chef_set_item('bootstrap-mds', key.delete!("\n"))
-    node.set['ceph']['bootstrap-mds'] = key
-    node.save
+    ceph_chef_save_bootstrap_mds_secret(key.delete!("\n"))
   end
-  not_if "#{node['ceph']['bootstrap-mds']}"
+  not_if { ceph_chef_bootstrap_mds_secret }
+  only_if "test -f /var/lib/ceph/bootstrap-mds/#{node['ceph']['cluster']}.keyring"
   ignore_failure true
 end

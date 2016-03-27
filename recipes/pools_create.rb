@@ -1,5 +1,5 @@
 #
-# Copyright 2015, Bloomberg Finance L.P.
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,14 +22,13 @@
 if node['ceph']['pools']['active']
   node['ceph']['pools']['active'].each do |pool|
     # Create pool and set type (replicated or erasure - default is replicated)
-    if pool == 'radosgw' && !node['ceph']['pools']['radosgw']['federated_regions'].empty?
+    if pool == 'radosgw' && !node['ceph']['pools']['radosgw']['federated_regions'].empty? && node['ceph']['pools']['radosgw']['federated_enable']
       # NOTE: *Must* have federated_regions and federated_zones if doing any federated processing!
       ceph_chef_build_federated_pool(pool)
     end
 
-    ceph_chef_create_pool(pool)
-    # TODO: Need to add for calculated PGs options
-    # TODO: Need to add crush_rule_set
-    # Set...
+    # If federation is used then inside this function it will loop through the federated pool names and created them.
+    # If federation is not used then the standard pool names and settings will be used.
+    ceph_chef_pool_create(pool)
   end
 end

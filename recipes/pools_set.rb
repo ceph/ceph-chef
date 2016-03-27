@@ -24,7 +24,9 @@
 
 if node['ceph']['pools']['active']
   node['ceph']['pools']['active'].each do |pool|
-    # Create pool and set type (replicated or erasure - default is replicated)
+
+    ceph_chef_pool_set(pool)
+=begin
     node['ceph']['pools'][pool]['names'].each do |name|
       unless node['ceph']['cluster'].downcase == 'ceph'
         cluster = ".#{node['ceph']['cluster']}"
@@ -32,9 +34,6 @@ if node['ceph']['pools']['active']
       else
         pool_name = "#{name}"
       end
-
-      # TODO: Need to add for calculated PGs options
-      # TODO: Need to add crush_rule_set
 
       if node['ceph']['pools'][pool]['settings']['type'] == 'replicated'
         if node['ceph']['pools'][pool]['settings']['size']
@@ -53,5 +52,6 @@ if node['ceph']['pools']['active']
         end
       end
     end
+=end
   end
 end

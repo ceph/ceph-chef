@@ -20,7 +20,8 @@
 # All versions of Ceph below Infernalis needs selinux disabled or in Permissive mode
 execute 'set selinux' do
   command 'setenforce 0'
-  not_if "getenforce | grep 'Permissive\|Disabled'"
+  # Opposite
+  only_if "getenforce | grep 'Permissive\|Disabled'"
   ignore_failure true
 end
 
@@ -55,7 +56,8 @@ template "/etc/ceph/#{node['ceph']['cluster']}.conf" do
       :is_mds => ceph_chef_is_mds_node,
       :is_admin => ceph_chef_is_admin_node,
       :is_osd => ceph_chef_is_osd_node,
-      :is_rest_api => ceph_chef_is_restapi_node
+      :is_rest_api => ceph_chef_is_restapi_node,
+      :is_federated => ceph_chef_is_radosgw_federated
     }
   }
   mode '0644'

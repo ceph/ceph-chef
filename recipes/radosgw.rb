@@ -22,21 +22,12 @@ node.default['ceph']['is_radosgw'] = true
 include_recipe 'ceph-chef'
 include_recipe 'ceph-chef::radosgw_install'
 
-service_type = node['ceph']['mon']['init_style']
-
 directory '/var/log/radosgw' do
   owner node['ceph']['owner']
   group node['ceph']['group']
   mode node['ceph']['mode']
   action :create
   not_if "test -d /var/log/radosgw"
-end
-
-# file "/var/log/radosgw/#{node['ceph']['cluster']}.client.radosgw.#{node['hostname']}.log" do
-# No need to for hostname as part of log file. It makes log collection easier.
-file "/var/log/radosgw/#{node['ceph']['cluster']}.client.radosgw.log" do
-  owner node['ceph']['owner']
-  group node['ceph']['group']
 end
 
 # If the directory does not exist already (on a dedicated node)
@@ -58,21 +49,8 @@ directory '/var/lib/ceph/bootstrap-rgw' do
   not_if "test -d /var/lib/ceph/bootstrap-rgw"
 end
 
-directory "/var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}" do
-  owner node['ceph']['owner']
-  group node['ceph']['group']
-  mode node['ceph']['mode']
-  recursive true
-  action :create
-  not_if "test -d /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}"
-end
-
 # IF you want specific recipes for civetweb then put them in the recipe referenced here.
 include_recipe "ceph-chef::radosgw_civetweb"
-
-# NOTE: This base_key can also be the bootstrap-rgw key (ceph.keyring) if desired. Just change it here.
-base_key = "/etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
-keyring = "/etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring"
 
 execute 'osd-create-key-mon-client-in-directory' do
   command lazy { "ceph-authtool /etc/ceph/#{node['ceph']['cluster']}.mon.keyring --create-keyring --name=mon. --add-key=#{ceph_chef_mon_secret} --cap mon 'allow *'" }
@@ -84,49 +62,33 @@ execute 'osd-create-key-admin-client-in-directory' do
   not_if "test -f /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
 end
 
-execute 'change-admin-mode' do
-  command lazy { "chmod 0644 /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring" }
-  only_if "test -f /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
+# Verifies or sets the correct mode only
+file "/etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring" do
+  mode '0644'
 end
 
-# NOTE: If the rgw keyring exists and you are using the same key on for different nodes (load balancing) then
-# this method will work well. Since the key is already part of the cluster the only thing needed is to copy it
-# to the correct area (where ever the ceph.conf settings are pointing to on the given node). You can keep things
-# simple by keeping the same ceph.conf the same (except for hostname info) for each rgw node.
+# Portion above is the same for Federated and Non-Federated versions.
 
-execute 'write ceph-radosgw-secret' do
-  command lazy { "ceph-authtool #{keyring} --create-keyring --name=client.radosgw.#{node['hostname']} --add-key='#{node['ceph']['radosgw-secret']}'" }
-  creates keyring
-  only_if { ceph_chef_radosgw_secret }
-  not_if "test -f #{keyring}"
-  sensitive true if Chef::Resource::Execute.method_defined? :sensitive
+if node['ceph']['pools']['radosgw']['federated_enable']
+  include_recipe 'ceph-chef::radosgw_federated'
+else
+  include_recipe 'ceph-chef::radosgw_non_federated'
 end
 
-execute 'gen client-radosgw-secret' do
-  command <<-EOH
-    ceph-authtool --create-keyring #{keyring} -n client.radosgw.#{node['hostname']} --gen-key --cap osd 'allow rwx' --cap mon 'allow rw'
-    ceph -k #{base_key} auth add client.radosgw.#{node['hostname']} -i /etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring
-  EOH
-  creates keyring
-  not_if { ceph_chef_radosgw_secret }
-  not_if "test -f #{keyring}"
-  notifies :create, 'ruby_block[save radosgw_secret]', :immediately
-  sensitive true if Chef::Resource::Execute.method_defined? :sensitive
-end
+# TODO: This block is only here as a reminder to update the optimal PG size later...
+# rgw_optimal_pg = ceph_chef_power_of_2(get_ceph_chef_osd_nodes.length*node['ceph']['pgs_per_node']/node['ceph']['rgw']['replicas']*node['ceph']['rgw']['portion']/100)
 
-# This ruby_block saves the key if it is needed at any other point plus this and all node data is saved on the
-# Chef Server for this given node
-ruby_block 'save radosgw_secret' do
-  block do
-    fetch = Mixlib::ShellOut.new("ceph-authtool #{keyring} --print-key")
-    fetch.run_command
-    key = fetch.stdout
-    #ceph_chef_set_item('radosgw-secret', key.delete!("\n"))
-    node.set['ceph']['radosgw-secret'] = key.delete!("\n")
-    node.save
-  end
-  action :nothing
+=begin
+# check to see if we should up the number of pg's now for the core buckets pool
+(node[['ceph']['pgp_auto_adjust'] ? %w{pg_num pgp_num} : %w{pg_num}).each do |pg|
+    bash "update-rgw-buckets-#{pg}" do
+        user "root"
+        code "ceph osd pool set .rgw.buckets #{pg} #{rgw_optimal_pg}"
+        only_if { %x[ceph osd pool get .rgw.buckets #{pg} | awk '{print $2}'].to_i < rgw_optimal_pg }
+        notifies :run, "bash[wait-for-pgs-creating]", :immediately
+    end
 end
+=end
 
 # DOCS: Begin
 
@@ -182,28 +144,3 @@ end
 # end
 
 # DOCS: End
-
-# TODO: This block is only here as a reminder to update the optimal PG size later...
-# rgw_optimal_pg = ceph_chef_power_of_2(get_ceph_chef_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['rgw']['replicas']*node['bcpc']['ceph']['rgw']['portion']/100)
-
-=begin
-# check to see if we should up the number of pg's now for the core buckets pool
-(node['bcpc']['ceph']['pgp_auto_adjust'] ? %w{pg_num pgp_num} : %w{pg_num}).each do |pg|
-    bash "update-rgw-buckets-#{pg}" do
-        user "root"
-        code "ceph osd pool set .rgw.buckets #{pg} #{rgw_optimal_pg}"
-        only_if { %x[ceph osd pool get .rgw.buckets #{pg} | awk '{print $2}'].to_i < rgw_optimal_pg }
-        notifies :run, "bash[wait-for-pgs-creating]", :immediately
-    end
-end
-=end
-
-# This is only here as part of completeness. The service_type is not really needed because of defaults.
-ruby_block 'radosgw-finalize' do
-  block do
-    ['done', service_type].each do |ack|
-      ::File.open("/var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}/#{ack}", 'w').close
-    end
-  end
-  not_if "test -f /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}/done"
-end

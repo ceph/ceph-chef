@@ -46,6 +46,6 @@ chef_gem 'netaddr' do
   not_if 'test -f /tmp/netaddr-1.5.1.gem'
 end
 
-if node['ceph']['pools']['radosgw']['federated_regions']
+if node['ceph']['pools']['radosgw']['federated_enable']
   ceph_chef_build_federated_pool('radosgw')
 end

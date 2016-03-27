@@ -71,9 +71,6 @@ end
 # Add ceph_journal.sh helper script to all OSD nodes and place it in /etc/ceph
 cookbook_file '/etc/ceph/scripts/ceph_journal.sh' do
   source 'ceph_journal.sh'
-  # owner 'root'
-  # group 'root'
-  # mode '0755'
   owner node['ceph']['owner']
   group node['ceph']['group']
   mode node['ceph']['mode']
@@ -81,9 +78,6 @@ cookbook_file '/etc/ceph/scripts/ceph_journal.sh' do
 end
 
 directory '/var/lib/ceph/bootstrap-osd' do
-  # owner 'root'
-  # group 'root'
-  # mode '0755'
   owner node['ceph']['owner']
   group node['ceph']['group']
   mode node['ceph']['mode']
@@ -94,9 +88,6 @@ end
 
 # Default data location - do not modify
 directory '/var/lib/ceph/osd' do
-  # owner 'root'
-  # group 'root'
-  # mode '0755'
   owner node['ceph']['owner']
   group node['ceph']['group']
   mode node['ceph']['mode']
@@ -115,13 +106,15 @@ execute 'osd-create-key-admin-client-in-directory' do
   not_if "test -f /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
 end
 
-execute 'change-admin-mode' do
-  command lazy { "chmod 0644 /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring" }
-  only_if "test -f /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
+# Verifies or sets the correct mode only
+file "/etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring" do
+  mode '0644'
 end
 
 execute 'osd-create-key-bootstrap-in-directory' do
   command lazy { "ceph-authtool /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring --create-keyring --name=client.bootstrap-osd --add-key=#{ceph_chef_bootstrap_osd_secret}" }
+  # NOTE: If the keyring exists then skip even if the node['bootstrap-osd'] ('ceph_chef_bootstrap_osd_secret') is not empty because you can also copy from other osd node or a central place where may keep keyring files. Just depends on your environment.
+  not_if "test -f /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring"
   only_if {ceph_chef_bootstrap_osd_secret}
 end
 
@@ -133,7 +126,8 @@ bash 'osd-write-bootstrap-osd-key' do
         --name=client.bootstrap-osd \
         --add-key="$BOOTSTRAP_KEY"
   EOH
-  #not_if "test -f /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring"
+  # NOTE: If the keyring exists then skip even if the node['bootstrap-osd'] ('ceph_chef_bootstrap_osd_secret') is empty because you can also copy from other osd node or a central place where may keep keyring files. Just depends on your environment.
+  not_if "test -f /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring"
   not_if {ceph_chef_bootstrap_osd_secret}
   notifies :create, 'ruby_block[save_bootstrap_osd_key]', :immediately
 end
@@ -165,13 +159,9 @@ if node['ceph']['osd']['devices']
     # Only one partition by default for ceph data
     partitions = 1
 
-    directory osd_device['data'] do
-      # owner 'root'
-      # group 'root'
-      owner node['ceph']['owner']
-      group node['ceph']['group']
-      recursive true
-      only_if { osd_device['type'] == 'directory' }
+    unless osd_device['status'].nil?
+      Log.info("osd: osd device '#{osd_device}' has already been setup.")
+      next
     end
 
     # if the 'encrypted' attribute is true then apply flag. This will encrypt the data at rest.
@@ -181,17 +171,17 @@ if node['ceph']['osd']['devices']
     # is_device - Is the device a partition or not
     # is_ceph - Does the device contain the default 'ceph data' or 'ceph journal' label
     # The -v option is added to the ceph-disk script so as to get a verbose output if debugging is needed. No other reason.
+    # is_ceph=$(parted --script #{osd_device['data']} print | egrep -sq '^ 1.*ceph')
     execute "ceph-disk-prepare on #{osd_device['data']}" do
       command <<-EOH
         is_device=$(echo '#{osd_device['data']}' | egrep '/dev/(([a-z]{3,4}[0-9]$)|(cciss/c[0-9]{1}d[0-9]{1}p[0-9]$))')
-        is_ceph=$(parted --script #{osd_device['data']} print | egrep -sq '^ 1.*ceph')
         ceph-disk -v prepare --cluster #{node['ceph']['cluster']} #{dmcrypt} --fs-type #{node['ceph']['osd']['fs_type']} #{osd_device['data']} #{osd_device['journal']}
         if [[ ! -z $is_device ]]; then
           ceph-disk -v activate #{osd_device['data']}#{partitions}
         else
           ceph-disk -v activate #{osd_device['data']}
         fi
-        sleep 2
+        sleep 3
       EOH
       # NOTE: The meaning of the uuids used here are listed above
       not_if "sgdisk -i1 #{osd_device['data']} | grep -i 4fbd7e29-9d25-41b8-afd0-062c0ceff05d" if !dmcrypt
@@ -200,6 +190,16 @@ if node['ceph']['osd']['devices']
       # all devices if you are wanting to add all of the devices again (if this is not the initial setup)
       not_if "parted --script #{osd_device['data']} print | egrep -sq '^ 1.*ceph'"
       action :run
+      notifies :create, "ruby_block[save osd_device status #{index}]", :immediately
+    end
+
+    # Add this status to the node env so that we can implement recreate and/or delete functionalities in the future.
+    ruby_block "save osd_device status #{index}" do
+      block do
+        node.normal['ceph']['osd']['devices'][index]['status'] = 'deployed'
+        node.save
+      end
+      action :nothing
     end
 
     # NOTE: Do not attempt to change the 'ceph journal' label on a partition. If you do then ceph-disk will not
@@ -208,5 +208,5 @@ if node['ceph']['osd']['devices']
     # ceph-disk list
   end
 else
-  Log.info("node['ceph']['osd']['data'] empty")
+  Log.info("node['ceph']['osd']['devices'] empty")
 end

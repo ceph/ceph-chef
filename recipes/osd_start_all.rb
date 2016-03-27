@@ -33,11 +33,7 @@ if service_type == 'upstart'
     subscribes :restart, "template[/etc/ceph/#{node['ceph']['cluster']}.conf]"
   end
 else
-  # execute 'raw osd start' do
-  #   command 'service ceph start osd'
-  # end
-  service 'ceph_osd' do
-    service_name 'ceph'
+  service 'ceph' do
     supports :restart => true, :status => true
     action [:enable, :start]
     subscribes :restart, "template[/etc/ceph/#{node['ceph']['cluster']}.conf]"
