@@ -20,6 +20,11 @@
 # Change this if you want a different cluster name other than the default of ceph
 default['ceph']['cluster'] = 'ceph'
 
+# Allows for experimental things such SHEC Erasure Coding plugin in releases below Jewel.
+# This will go into the global section of the ceph.conf on all nodes
+default['ceph']['experimental']['enable'] = false
+default['ceph']['experimental']['features'] = ['shec']
+
 # This section controls which repo branch to use but is not in repo.rb because it also allows for changing of
 # Ceph version information that is used for conditionals used in the recipes to KEEP them here.
 default['ceph']['branch'] = 'stable' # Can be stable, testing or dev.

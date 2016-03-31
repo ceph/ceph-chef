@@ -34,7 +34,6 @@ if node['ceph']['osd']['add']
   devices = Hash[(0...devices.size).zip devices] unless devices.is_a? Hash
 
   devices.each do |index, osd_device|
-    # May look at this later...
     partitions = 1
 
     unless osd_device['status'].nil?
@@ -49,17 +48,17 @@ if node['ceph']['osd']['add']
     # is_device - Is the device a partition or not
     # is_ceph - Does the device contain the default 'ceph data' or 'ceph journal' label
     # The -v option is added to the ceph-disk script so as to get a verbose output if debugging is needed. No other reason.
+    # is_ceph=$(parted --script #{osd_device['data']} print | egrep -sq '^ 1.*ceph')
     execute "ceph-disk-prepare on #{osd_device['data']}" do
       command <<-EOH
         is_device=$(echo '#{osd_device['data']}' | egrep '/dev/(([a-z]{3,4}[0-9]$)|(cciss/c[0-9]{1}d[0-9]{1}p[0-9]$))')
-        is_ceph=$(parted --script #{osd_device['data']} print | egrep -sq '^ 1.*ceph')
         ceph-disk -v prepare --cluster #{node['ceph']['cluster']} #{dmcrypt} --fs-type #{node['ceph']['osd']['fs_type']} #{osd_device['data']} #{osd_device['journal']}
         if [[ ! -z $is_device ]]; then
           ceph-disk -v activate #{osd_device['data']}#{partitions}
         else
           ceph-disk -v activate #{osd_device['data']}
         fi
-        sleep 2
+        sleep 3
       EOH
       # NOTE: The meaning of the uuids used here are listed above
       not_if "sgdisk -i1 #{osd_device['data']} | grep -i 4fbd7e29-9d25-41b8-afd0-062c0ceff05d" if !dmcrypt

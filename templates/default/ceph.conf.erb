@@ -42,6 +42,9 @@
 <% if !node['ceph']['config']['rebalance'].nil? and !node['ceph']['config']['rebalance'].empty? %>
   paxos propose interval = 60
 <% end %>
+<% if node['ceph']['experimental']['enable'] %>
+  enable experimental unrecoverable data corrupting features: <%= @node['ceph']['experimental']['features'].join(',') %>
+<% end %>
 
 <% if @is_osd -%>
 [osd]
