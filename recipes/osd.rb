@@ -159,7 +159,7 @@ if node['ceph']['osd']['devices']
     # Only one partition by default for ceph data
     partitions = 1
 
-    unless osd_device['status'].nil?
+    unless osd_device['status'].nil? || osd_device['status'] != 'deployed'
       Log.info("osd: osd device '#{osd_device}' has already been setup.")
       next
     end
