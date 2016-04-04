@@ -30,6 +30,7 @@ node['ceph']['pools']['erasure_coding']['profiles'].each do | profile |
     directory profile['directory']
     key_value profile['key_value']
     force profile['force']
+    technique profile['technique']
     action :set
     not_if "ceph osd erasure-code-profile get #{profile['profile']}"
   end

@@ -54,12 +54,28 @@ def set_profile
   end
 
   cmd_text = "ceph osd erasure-code-profile set #{new_resource.name}"
-  if !new_resource.directory.nil?
+  if !new_resource.directory.nil? 
     cmd_text += " directory=#{new_resource.directory}"
   end
 
   if !new_resource.plugin.nil?
     cmd_text += " plugin=#{new_resource.plugin}"
+  end
+
+  if !new_resource.technique.nil?
+    cmd_text += " technique=#{new_resource.technique}"
+  end
+
+  if !new_resource.ruleset_root.nil?
+    cmd_text += " ruleset-root=#{new_resource.ruleset_root}"
+  end
+
+  if !new_resource.ruleset_failure_domain.nil?
+    cmd_text += " ruleset-failure-domain=#{new_resource.ruleset_failure_domain}"
+  end
+
+  if !new_resource.packet_size.nil?
+    cmd_text += " packet-size=#{new_resource.packet_size}"
   end
 
   if !new_resource.key_value.nil?

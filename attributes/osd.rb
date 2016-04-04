@@ -29,11 +29,11 @@ default['ceph']['osd']['secret_file'] = '/etc/chef/secrets/ceph_chef_osd'
 default['ceph']['osd']['size']['max'] = 3
 default['ceph']['osd']['size']['min'] = 2
 
-# Default to 10G
-default['ceph']['osd']['journal']['size'] = 10000
+# Default to 2G - Changed this to higher number for a production system.
+default['ceph']['osd']['journal']['size'] = 2048
 
-# Host
-default['ceph']['osd']['crush']['chooseleaf_type'] = 1
+# Override this if you modify the crush map in a production system.
+default['ceph']['osd']['crush'] = {'update_on_start' => true, 'chooseleaf_type' => 1}
 
 # NOTE: Crush map bucket types: (Context of bucket is not the same as a bucket in RGW)
 # type 0 osd

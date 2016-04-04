@@ -38,5 +38,7 @@ attribute :key, :kind_of => String
 attribute :value, :kind_of => [Integer, String]
 # Pool type - default is replicated
 attribute :type, :kind_of => String, :default => 'replicated'
+# Erasure coding profile
+attribute :profile, :kind_of => String
 
 attr_accessor :exists

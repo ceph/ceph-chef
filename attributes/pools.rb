@@ -40,13 +40,15 @@ default['ceph']['pools']['erasure_coding']['profiles'] = [{"profile" => "custom-
 # {region name}-{zone name}-{instance} -- Naming convention used but you can change it
 default['ceph']['pools']['radosgw']['federated_enable'] = false
 default['ceph']['pools']['radosgw']['federated_regions'] = []
+default['ceph']['pools']['radosgw']['federated_master_zone'] = ''
+default['ceph']['pools']['radosgw']['federated_master_zone_port'] = 80
 # NOTE: If you use a region then you *must* have at least 1 zone defined and if you use a zone then must at least 1
 # region defined.
-default['ceph']['pools']['radosgw']['federated_zones'] = []
-# Default for federated_instances is 1. If you would like to run multiple instances of radosgw per node then increase
-# the federated_instances count. NOTE: When you do this, make sure if you use a load balancer that you account
+#default['ceph']['pools']['radosgw']['federated_zones'] = []
+# Default for federated_zone_instances is 1. If you would like to run multiple instances of radosgw per node then increase
+# the federated_zone_instances count. NOTE: When you do this, make sure if you use a load balancer that you account
 # for the additional instance(s). Also, there *MUST* always be at least 1 instance value (change the values if desired)
-default['ceph']['pools']['radosgw']['federated_instances'] = [{"name" => "inst1", "port" => 8080}]
+default['ceph']['pools']['radosgw']['federated_zone_instances'] = [{"name" => "inst1", "port" => 8080, "region" => ""}]
 
 # These two values *must* be set in your wrapper cookbook if using federated region/zone. They will be the root pool
 # name used. For example, region - .us.rgw.root, zone - .us-east.rgw.root (these do not include instances).
@@ -54,11 +56,36 @@ default['ceph']['pools']['radosgw']['federated_region_root_pool_name'] = nil
 default['ceph']['pools']['radosgw']['federated_zone_root_pool_name'] = nil
 
 # The cluster name will be prefixed to each name during the processing so only include the actual name.
-default['ceph']['pools']['radosgw']['names'] = [
-  '.rgw', '.rgw.control', '.rgw.gc', '.rgw.root', '.users.uid',
-  '.users.email', '.users.swift', '.users', '.usage', '.log', '.intent-log', '.rgw.buckets', '.rgw.buckets.index',
-  '.rgw.buckets.extra'
+#default['ceph']['pools']['radosgw']['names'] = [
+#  '.rgw', '.rgw.control', '.rgw.gc', '.rgw.root', '.users.uid',
+#  '.users.email', '.users.swift', '.users', '.usage', '.log', '.intent-log', '.rgw.buckets', '.rgw.buckets.index',
+#  '.rgw.buckets.extra'
+#]
+
+# data_percent below should eqaul 100% for the pools listed. The percentage is an estimate of the amount of data each pool will represent. For RGW the .rgw.buckets is the largest and thus requires the highest percentage.
+# IF Federation is used then the additional pools will be taken into account within the calculation. See PG calc below. Do not include Federated pools here.
+default['ceph']['pools']['radosgw']['pools'] = [
+  {'name' => '.rgw', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
+  {'name' => '.rgw.control', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
+  {'name' => '.rgw.gc', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
+  {'name' => '.rgw.root', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
+  {'name' => '.users.uid', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
+  {'name' => '.users.email', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
+  {'name' => '.users.swift', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
+  {'name' => '.users', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
+  {'name' => '.usage', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
+  {'name' => '.log', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
+  {'name' => '.intent-log', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
+  {'name' => '.rgw.buckets', 'data_percent' => 96.90, 'type' => 'replicated', 'profile' => ''},
+  {'name' => '.rgw.buckets.index', 'data_percent' => 1.00, 'type' => 'replicated', 'profile' => ''},
+  {'name' => '.rgw.buckets.extra', 'data_percent' => 1.00, 'type' => 'replicated', 'profile' => ''}
 ]
+
+default['ceph']['pools']['rbd']['pools'] = []
+
+# This is an internal array that gets built if the Federated option is true. It takes the 'pools' array above and adds the federated names to to.
+# So, if you have two vips and Federated is true then this array becomes exactly like the 'pools' array above but twice as large because it cycles through two times (num of vips).
+default['ceph']['pools']['radosgw']['federated']['pools'] = []
 
 # If pool names exist in this array they will be removed from Ceph
 default['ceph']['pools']['radosgw']['remove']['names'] = []
@@ -75,8 +102,21 @@ default['ceph']['pools']['rbd']['federated_names'] = []
 # The 'ceph''osd''size''max' value will be used if no 'size' value is given in the pools settings! Size represents replicas.
 default['ceph']['pools']['radosgw']['settings'] = {
   'pg_num' => 128, 'pgp_num' => 128, 'options' => '', 'force' => false,
-  'calc' => true, 'size' => 3, 'crush_rule_set' => 3, 'chooseleaf' => 'host',
+  'calc' => true, 'size' => 3, 'crush_rule_set' => 3, 'chooseleaf' => 'host', 'chooseleaf_type' => 1,
   'type' => 'replicated'
+}
+
+# Used for the initial calculation of PGs per pool.
+# total_osds - Total number of OSDs on initial setup.
+# target_pgs_per_osd - Factor used to represent a 'good' estimate for PGs per OSD. 100 - If you don't expect the size of the cluster
+# to change for awhile. 200 - If you believe the size could increase within a reasonable time. 300 - If you believe the cluster will double in size soon.
+# replicated_size - If you're using the default 'replicated' model then then number of replicas.
+# erasure_size - If you're using erasure coding then the sum of k+m (i.e, 8 + 3 = 11) where k is number of data chunks per piece of data stored and m is the number of coding chunks.
+default['ceph']['pools']['pgs']['calc'] = {
+  'total_osds' => 12,
+  'target_pgs_per_osd' => 200,
+  'replicated_size' => 3,
+  'erasure_size' => 11
 }
 
 default['ceph']['pools']['pgs']['num'] = 128

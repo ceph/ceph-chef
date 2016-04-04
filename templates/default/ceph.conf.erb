@@ -61,7 +61,7 @@
   # IMPORTANT: If you modify the crush map with the automation then uncomment the line below (osd crush update ...)
   # otherwise the crush map will not get created correctly and the PGs will stay in inactive/unclean state.
   # In a production system it's good to set this value to 'false' and modify the crush map to fit your environment.
-  ## osd crush update on start = false
+  osd crush update on start = <%= node['ceph']['osd']['crush']['update_on_start'] %>
   osd client up priority = 63
   # You can change the replica count via config or cli
   osd pool default size = <%= node['ceph']['osd']['size']['max'] %>
@@ -70,7 +70,7 @@
   osd pool default pgp num = <%= node['ceph']['pools']['pgs']['num'] %>
   osd pool default crush rule = 0
   osd backfill full ratio = 0.70
-  # Host
+  # Host 1, Rack 3
   osd crush chooseleaf type = <%= node['ceph']['osd']['crush']['chooseleaf_type'] %>
   # Note: All of these values can be overridden in you wrapper cookbook or "chef-repo" project
   <% end -%>
@@ -133,9 +133,17 @@
 
 <% if @is_rgw -%>
 <% if @is_federated -%>
-<% node['ceph']['pools']['radosgw']['federated_instances'].each do |inst| %>
-[client.radosgw.<%= node['hostname'] %>.<%= inst['name'] %>]
+<% node['ceph']['pools']['radosgw']['federated_zone_instances'].each do |inst| %>
+[client.radosgw.<%= node['hostname'] %>.<%= inst['region'] %>-<%= inst['name'] %>]
   host = <%= node['hostname'] %>
+  rgw region = <%= inst['region'] %>
+  <% if node['ceph']['version'] == 'hammer' %>
+  rgw region root pool = .<%= inst['region'] %>.rgw.root
+  <% else %>
+  rgw zonegroup root pool = .<%= inst['region'] %>.rgw.root
+  <% end %>
+  rgw zone = <%= inst['name'] %>
+  rgw zone root pool = .<%= inst['name'] %>.rgw.root
   keyring = /etc/ceph/$cluster.client.radosgw.<%= inst['name'] %>.keyring
   rgw num rados handles = <%= node['ceph']['radosgw']['rgw_num_rados_handles'] %>
   rgw frontends = civetweb port=<%= inst['port'] %> num_threads=<%= node['ceph']['radosgw']['civetweb_num_threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.<%= inst['name'] %>.log access_log_file=<%= node['ceph']['radosgw']['civetweb_access_log_file'] %>.<%= inst['name'] %>.log

@@ -28,26 +28,26 @@ base_key = "/etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
 
 if node['ceph']['pools']['radosgw']['federated_enable']
   Chef::Log.info "RADOSGW - FEDERATED Version..."
-  node['ceph']['pools']['radosgw']['federated_instances'].each do | inst |
-    keyring = "/etc/ceph/#{node['ceph']['cluster']}.client.radosgw.#{inst['name']}.keyring"
+  node['ceph']['pools']['radosgw']['federated_zone_instances'].each do | inst |
+    keyring = "/etc/ceph/#{node['ceph']['cluster']}.client.radosgw.#{inst['region']}-#{inst['name']}.keyring"
 
-    file "/var/log/radosgw/#{node['ceph']['cluster']}.client.radosgw.#{inst['name']}.log" do
+    file "/var/log/radosgw/#{node['ceph']['cluster']}.client.radosgw.#{inst['region']}-#{inst['name']}.log" do
       owner node['ceph']['owner']
       group node['ceph']['group']
     end
 
-    directory "/var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}.#{inst['name']}" do
+    directory "/var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}.#{inst['region']}-#{inst['name']}" do
       owner node['ceph']['owner']
       group node['ceph']['group']
       mode node['ceph']['mode']
       recursive true
       action :create
-      not_if "test -d /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}.#{inst['name']}"
+      not_if "test -d /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}.#{inst['region']}-#{inst['name']}"
     end
 
     # If a key exists then this will run
     execute 'write-ceph-radosgw-secret' do
-      command lazy { "ceph-authtool #{keyring} --create-keyring --name=client.radosgw.#{node['hostname']}.#{inst['name']} --add-key=ceph_chef_radosgw_inst_secret(inst['name'])" }
+      command lazy { "ceph-authtool #{keyring} --create-keyring --name=client.radosgw.#{node['hostname']}.#{inst['region']}-#{inst['name']} --add-key=ceph_chef_radosgw_inst_secret(inst['name'])" }
       creates keyring
       only_if { ceph_chef_radosgw_inst_secret(inst['name']) }
       not_if "test -f #{keyring}"
@@ -57,8 +57,8 @@ if node['ceph']['pools']['radosgw']['federated_enable']
     # If no key exists then this will run
     execute 'generate-client-radosgw-secret' do
       command <<-EOH
-        ceph-authtool --create-keyring #{keyring} -n client.radosgw.#{node['hostname']}.#{inst['name']} --gen-key --cap osd 'allow rwx' --cap mon 'allow rw'
-        ceph -k #{base_key} auth add client.radosgw.#{node['hostname']}.#{inst['name']} -i #{keyring}
+        ceph-authtool --create-keyring #{keyring} -n client.radosgw.#{node['hostname']}.#{inst['region']}-#{inst['name']} --gen-key --cap osd 'allow rwx' --cap mon 'allow rw'
+        ceph -k #{base_key} auth add client.radosgw.#{node['hostname']}.#{inst['region']}-#{inst['name']} -i #{keyring}
       EOH
       creates keyring
       not_if { ceph_chef_radosgw_inst_secret(inst) }
@@ -78,14 +78,53 @@ if node['ceph']['pools']['radosgw']['federated_enable']
       action :nothing
     end
 
+    # Add the region and zone files and remove the default root pools
+    # We only have one region even though it's in a list.
+    template "/etc/ceph/#{inst['region']}.json" do
+      source 'radosgw-federated-region.json.erb'
+    end
+
+    execute "create-region-#{inst['region']}" do
+      command <<-EOH
+        radosgw-admin region set --infile #{inst['region']}.json --name client.radosgw.#{node['hostname']}.#{inst['region']}-#{inst['name']}
+      EOH
+      not_if "radosgw-admin region list | grep #{inst['region']}"
+    end
+
+    execute "create-region-#{inst['region']}" do
+      command lazy { "rados -p .#{inst['region']}.rgw.root rm region_info.default" }
+      ignore_failure true
+    end
+
+    execute "create-region-#{inst['region']}" do
+      command <<-EOH
+        radosgw-admin region default --rgw-region=#{inst['region']} --name client.radosgw.#{node['hostname']}.#{inst['region']}-#{inst['name']}
+        radosgw-admin regionmap update --name client.radosgw.#{node['hostname']}.#{inst['region']}-#{inst['name']}
+      EOH
+      only_if "radosgw-admin region list | grep #{inst['region']}"
+    end
+
+    # Now the zones
+    template "/etc/ceph/#{inst['name']}.json" do
+      source 'radosgw-federated-zone.json.erb'
+      variables lazy {
+        {
+          :region => "#{inst['region']}",
+          :zone => "#{inst['name']}"
+        }
+      }
+    end
+
+    # TODO: Add the zones to a list so that you can 
+
     # This is only here as part of completeness. The service_type is not really needed because of defaults.
     ruby_block "radosgw-finalize-#{inst['name']}" do
       block do
         ['done', service_type].each do |ack|
-          ::File.open("/var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}.#{inst['name']}/#{ack}", 'w').close
+          ::File.open("/var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}.#{inst['region']}-#{inst['name']}/#{ack}", 'w').close
         end
       end
-      not_if "test -f /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}.#{inst['name']}/done"
+      not_if "test -f /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}.#{inst['region']}-#{inst['name']}/done"
     end
   end
 end
