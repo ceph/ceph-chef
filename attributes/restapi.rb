@@ -19,6 +19,8 @@
 
 include_attribute 'ceph-chef'
 
+default['ceph']['restapi']['url'] = 'api.ceph.example.com'
+default['ceph']['restapi']['ip'] = '10.0.100.21'
 default['ceph']['restapi']['port'] = 5080
 default['ceph']['restapi']['base_url'] = '/api/v0.1'
 default['ceph']['restapi']['log']['level'] = 'warning'

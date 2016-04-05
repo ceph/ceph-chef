@@ -48,7 +48,7 @@ default['ceph']['pools']['radosgw']['federated_master_zone_port'] = 80
 # Default for federated_zone_instances is 1. If you would like to run multiple instances of radosgw per node then increase
 # the federated_zone_instances count. NOTE: When you do this, make sure if you use a load balancer that you account
 # for the additional instance(s). Also, there *MUST* always be at least 1 instance value (change the values if desired)
-default['ceph']['pools']['radosgw']['federated_zone_instances'] = [{"name" => "inst1", "port" => 8080, "region" => ""}]
+default['ceph']['pools']['radosgw']['federated_zone_instances'] = [{"name" => "inst1", "port" => 8080, "region" => "", "url" => "s3.rgw.ceph.example.com"}]
 
 # These two values *must* be set in your wrapper cookbook if using federated region/zone. They will be the root pool
 # name used. For example, region - .us.rgw.root, zone - .us-east.rgw.root (these do not include instances).
@@ -122,6 +122,7 @@ default['ceph']['pools']['pgs']['calc'] = {
 }
 
 default['ceph']['pools']['pgs']['num'] = 128
+default['ceph']['pools']['crush']['rule'] = 0
 
 # RBD - Rados Block Device section
 # The cluster name will be prefixed to each name during the processing so please only include the actual name.

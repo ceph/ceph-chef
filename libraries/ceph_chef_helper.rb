@@ -76,8 +76,8 @@ def ceph_chef_pool_create(pool)
         pg_num pg_num_val
         pgp_num pg_num_val
         type type_val
-        crush_ruleset pool_val['crush_ruleset']
-        crush_ruleset_name crush_ruleset_name if !crush_ruleset_name.nil?
+        crush_ruleset pool_val['crush_ruleset'] if node['ceph']['osd']['crush']['update']
+        crush_ruleset_name crush_ruleset_name if !crush_ruleset_name.nil? && node['ceph']['osd']['crush']['update']
         profile profile_val if !profile_val.nil?
         options options_val if !options_val.nil?
         # notifies :run, "bash[wait-for-pgs-creating]", :immediately
@@ -94,8 +94,8 @@ def ceph_chef_pool_create(pool)
         pg_num pg_num_val
         pgp_num pg_num_val
         type type_val
-        crush_ruleset pool_val['crush_ruleset']
-        crush_ruleset_name crush_ruleset_name if !crush_ruleset_name.nil?
+        crush_ruleset pool_val['crush_ruleset'] if node['ceph']['osd']['crush']['update']
+        crush_ruleset_name crush_ruleset_name if !crush_ruleset_name.nil? && node['ceph']['osd']['crush']['update']
         options node['ceph']['pools'][pool]['settings']['options'] if node['ceph']['pools'][pool]['settings']['options']
         # notifies :run, "bash[wait-for-pgs-creating]", :immediately
       end

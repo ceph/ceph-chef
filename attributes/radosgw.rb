@@ -36,6 +36,8 @@ include_attribute 'ceph-chef'
 default['ceph']['radosgw']['port'] = 80
 # NOTE: If using federated options then look at 'pools' attributes file for federated ports.
 
+default['ceph']['radosgw']['default_url'] = 's3.rgw.ceph.example.com'
+
 # IMPORTANT: The civetweb user manual is a good place to look for custom config for civetweb:
 # https://github.com/civetweb/civetweb/blob/master/docs/UserManual.md
 # Add the options to the single line of the 'frontends etc...'

@@ -12,10 +12,10 @@
   auth cluster required = cephx
   auth service required = cephx
   auth client required = cephx
-  cephx require signatures = true
-  cephx cluster require signatures = true
-  cephx service require signatures = true
-  cephx sign messages = true
+  #cephx require signatures = true
+  #cephx cluster require signatures = true
+  #cephx service require signatures = false
+  #cephx sign messages = true
   # Note: mon host (required) and mon initial members (optional) should be in global section in addition
   # to the cluster and public network options since they are all critical to every node.
   # List of all of the monitor nodes in the given cluster
@@ -52,25 +52,27 @@
   <% # If the 'config''osd' key/value pairs are nil then use these values as defaults other wise be SURE to have at least these defined in your custom key/value OSD array -%>
   <% if node['ceph']['config']['osd'].nil? -%>
   # Set the default values here if no values provided to override them
+  # Need xattr use omap = true for RGW
   filestore xattr use omap = true
-  filestore flusher = false
   osd journal size = <%= node['ceph']['osd']['journal']['size'] %>
   osd mkfs type = xfs
-  osd mkfs options xfs = -f -i size=2048 -n size=65536
-  osd mount options xfs = noexec,nodev,noatime,nodiratime,barrier=0,discard
+  osd mount options xfs = rw,noexec,nodev,noatime,nodiratime,nobarrier
+  # Example: osd mkfs options xfs = -f -i size=2048
+  # Example: osd mount options xfs = noexec,nodev,noatime,nodiratime,barrier=0,discard
   # IMPORTANT: If you modify the crush map with the automation then uncomment the line below (osd crush update ...)
   # otherwise the crush map will not get created correctly and the PGs will stay in inactive/unclean state.
   # In a production system it's good to set this value to 'false' and modify the crush map to fit your environment.
-  # osd crush update on start = <%= node['ceph']['osd']['crush']['update_on_start'] %>
-  osd client up priority = 63
-  # You can change the replica count via config or cli
+  <% if node['ceph']['osd']['crush']['update'] %>
+  osd crush update on start = <%= node['ceph']['osd']['crush']['update_on_start'] %>
+  <% end %>
+  #You can change the replica count via config or cli
   osd pool default size = <%= node['ceph']['osd']['size']['max'] %>
   osd pool default min size = <%= node['ceph']['osd']['size']['min'] %>
   osd pool default pg num = <%= node['ceph']['pools']['pgs']['num'] %>
   osd pool default pgp num = <%= node['ceph']['pools']['pgs']['num'] %>
-  osd pool default crush rule = 0
-  osd backfill full ratio = 0.70
-  # Host 1, Rack 3
+  # Default is 0 for default crush rule.
+  # Example: osd pool default crush rule = <%= node['ceph']['pools']['crush']['rule'] %>
+  # Host 1, Rack 3 - Default is 1. This can have an impact on the crushmap if not the default.
   osd crush chooseleaf type = <%= node['ceph']['osd']['crush']['chooseleaf_type'] %>
   # Note: All of these values can be overridden in you wrapper cookbook or "chef-repo" project
   <% end -%>
@@ -90,8 +92,6 @@
 
 <% if @is_mon -%>
 [mon]
-  <% if !node['ceph']['mon']['clock_drift_allowed'].nil? -%>
-  <% end -%>
   <% if !node['ceph']['config']['mon'].nil? -%>
   <% node['ceph']['config']['mon'].sort.each do |k, v| %>
   <%= k %> = <%= v %>
@@ -153,7 +153,7 @@
   log file = /var/log/radosgw/$cluster.client.radosgw.<%= inst['name'] %>.log
   # Increased to 1 to log HTTP return codes - http://tracker.ceph.com/issues/12432
   debug rgw = 1/0
-  rgw dns name = <%= node['fqdn'] %>
+  rgw dns name = <%= inst['url'] %>
   <% if node['ceph']['radosgw']['keystone']['auth'] %>
   rgw keystone url = <%= node['ceph']['radosgw']['keystone']['admin']['url'] %>:<%= node['ceph']['radosgw']['keystone']['admin']['port'] %>
   rgw keystone admin token = <%= node['ceph']['radosgw']['keystone']['admin']['token'] %>
@@ -181,7 +181,7 @@
   log file = /var/log/radosgw/$cluster.client.radosgw.log
   # Increased to 1 to log HTTP return codes - http://tracker.ceph.com/issues/12432
   debug rgw = 1/0
-  rgw dns name = <%= node['fqdn'] %>
+  rgw dns name = <%= node['ceph']['radosgw']['default_url'] %>
   <% if node['ceph']['radosgw']['keystone']['auth'] %>
   rgw keystone url = <%= node['ceph']['radosgw']['keystone']['admin']['url'] %>:<%= node['ceph']['radosgw']['keystone']['admin']['port'] %>
   rgw keystone admin token = <%= node['ceph']['radosgw']['keystone']['admin']['token'] %>
@@ -200,7 +200,7 @@
 
 <% if @is_rest_api -%>
 [client.restapi]
-  public addr = <%= node['ipaddress'] %>:<%= node['ceph']['restapi']['port'] %>
+  public addr = <%= node['ceph']['restapi']['ip'] %>:<%= node['ceph']['restapi']['port'] %>
   keyring = /etc/ceph/$cluster.client.restapi.keyring
   restapi base url = <%= node['ceph']['restapi']['base_url'] %>
   log file = /var/log/ceph/$cluster.client.restapi.log
