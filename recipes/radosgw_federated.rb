@@ -110,12 +110,16 @@ if node['ceph']['pools']['radosgw']['federated_enable']
       variables lazy {
         {
           :region => "#{inst['region']}",
-          :zone => "#{inst['name']}"
+          :zone => "#{inst['name']}",
+          :secret_key => "",
+          :access_key => ""
         }
       }
     end
 
-    # TODO: Add the zones to a list so that you can 
+    # TODO: Add the zones to a list so that you can
+    # ceph_chef_secure_password(20)
+    # ceph_chef_secure_password(40)
 
     # This is only here as part of completeness. The service_type is not really needed because of defaults.
     ruby_block "radosgw-finalize-#{inst['name']}" do

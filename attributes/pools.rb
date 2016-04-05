@@ -64,21 +64,23 @@ default['ceph']['pools']['radosgw']['federated_zone_root_pool_name'] = nil
 
 # data_percent below should eqaul 100% for the pools listed. The percentage is an estimate of the amount of data each pool will represent. For RGW the .rgw.buckets is the largest and thus requires the highest percentage.
 # IF Federation is used then the additional pools will be taken into account within the calculation. See PG calc below. Do not include Federated pools here.
+# NOTE: IMPORANT - crush_ruleset -1 means the provider will not attempt to set the crush_ruleset of the pool. IF the value is >= 0 then
+# you MUST make sure you modify the crushmap BEFORE creating the pools!
 default['ceph']['pools']['radosgw']['pools'] = [
-  {'name' => '.rgw', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
-  {'name' => '.rgw.control', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
-  {'name' => '.rgw.gc', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
-  {'name' => '.rgw.root', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
-  {'name' => '.users.uid', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
-  {'name' => '.users.email', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
-  {'name' => '.users.swift', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
-  {'name' => '.users', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
-  {'name' => '.usage', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
-  {'name' => '.log', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
-  {'name' => '.intent-log', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => ''},
-  {'name' => '.rgw.buckets', 'data_percent' => 96.90, 'type' => 'replicated', 'profile' => ''},
-  {'name' => '.rgw.buckets.index', 'data_percent' => 1.00, 'type' => 'replicated', 'profile' => ''},
-  {'name' => '.rgw.buckets.extra', 'data_percent' => 1.00, 'type' => 'replicated', 'profile' => ''}
+  {'name' => '.rgw', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
+  {'name' => '.rgw.control', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
+  {'name' => '.rgw.gc', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
+  {'name' => '.rgw.root', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
+  {'name' => '.users.uid', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
+  {'name' => '.users.email', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
+  {'name' => '.users.swift', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
+  {'name' => '.users', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
+  {'name' => '.usage', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
+  {'name' => '.log', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
+  {'name' => '.intent-log', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
+  {'name' => '.rgw.buckets', 'data_percent' => 96.90, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
+  {'name' => '.rgw.buckets.index', 'data_percent' => 1.00, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
+  {'name' => '.rgw.buckets.extra', 'data_percent' => 1.00, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''}
 ]
 
 default['ceph']['pools']['rbd']['pools'] = []
@@ -102,7 +104,7 @@ default['ceph']['pools']['rbd']['federated_names'] = []
 # The 'ceph''osd''size''max' value will be used if no 'size' value is given in the pools settings! Size represents replicas.
 default['ceph']['pools']['radosgw']['settings'] = {
   'pg_num' => 128, 'pgp_num' => 128, 'options' => '', 'force' => false,
-  'calc' => true, 'size' => 3, 'crush_rule_set' => 3, 'chooseleaf' => 'host', 'chooseleaf_type' => 1,
+  'calc' => true, 'size' => 3, 'crush_ruleset' => 3, 'chooseleaf' => 'host', 'chooseleaf_type' => 1,
   'type' => 'replicated'
 }
 

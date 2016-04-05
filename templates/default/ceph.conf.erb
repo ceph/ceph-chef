@@ -61,7 +61,7 @@
   # IMPORTANT: If you modify the crush map with the automation then uncomment the line below (osd crush update ...)
   # otherwise the crush map will not get created correctly and the PGs will stay in inactive/unclean state.
   # In a production system it's good to set this value to 'false' and modify the crush map to fit your environment.
-  osd crush update on start = <%= node['ceph']['osd']['crush']['update_on_start'] %>
+  # osd crush update on start = <%= node['ceph']['osd']['crush']['update_on_start'] %>
   osd client up priority = 63
   # You can change the replica count via config or cli
   osd pool default size = <%= node['ceph']['osd']['size']['max'] %>

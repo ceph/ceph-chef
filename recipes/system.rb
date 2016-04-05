@@ -20,7 +20,10 @@
 # Use this recipe to update system oriented items so that it's easier to override on a per node or role basis
 
 # This will allow for a much higher pid count instead of the default 64k since Ceph uses a lot of threads/daemons
-execute 'pid_max' do
-  command "echo #{node['ceph']['system']['pid_max']} > /proc/sys/kernel/pid_max"
-  not_if "cat /proc/sys/kernel/pid_max | grep #{node['ceph']['system']['pid_max']}"
+
+node['ceph']['system']['sysctls'].each_with_index do |sysctl, index|
+  execute 'sysctl-updates-#{index}' do
+    command "echo #{sysctl} >> /etc/sysctl.conf"
+    not_if "cat /etc/sysctl.conf | grep #{sysctl}"
+  end
 end

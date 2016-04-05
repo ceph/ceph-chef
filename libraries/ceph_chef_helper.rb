@@ -26,7 +26,7 @@ def ceph_chef_build_federated_pool(pool)
   node['ceph']['pools'][pool]['federated_regions'].each do |region|
     node['ceph']['pools'][pool]['federated_zone_instances'].each do |zone_instance|
       node['ceph']['pools'][pool]['pools'].each do |pool_val|
-        federated_name = ".#{region}-#{zone_instance}#{pool_val['name']}"
+        federated_name = ".#{region}-#{zone_instance['name']}#{pool_val['name']}"
         if !node['ceph']['pools'][pool]['federated_names'].include? federated_name
           node.default['ceph']['pools'][pool]['federated_names'] << federated_name
           node.default['ceph']['pools'][pool]['federated']['pools'] << pool_val
@@ -69,15 +69,18 @@ def ceph_chef_pool_create(pool)
       type_val = pool_val['type']
       pg_num_val = get_pool_pg_count(pool, index, type_val, num_of_pools, true)
       profile_val = pool_val['profile'] if type_val == 'erasure'
+      crush_ruleset_name = pool_val['crush_ruleset_name']
 
       ceph_chef_pool name do
         action :create
         pg_num pg_num_val
         pgp_num pg_num_val
         type type_val
+        crush_ruleset pool_val['crush_ruleset']
+        crush_ruleset_name crush_ruleset_name if !crush_ruleset_name.nil?
         profile profile_val if !profile_val.nil?
         options options_val if !options_val.nil?
-        notifies :run, "bash[wait-for-pgs-creating]", :immediately
+        # notifies :run, "bash[wait-for-pgs-creating]", :immediately
       end
     end
   else
@@ -91,8 +94,10 @@ def ceph_chef_pool_create(pool)
         pg_num pg_num_val
         pgp_num pg_num_val
         type type_val
+        crush_ruleset pool_val['crush_ruleset']
+        crush_ruleset_name crush_ruleset_name if !crush_ruleset_name.nil?
         options node['ceph']['pools'][pool]['settings']['options'] if node['ceph']['pools'][pool]['settings']['options']
-        notifies :run, "bash[wait-for-pgs-creating]", :immediately
+        # notifies :run, "bash[wait-for-pgs-creating]", :immediately
       end
     end
   end
