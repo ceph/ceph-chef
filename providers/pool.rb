@@ -79,7 +79,7 @@ def create_pool
   cmd_text << " #{new_resource.crush_ruleset_name}" if new_resource.crush_ruleset_name
   cmd_text << " #{new_resource.options}" if new_resource.options
 
-  puts "#{cmd_text}"
+  puts "\nRunning... #{cmd_text}"
 
   cmd = Mixlib::ShellOut.new(cmd_text)
   cmd.run_command
@@ -89,6 +89,9 @@ end
 
 def set_pool
   cmd_text = "ceph osd pool set #{new_resource.name} #{new_resource.key} #{new_resource.value}"
+
+  puts "\nSetting... #{cmd_text}"
+  
   cmd = Mixlib::ShellOut.new(cmd_text)
   cmd.run_command
   cmd.error!

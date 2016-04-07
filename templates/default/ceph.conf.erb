@@ -53,6 +53,8 @@
   <% if node['ceph']['config']['osd'].nil? -%>
   # Set the default values here if no values provided to override them
   # Need xattr use omap = true for RGW
+  osd map dedup = true
+  # Example: osd op threads = 16
   filestore xattr use omap = true
   osd journal size = <%= node['ceph']['osd']['journal']['size'] %>
   osd mkfs type = xfs
@@ -136,6 +138,7 @@
 <% node['ceph']['pools']['radosgw']['federated_zone_instances'].each do |inst| %>
 [client.radosgw.<%= node['hostname'] %>.<%= inst['region'] %>-<%= inst['name'] %>]
   host = <%= node['hostname'] %>
+  <% if node['ceph']['pools']['radosgw']['federated_enable_regions_zones'] %>
   rgw region = <%= inst['region'] %>
   <% if node['ceph']['version'] == 'hammer' %>
   rgw region root pool = .<%= inst['region'] %>.rgw.root
@@ -144,13 +147,14 @@
   <% end %>
   rgw zone = <%= inst['name'] %>
   rgw zone root pool = .<%= inst['name'] %>.rgw.root
-  keyring = /etc/ceph/$cluster.client.radosgw.<%= inst['name'] %>.keyring
+  <% end %>
+  keyring = /etc/ceph/$cluster.client.radosgw.<%= inst['region'] %>-<%= inst['name'] %>.keyring
   rgw num rados handles = <%= node['ceph']['radosgw']['rgw_num_rados_handles'] %>
   rgw frontends = civetweb port=<%= inst['port'] %> num_threads=<%= node['ceph']['radosgw']['civetweb_num_threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.<%= inst['name'] %>.log access_log_file=<%= node['ceph']['radosgw']['civetweb_access_log_file'] %>.<%= inst['name'] %>.log
   # rgw enable ops log = false
   # rgw enable usage log = false
-  pid file = /var/run/ceph/$name.<%= inst['name'] %>.pid
-  log file = /var/log/radosgw/$cluster.client.radosgw.<%= inst['name'] %>.log
+  pid file = /var/run/ceph/$name.<%= inst['region'] %>-<%= inst['name'] %>.pid
+  log file = /var/log/radosgw/$cluster.client.radosgw.<%= inst['region'] %>-<%= inst['name'] %>.log
   # Increased to 1 to log HTTP return codes - http://tracker.ceph.com/issues/12432
   debug rgw = 1/0
   rgw dns name = <%= inst['url'] %>

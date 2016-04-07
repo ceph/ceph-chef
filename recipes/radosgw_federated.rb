@@ -84,24 +84,31 @@ if node['ceph']['pools']['radosgw']['federated_enable']
       source 'radosgw-federated-region.json.erb'
     end
 
-    execute "create-region-#{inst['region']}" do
-      command <<-EOH
-        radosgw-admin region set --infile #{inst['region']}.json --name client.radosgw.#{node['hostname']}.#{inst['region']}-#{inst['name']}
-      EOH
-      not_if "radosgw-admin region list | grep #{inst['region']}"
-    end
+    if node['ceph']['pools']['radosgw']['federated_enable_regions_zones']
+      # TODO: Need more work here for full region/zone
+      execute "create-region-#{inst['region']}" do
+        command <<-EOH
+          radosgw-admin region set --infile #{inst['region']}.json --name client.radosgw.#{node['hostname']}.#{inst['region']}-#{inst['name']}
+        EOH
+        not_if "radosgw-admin region list | grep #{inst['region']}"
+      end
 
-    execute "create-region-#{inst['region']}" do
-      command lazy { "rados -p .#{inst['region']}.rgw.root rm region_info.default" }
-      ignore_failure true
-    end
+      execute "create-region-#{inst['region']}" do
+        command lazy { "rados -p .#{inst['region']}.rgw.root rm region_info.default" }
+        ignore_failure true
+      end
 
-    execute "create-region-#{inst['region']}" do
-      command <<-EOH
-        radosgw-admin region default --rgw-region=#{inst['region']} --name client.radosgw.#{node['hostname']}.#{inst['region']}-#{inst['name']}
-        radosgw-admin regionmap update --name client.radosgw.#{node['hostname']}.#{inst['region']}-#{inst['name']}
-      EOH
-      only_if "radosgw-admin region list | grep #{inst['region']}"
+      execute "create-region-#{inst['region']}" do
+        command <<-EOH
+          radosgw-admin region default --rgw-region=#{inst['region']} --name client.radosgw.#{node['hostname']}.#{inst['region']}-#{inst['name']}
+          radosgw-admin regionmap update --name client.radosgw.#{node['hostname']}.#{inst['region']}-#{inst['name']}
+        EOH
+        only_if "radosgw-admin region list | grep #{inst['region']}"
+      end
+
+      # TODO: Update the keys for the zones. This will allow each one to sync with the other.
+      # ceph_chef_secure_password(20)
+      # ceph_chef_secure_password(40)
     end
 
     # Now the zones
@@ -116,10 +123,6 @@ if node['ceph']['pools']['radosgw']['federated_enable']
         }
       }
     end
-
-    # TODO: Add the zones to a list so that you can
-    # ceph_chef_secure_password(20)
-    # ceph_chef_secure_password(40)
 
     # This is only here as part of completeness. The service_type is not really needed because of defaults.
     ruby_block "radosgw-finalize-#{inst['name']}" do

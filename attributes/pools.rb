@@ -23,7 +23,7 @@ include_attribute 'ceph-chef'
 
 ##### Erasure coding
 # NOTE: This is already created so don't try to set it again. Also, add to the key_value hash if more options are needed.
-default['ceph']['pools']['erasure_coding']['profiles'] = [{"profile" => "custom-default", "directory" => "/usr/lib64/ceph/erasure-code", "plugin" => "SHEC", "force" => true, "key_value" => {"k" => 8, "m" => 3}}]
+default['ceph']['pools']['erasure_coding']['profiles'] = [{"profile" => "custom-default", "directory" => "/usr/lib64/ceph/erasure-code", "plugin" => "jerasure", "force" => true, "ruleset_root" => "", "key_value" => {"k" => 3, "m" => 2}}]
 # NOTE: Override the above array with the profile(s) you want for your environment. The above is simply an example!!
 
 # There may be more but at the initial time of this code the following are valid plugins:
@@ -40,6 +40,7 @@ default['ceph']['pools']['erasure_coding']['profiles'] = [{"profile" => "custom-
 # {region name}-{zone name}-{instance} -- Naming convention used but you can change it
 default['ceph']['pools']['radosgw']['federated_enable'] = false
 default['ceph']['pools']['radosgw']['federated_regions'] = []
+default['ceph']['pools']['radosgw']['federated_enable_regions_zones'] = false
 default['ceph']['pools']['radosgw']['federated_master_zone'] = ''
 default['ceph']['pools']['radosgw']['federated_master_zone_port'] = 80
 # NOTE: If you use a region then you *must* have at least 1 zone defined and if you use a zone then must at least 1

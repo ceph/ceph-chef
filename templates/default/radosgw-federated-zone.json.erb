@@ -1,21 +1,21 @@
 {
-  "domain_root": ".<%=@region%>-<%@zone%>.domain.rgw",
-  "control_pool": ".<%=@region%>-<%@zone%>.rgw.control",
-  "gc_pool": ".<%=@region%>-<%@zone%>.gc",
-  "log_pool": ".<%=@region%>-<%@zone%>.log",
-  "intent_log_pool": ".<%=@region%>-<%@zone%>.intent-log",
-  "usage_log_pool": ".<%=@region%>-<%@zone%>.usage",
-  "user_keys_pool": ".<%=@region%>-<%@zone%>.users",
-  "user_email_pool": ".<%=@region%>-<%@zone%>.users.email",
-  "user_swift_pool": ".<%=@region%>-<%@zone%>.users.swift",
-  "user_uid_pool": ".<%=@region%>-<%@zone%>.users.uid",
+  "domain_root": ".<%=@region%>-<%=@zone%>.domain.rgw",
+  "control_pool": ".<%=@region%>-<%=@zone%>.rgw.control",
+  "gc_pool": ".<%=@region%>-<%=@zone%>.gc",
+  "log_pool": ".<%=@region%>-<%=@zone%>.log",
+  "intent_log_pool": ".<%=@region%>-<%=@zone%>.intent-log",
+  "usage_log_pool": ".<%=@region%>-<%=@zone%>.usage",
+  "user_keys_pool": ".<%=@region%>-<%=@zone%>.users",
+  "user_email_pool": ".<%=@region%>-<%=@zone%>.users.email",
+  "user_swift_pool": ".<%=@region%>-<%=@zone%>.users.swift",
+  "user_uid_pool": ".<%=@region%>-<%=@zone%>.users.uid",
   "system_key": { "access_key": "<%=@access_key%>", "secret_key": "<%=@secret_key%>"},
   "placement_pools": [
     {
       "key": "default-placement",
       "val": {
-        "index_pool": ".<%=@region%>-<%@zone%>.rgw.buckets.index",
-        "data_pool": ".<%=@region%>-<%@zone%>.rgw.buckets"
+        "index_pool": ".<%=@region%>-<%=@zone%>.rgw.buckets.index",
+        "data_pool": ".<%=@region%>-<%=@zone%>.rgw.buckets"
       }
     }
   ]

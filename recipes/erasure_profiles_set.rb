@@ -31,6 +31,8 @@ node['ceph']['pools']['erasure_coding']['profiles'].each do | profile |
     key_value profile['key_value']
     force profile['force']
     technique profile['technique']
+    ruleset_root profile['ruleset_root'] if node['ceph']['osd']['crush']['update'] && (!profile['ruleset_root'].nil? && !profile['ruleset_root'].empty?)
+    ruleset_failure_domain profile['ruleset_failure_domain'] if node['ceph']['osd']['crush']['update'] && (!profile['ruleset_failure_domain'].nil? && !profile['ruleset_failure_domain'].empty?)
     action :set
     not_if "ceph osd erasure-code-profile get #{profile['profile']}"
   end

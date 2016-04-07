@@ -54,7 +54,7 @@ def set_profile
   end
 
   cmd_text = "ceph osd erasure-code-profile set #{new_resource.name}"
-  if !new_resource.directory.nil? 
+  if !new_resource.directory.nil?
     cmd_text += " directory=#{new_resource.directory}"
   end
 
@@ -66,17 +66,17 @@ def set_profile
     cmd_text += " technique=#{new_resource.technique}"
   end
 
-  if !new_resource.ruleset_root.nil?
+  if !new_resource.ruleset_root.nil? && !new_resource.ruleset_root.empty?
     cmd_text += " ruleset-root=#{new_resource.ruleset_root}"
   end
 
-  if !new_resource.ruleset_failure_domain.nil?
+  if !new_resource.ruleset_failure_domain.nil? && !new_resource.ruleset_failure_domain.empty?
     cmd_text += " ruleset-failure-domain=#{new_resource.ruleset_failure_domain}"
   end
 
-  if !new_resource.packet_size.nil?
-    cmd_text += " packet-size=#{new_resource.packet_size}"
-  end
+#  if !new_resource.packet_size.nil?
+#    cmd_text += " packet-size=#{new_resource.packet_size}"
+#  end
 
   if !new_resource.key_value.nil?
     new_resource.key_value.each do | key, value |
@@ -87,6 +87,8 @@ def set_profile
   if new_resource.force
     cmd_text += " --force"
   end
+
+  puts "\nErasure-coding profile... #{cmd_text}"
 
   cmd = Mixlib::ShellOut.new(cmd_text)
   cmd.run_command

@@ -88,6 +88,8 @@ def ceph_chef_pool_create(pool)
     node_loop.each_with_index do |pool_val, index|
       type_val = pool_val['type'] # node['ceph']['pools'][pool]['pools'][index]['type']
       pg_num_val = get_pool_pg_count(pool, index, type_val, 1, false)
+      profile_val = pool_val['profile'] if type_val == 'erasure'
+      crush_ruleset_name = pool_val['crush_ruleset_name']
 
       ceph_chef_pool pool_val['name'] do
         action :create
@@ -96,6 +98,7 @@ def ceph_chef_pool_create(pool)
         type type_val
         crush_ruleset pool_val['crush_ruleset'] if node['ceph']['osd']['crush']['update']
         crush_ruleset_name crush_ruleset_name if !crush_ruleset_name.nil? && node['ceph']['osd']['crush']['update']
+        profile profile_val if !profile_val.nil?
         options node['ceph']['pools'][pool]['settings']['options'] if node['ceph']['pools'][pool]['settings']['options']
         # notifies :run, "bash[wait-for-pgs-creating]", :immediately
       end
@@ -173,6 +176,7 @@ def get_pool_pg_count(pool_type, pool_index, type, num_of_pool_groups, federated
 
     # NOTE: Could add float or just make sure data_percent has decimal point in array such as 1 being 1.00 because ruby tries to be too smart.
     num = [(target_pgs_per_osd * total_osds * (data_percent/100)/num_of_pool_groups)/size, (total_osds/size)/num_of_pool_groups, calc['min_pgs_per_pool']].max
+    # The power of 2 calculation does not go to the higher but actually to the nearest power of 2 value.
     val = ceph_chef_power_of_2(num)
   end
 

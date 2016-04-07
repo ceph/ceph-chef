@@ -10,7 +10,7 @@
         {
           "name": "<%= zone['region'] %>-<%= zone['name'] %>",
           "endpoints": [
-                "http:\/\/<%= zone['region'] %>-:<%= zone['port'] %>\/"],
+                "http:\/\/<%= zone['region'] %>-<%= zone['name'] %>:<%= zone['port'] %>\/"],
           "log_meta": "true",
           "log_data": "true"
         }<% if index < node['ceph']['pools']['radosgw']['federated_zone_instances'].size %>,<% end %>
