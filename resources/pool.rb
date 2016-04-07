@@ -38,5 +38,11 @@ attribute :key, :kind_of => String
 attribute :value, :kind_of => [Integer, String]
 # Pool type - default is replicated
 attribute :type, :kind_of => String, :default => 'replicated'
+# Erasure coding profile
+attribute :profile, :kind_of => String
+# crush_ruleset
+attribute :crush_ruleset, :kind_of => Integer, :default => -1
+# Crush ruleset name
+attribute :crush_ruleset_name, :kind_of => String
 
 attr_accessor :exists

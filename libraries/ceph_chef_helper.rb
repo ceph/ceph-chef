@@ -21,36 +21,87 @@ require 'json'
 
 # NOTE: To create radosgw federated pools we need to override the default node['ceph']['pools']['radosgw']['names']
 # by rebuilding the structure dynamically based on the federated options.
+# name should already have '.' as first character so don't add it to formating here
 def ceph_chef_build_federated_pool(pool)
   node['ceph']['pools'][pool]['federated_regions'].each do |region|
-    node['ceph']['pools'][pool]['federated_zones'].each do |zone|
-      node['ceph']['pools'][pool]['federated_instances'].each do |instance|
-        node['ceph']['pools'][pool]['names'].each do |name|
-          # name should already have '.' as first character so don't add it to formating here
-          federated_name = ".#{region}-#{zone}-#{instance['name']}#{name}"
-          if !node['ceph']['pools'][pool]['federated_names'].include? federated_name
-            node.default['ceph']['pools'][pool]['federated_names'] << federated_name
-          end
+    node['ceph']['pools'][pool]['federated_zone_instances'].each do |zone_instance|
+      node['ceph']['pools'][pool]['pools'].each do |pool_val|
+        federated_name = ".#{region}-#{zone_instance['name']}#{pool_val['name']}"
+        if !node['ceph']['pools'][pool]['federated_names'].include? federated_name
+          node.default['ceph']['pools'][pool]['federated_names'] << federated_name
+          node.default['ceph']['pools'][pool]['federated']['pools'] << pool_val
         end
       end
     end
   end
 end
 
+=begin
+def ceph_chef_build_federated_pool(pool)
+  node['ceph']['pools'][pool]['federated_regions'].each do |region|
+    node['ceph']['pools'][pool]['federated_zones'].each do |zone|
+      node['ceph']['pools'][pool]['federated_instances'].each do |instance|
+        node['ceph']['pools'][pool]['pools'].each do |pool_val|
+          federated_name = ".#{region}-#{zone}-#{instance['name']}#{pool_val['name']}"
+          if !node['ceph']['pools'][pool]['federated_names'].include? federated_name
+            node.default['ceph']['pools'][pool]['federated_names'] << federated_name
+            node.default['ceph']['pools'][pool]['federated']['pools'] << pool_val
+          end
+        end
+      end
+    end
+  end
+end
+=end
+
 def ceph_chef_pool_create(pool)
   if !node['ceph']['pools'][pool]['federated_names'].empty? && node['ceph']['pools'][pool]['federated_names']
     node_loop = node['ceph']['pools'][pool]['federated_names']
-  else
-    node_loop = node['ceph']['pools'][pool]['names']
-  end
+    # num_of_pools = node['ceph']['pools'][pool]['federated_instances'].size
+    # Force it to be 1 for now since we don't know how much each federated instance will be used.
+    num_of_pools = 1
 
-  node_loop.each do |name|
-    ceph_chef_pool name do
-      action :create
-      pg_num node['ceph']['pools'][pool]['settings']['pg_num']
-      pgp_num node['ceph']['pools'][pool]['settings']['pgp_num']
-      type node['ceph']['pools'][pool]['settings']['type']
-      options node['ceph']['pools'][pool]['settings']['options'] if node['ceph']['pools'][pool]['settings']['options']
+    node_loop.each_with_index do |name, index|
+      profile_val = nil
+      options_val = nil
+
+      pool_val =  node['ceph']['pools'][pool]['federated']['pools'][index]
+      type_val = pool_val['type']
+      pg_num_val = get_pool_pg_count(pool, index, type_val, num_of_pools, true)
+      profile_val = pool_val['profile'] if type_val == 'erasure'
+      crush_ruleset_name = pool_val['crush_ruleset_name']
+
+      ceph_chef_pool name do
+        action :create
+        pg_num pg_num_val
+        pgp_num pg_num_val
+        type type_val
+        crush_ruleset pool_val['crush_ruleset'] if node['ceph']['osd']['crush']['update']
+        crush_ruleset_name crush_ruleset_name if !crush_ruleset_name.nil? && node['ceph']['osd']['crush']['update']
+        profile profile_val if !profile_val.nil?
+        options options_val if !options_val.nil?
+        # notifies :run, "bash[wait-for-pgs-creating]", :immediately
+      end
+    end
+  else
+    node_loop = node['ceph']['pools'][pool]['pools']
+    node_loop.each_with_index do |pool_val, index|
+      type_val = pool_val['type'] # node['ceph']['pools'][pool]['pools'][index]['type']
+      pg_num_val = get_pool_pg_count(pool, index, type_val, 1, false)
+      profile_val = pool_val['profile'] if type_val == 'erasure'
+      crush_ruleset_name = pool_val['crush_ruleset_name']
+
+      ceph_chef_pool pool_val['name'] do
+        action :create
+        pg_num pg_num_val
+        pgp_num pg_num_val
+        type type_val
+        crush_ruleset pool_val['crush_ruleset'] if node['ceph']['osd']['crush']['update']
+        crush_ruleset_name crush_ruleset_name if !crush_ruleset_name.nil? && node['ceph']['osd']['crush']['update']
+        profile profile_val if !profile_val.nil?
+        options node['ceph']['pools'][pool]['settings']['options'] if node['ceph']['pools'][pool]['settings']['options']
+        # notifies :run, "bash[wait-for-pgs-creating]", :immediately
+      end
     end
   end
 end
@@ -58,26 +109,78 @@ end
 def ceph_chef_pool_set(pool)
   if !node['ceph']['pools'][pool]['federated_names'].empty? && node['ceph']['pools'][pool]['federated_enable']
     node_loop = node['ceph']['pools'][pool]['federated_names']
-  else
-    node_loop = node['ceph']['pools'][pool]['names']
-  end
+    node_loop.each do |name|
+      if node['ceph']['pools'][pool]['settings']['type'] == 'replicated'
+        if node['ceph']['pools'][pool]['settings']['size']
+          val = node['ceph']['pools'][pool]['settings']['size']
+        else
+          val = node['ceph']['osd']['size']['max']
+        end
 
-  node_loop.each do |name|
-    if node['ceph']['pools'][pool]['settings']['type'] == 'replicated'
-      if node['ceph']['pools'][pool]['settings']['size']
-        val = node['ceph']['pools'][pool]['settings']['size']
-      else
-        val = node['ceph']['osd']['size']['max']
+        ceph_chef_pool name do
+          action :set
+          key 'size'
+          value val
+          only_if "ceph osd pool #{name} size | grep #{val}"
+        end
       end
+    end
+  else
+    node_loop = node['ceph']['pools'][pool]['pools']
+    node_loop.each do |pool_val|
+      if node['ceph']['pools'][pool]['settings']['type'] == 'replicated'
+        if node['ceph']['pools'][pool]['settings']['size']
+          val = node['ceph']['pools'][pool]['settings']['size']
+        else
+          val = node['ceph']['osd']['size']['max']
+        end
 
-      ceph_chef_pool name do
-        action :set
-        key 'size'
-        value val
-        only_if "ceph osd pool #{name} size | grep #{val}"
+        ceph_chef_pool pool_val['name'] do
+          action :set
+          key 'size'
+          value val
+          only_if "ceph osd pool #{pool_val['name']} size | grep #{val}"
+        end
       end
     end
   end
+
+end
+
+# Calculate the PG count for a given pool. Set the default if count < default or error
+# Reference: http://ceph.com/pgcalc/
+def get_pool_pg_count(pool_type, pool_index, type, num_of_pool_groups, federated)
+  val = node['ceph']['pools']['pgs']['num']
+  if federated
+    pool = node['ceph']['pools'][pool_type]['federated']['pools'][pool_index]
+  else
+    pool = node['ceph']['pools'][pool_type]['pools'][pool_index]
+  end
+
+  if pool
+    calc = node['ceph']['pools']['pgs']['calc']
+    total_osds = calc['total_osds']
+    if type == 'erasure'
+      size = calc['erasure_size']
+    else
+      size = calc['replicated_size']
+    end
+    if size <= 0
+      size = 1
+    end
+    target_pgs_per_osd = calc['target_pgs_per_osd']
+    data_percent = pool['data_percent']
+    if num_of_pool_groups <= 0
+      num_of_pool_groups = 1
+    end
+
+    # NOTE: Could add float or just make sure data_percent has decimal point in array such as 1 being 1.00 because ruby tries to be too smart.
+    num = [(target_pgs_per_osd * total_osds * (data_percent/100)/num_of_pool_groups)/size, (total_osds/size)/num_of_pool_groups, calc['min_pgs_per_pool']].max
+    # The power of 2 calculation does not go to the higher but actually to the nearest power of 2 value.
+    val = ceph_chef_power_of_2(num)
+  end
+
+  val
 end
 
 def ceph_chef_is_mon_node
@@ -601,11 +704,21 @@ def ceph_chef_ceph_chef_use_cephx?(type = nil)
     node['ceph']['config']['global']["auth #{type} required"] == 'cephx'
 end
 
+# Nearest po2
 def ceph_chef_power_of_2(number)
   result = 1
+  last_pwr = 1
   while result < number
+    last_pwr = result
     result <<= 1
   end
+
+  low_delta = number - last_pwr
+  high_delta = result - number
+  if high_delta > low_delta
+    result = last_pwr
+  end
+
   result
 end
 

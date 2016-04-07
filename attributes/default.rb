@@ -70,7 +70,7 @@ default['ceph']['mds']['tag'] = 'ceph-mds'
 default['ceph']['restapi']['tag'] = 'ceph-restapi'
 
 # Set the max pid since Ceph creates a lot of threads and if using with OpenStack then...
-default['ceph']['system']['pid_max'] = 4194303
+default['ceph']['system']['sysctls']= ['kernel.pid_max=4194303', 'fs.file-max=26234859']
 
 default['ceph']['install_debug'] = false
 default['ceph']['encrypted_data_bags'] = false

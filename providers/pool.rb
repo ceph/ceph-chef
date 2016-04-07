@@ -31,6 +31,9 @@ action :create do
   else
     converge_by("Creating #{@new_resource}") do
       create_pool
+      if @new_resource.crush_ruleset >= 0
+        set_pool_crush_ruleset
+      end
     end
   end
 end
@@ -69,9 +72,15 @@ def load_current_resource
   @current_resource.exists = pool_exists?(@current_resource.name)
 end
 
+# profile is only used for erasure coding...
 def create_pool
-  cmd_text = "ceph osd pool create #{new_resource.name} #{new_resource.pg_num} #{new_resource.pgp_num}"
+  cmd_text = "ceph osd pool create #{new_resource.name} #{new_resource.pg_num} #{new_resource.pgp_num} #{new_resource.type}"
+  cmd_text << " #{new_resource.profile}" if new_resource.profile
+  cmd_text << " #{new_resource.crush_ruleset_name}" if new_resource.crush_ruleset_name
   cmd_text << " #{new_resource.options}" if new_resource.options
+
+  puts "\nRunning... #{cmd_text}"
+
   cmd = Mixlib::ShellOut.new(cmd_text)
   cmd.run_command
   cmd.error!
@@ -80,10 +89,21 @@ end
 
 def set_pool
   cmd_text = "ceph osd pool set #{new_resource.name} #{new_resource.key} #{new_resource.value}"
+
+  puts "\nSetting... #{cmd_text}"
+  
   cmd = Mixlib::ShellOut.new(cmd_text)
   cmd.run_command
   cmd.error!
   Chef::Log.debug "Pool updated: #{cmd.stderr}"
+end
+
+def set_pool_crush_ruleset
+  cmd_text = "ceph osd pool set #{new_resource.name} crush_ruleset #{new_resource.crush_ruleset}"
+  cmd = Mixlib::ShellOut.new(cmd_text)
+  cmd.run_command
+  cmd.error!
+  Chef::Log.debug "Pool crush_ruleset updated: #{cmd.stderr}"
 end
 
 def get_pool

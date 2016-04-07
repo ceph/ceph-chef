@@ -30,8 +30,11 @@
 #        {
 #            "type": "hdd",
 #            "data": "/dev/sdb",
+#            "data_type": "hdd",
 #            "journal": "/dev/sdf",
-#            "encrypted": true
+#            "journal_type": "ssd",
+#            "encrypted": false,
+#            "status": ""
 #        }
 #    ]
 # }
