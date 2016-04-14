@@ -203,6 +203,7 @@ if node['ceph']['osd']['devices']
         node.save
       end
       action :nothing
+      only_if "ceph-disk list 2>/dev/null | grep 'ceph data' | grep #{osd_device['data']}"
     end
 
     # NOTE: Do not attempt to change the 'ceph journal' label on a partition. If you do then ceph-disk will not

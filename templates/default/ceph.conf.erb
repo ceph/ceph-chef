@@ -124,7 +124,7 @@
   admin socket = /var/run/ceph/$cluster-$type.$id.$pid.asok
 <% end -%>
 
-<% if @is_admin -%>
+<% if @is_admin || @is_rgw -%>
 # NOTE: You can null out the 'admin socket' below if you wish. If present, when running ceph -s without being 'sudo'
 # you will receive an 'unable to bind error msg'.
 [client.admin]

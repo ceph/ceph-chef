@@ -91,7 +91,7 @@ def set_pool
   cmd_text = "ceph osd pool set #{new_resource.name} #{new_resource.key} #{new_resource.value}"
 
   puts "\nSetting... #{cmd_text}"
-  
+
   cmd = Mixlib::ShellOut.new(cmd_text)
   cmd.run_command
   cmd.error!
