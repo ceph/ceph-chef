@@ -74,6 +74,23 @@ The other set of attributes that this recipe needs is `node['ceph']['osd']['devi
 * {'device' => '/dev/sde', 'dmcrypt' => true} - Store the data encrypted by passing --dmcrypt to `ceph-disk-prepare`
 * {'device' => '/dev/sdc', 'journal' => '/dev/sdd2'} - use a full disk for the OSD with a custom partition for the journal on another device such as an SSD or NMVe
 
+### Trouble Shooting
+
+Pools - After creating it appears that some of the PGs are stuck 'creating+peering'. This can be caused by a number of things. Most likely an OSD is not blocking the creation. Do something like:
+ceph pg ls-by-pool <whatever the pool name> | grep creating
+
+Something like: ceph pg ls-by-pool .rgw | grep creating
+
+It should show you the PG number as the first column. Use that to query it to see if something is blocking it.
+ceph pg <pg num> query
+
+Something like: ceph pg 175.f7 query
+
+This will return a lot of json data. You can grep or look for 'blocking'. If found then restart the given OSD. You can find the host for the OSD with: ceph osd find <OSD number>
+
+Once you're on the host simply restart the specific OSD with: sudo service ceph restart osd.<whatever the number>
+
+
 ### Using a Policy Wrapper Cookbook
 
 To automate setting several of these node attributes, it is recommended to use a policy wrapper cookbook. This allows the ability to use Chef Server cookbook versions along with environment version restrictions to roll out configuration changes in an ordered fashion.

@@ -34,8 +34,12 @@ if service_type == 'upstart'
   end
 else
   service 'ceph' do
-    start_command 'service ceph start osd'
-    action [:enable, :start]
+    action [:enable]
+  end
+
+  execute 'ceph-osd-start' do
+    command lazy { "sudo service ceph start osd" }
+    action :run
   end
 
   execute 'ceph-osd-restart' do
