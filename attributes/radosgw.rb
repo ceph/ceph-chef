@@ -41,8 +41,8 @@ default['ceph']['radosgw']['default_url'] = 's3.rgw.ceph.example.com'
 # IMPORTANT: The civetweb user manual is a good place to look for custom config for civetweb:
 # https://github.com/civetweb/civetweb/blob/master/docs/UserManual.md
 # Add the options to the single line of the 'frontends etc...'
-# NOTE: Change the number of default threads that civetweb uses per node
-default['ceph']['radosgw']['civetweb_num_threads'] = 10
+# NOTE: Change the number of default threads that civetweb uses per node - Default is 100 from civetweb
+default['ceph']['radosgw']['civetweb_num_threads'] = 100
 # NOTE: DO NOT append '.log' to these log files because the conf recipe adds it because of the possible use of federation.
 default['ceph']['radosgw']['civetweb_access_log_file'] = '/var/log/radosgw/civetweb.access'
 default['ceph']['radosgw']['civetweb_error_log_file'] = '/var/log/radosgw/civetweb.error'

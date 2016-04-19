@@ -110,7 +110,8 @@ def ceph_chef_pool_set(pool)
   if !node['ceph']['pools'][pool]['federated_names'].empty? && node['ceph']['pools'][pool]['federated_enable']
     node_loop = node['ceph']['pools'][pool]['federated_names']
     node_loop.each do |name|
-      if node['ceph']['pools'][pool]['settings']['type'] == 'replicated'
+      # if node['ceph']['pools'][pool]['settings']['type'] == 'replicated'
+      if name['type'] == 'replicated'
         if node['ceph']['pools'][pool]['settings']['size']
           val = node['ceph']['pools'][pool]['settings']['size']
         else
@@ -128,7 +129,8 @@ def ceph_chef_pool_set(pool)
   else
     node_loop = node['ceph']['pools'][pool]['pools']
     node_loop.each do |pool_val|
-      if node['ceph']['pools'][pool]['settings']['type'] == 'replicated'
+      # if node['ceph']['pools'][pool]['settings']['type'] == 'replicated'
+      if pool_val['type'] == 'replicated'
         if node['ceph']['pools'][pool]['settings']['size']
           val = node['ceph']['pools'][pool]['settings']['size']
         else

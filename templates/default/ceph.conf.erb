@@ -151,13 +151,14 @@
   keyring = /etc/ceph/$cluster.client.radosgw.<%= inst['region'] %>-<%= inst['name'] %>.keyring
   rgw num rados handles = <%= node['ceph']['radosgw']['rgw_num_rados_handles'] %>
   rgw frontends = civetweb port=<%= inst['port'] %> num_threads=<%= node['ceph']['radosgw']['civetweb_num_threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.<%= inst['name'] %>.log access_log_file=<%= node['ceph']['radosgw']['civetweb_access_log_file'] %>.<%= inst['name'] %>.log
-  # rgw enable ops log = false
-  # rgw enable usage log = false
+  rgw enable ops log = false
+  rgw enable usage log = false
   pid file = /var/run/ceph/$name.<%= inst['region'] %>-<%= inst['name'] %>.pid
   log file = /var/log/radosgw/$cluster.client.radosgw.<%= inst['region'] %>-<%= inst['name'] %>.log
   # Increased to 1 to log HTTP return codes - http://tracker.ceph.com/issues/12432
   debug rgw = 1/0
   rgw dns name = <%= inst['url'] %>
+  rgw resolve cname = True
   <% if node['ceph']['radosgw']['keystone']['auth'] %>
   rgw keystone url = <%= node['ceph']['radosgw']['keystone']['admin']['url'] %>:<%= node['ceph']['radosgw']['keystone']['admin']['port'] %>
   rgw keystone admin token = <%= node['ceph']['radosgw']['keystone']['admin']['token'] %>
@@ -179,13 +180,14 @@
   keyring = /etc/ceph/$cluster.client.radosgw.keyring
   rgw num rados handles = <%= node['ceph']['radosgw']['rgw_num_rados_handles'] %>
   rgw frontends = civetweb port=<%= node['ceph']['radosgw']['port'] %> num_threads=<%= node['ceph']['radosgw']['civetweb_num_threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.log access_log_file=<%= node['ceph']['radosgw']['civetweb_access_log_file'] %>.log
-  # rgw enable ops log = false
-  # rgw enable usage log = false
+  rgw enable ops log = false
+  rgw enable usage log = false
   pid file = /var/run/ceph/$name.pid
   log file = /var/log/radosgw/$cluster.client.radosgw.log
   # Increased to 1 to log HTTP return codes - http://tracker.ceph.com/issues/12432
   debug rgw = 1/0
   rgw dns name = <%= node['ceph']['radosgw']['default_url'] %>
+  rgw resolve cname = True
   <% if node['ceph']['radosgw']['keystone']['auth'] %>
   rgw keystone url = <%= node['ceph']['radosgw']['keystone']['admin']['url'] %>:<%= node['ceph']['radosgw']['keystone']['admin']['port'] %>
   rgw keystone admin token = <%= node['ceph']['radosgw']['keystone']['admin']['token'] %>
