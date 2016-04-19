@@ -21,7 +21,8 @@
 
 bash 'set-ceph-crush-tunables' do
   code <<-EOH
-    ceph --name mon. --keyring /etc/ceph/#{node['ceph']['cluster']}.mon.keyring osd crush tunables optimal
+    ceph crush tunables optimal
+    ceph osd crush set-tunable straw_calc_version 2
   EOH
   ignore_failure true
 end
