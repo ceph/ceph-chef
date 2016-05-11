@@ -25,14 +25,18 @@ end
 
 platform_family = node['platform_family']
 
-case platform_family
-when 'rhel'
-  # Known issue - https://access.redhat.com/solutions/1546303
-  # 2015-10-05
-  cookbook_file '/etc/init.d/ceph-radosgw' do
-    source 'ceph-radosgw'
-    owner 'root'
-    group 'root'
-    mode '0755'
+if node['ceph']['version'] == 'hammer'
+  case platform_family
+  when 'rhel'
+    # Known issue - https://access.redhat.com/solutions/1546303
+    # 2015-10-05
+    cookbook_file '/etc/init.d/ceph-radosgw' do
+      source 'ceph-radosgw'
+      owner 'root'
+      group 'root'
+      mode '0755'
+    end
   end
 end
+
+include_recipe 'ceph-chef::install'

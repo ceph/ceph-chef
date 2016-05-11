@@ -3,7 +3,7 @@
 # Cookbook Name:: ceph
 # Recipe:: osd
 #
-# Copyright 2015, Bloomberg Finance L.P.
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,7 +31,15 @@ if service_type == 'upstart'
     action [:stop]
   end
 else
-  execute 'raw osd stop all' do
-    command 'service ceph stop osd'
+  if node['ceph']['version'] != 'hammer'
+    service 'ceph.target' do
+      service_name 'ceph.target'
+      provider Chef::Provider::Service::Systemd
+      action [:stop]
+    end
+  else
+    execute 'raw osd stop all' do
+      command 'service ceph stop osd'
+    end
   end
 end

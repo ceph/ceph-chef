@@ -45,11 +45,8 @@ package 'parted'    # needed by ceph-disk-prepare to run partprobe
 package 'hdparm'    # used by ceph-disk activate
 package 'xfsprogs'  # needed by ceph-disk-prepare to format as xfs
 
-if node['ceph']['version'] == 'hammer'
-  # 0.94.6 seemed to have a package issue where lsb-core was required and CentOS core does not install automatically
-  package 'redhat-lsb-core' do # lsb-init
-    not_if "test -f /lib/lsb/init-functions"
-  end
+package 'redhat-lsb-core' do # lsb-init
+  not_if "test -f /lib/lsb/init-functions"
 end
 
 if node['platform_family'] == 'rhel' && node['platform_version'].to_f > 6

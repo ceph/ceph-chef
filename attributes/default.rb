@@ -45,12 +45,12 @@ when 'hammer'
 else
   default['ceph']['owner'] = 'ceph'
   default['ceph']['group'] = 'ceph'
-  default['ceph']['mode'] = 0770
+  default['ceph']['mode'] = 0750
   case node['platform']
   when 'ubuntu'
     default['ceph']['init_style'] = 'upstart'
   else
-    default['ceph']['init_style'] = 'systemd'
+    default['ceph']['init_style'] = 'sysvinit'  # systemd
   end
 end
 

@@ -28,7 +28,12 @@ service 'radosgw' do
     if node['platform'] == 'debian'
       service_name 'radosgw'
     else
-      service_name 'ceph-radosgw'
+      if node['ceph']['version'] != 'hammer'
+        service_name 'ceph-radosgw.target'
+        provider Chef::Provider::Service::Systemd
+      else
+        service_name 'ceph-radosgw'
+      end
     end
   end
   supports :restart => true

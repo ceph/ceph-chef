@@ -24,6 +24,7 @@
 # This recipe can only be ran AFTER a monitor has started
 # NOTE: This recipe will create bootstrap keys for OSD, [MDS, RGW automatically]
 
+# NOTE: MAY NEED TO MOVE Key gen to it's own recipe for all keys in the /tmp directory for Jewel and later...
 execute 'format bootstrap-osd-secret as keyring' do
   command lazy { "ceph-authtool '/var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring' --create-keyring --name=client.bootstrap-osd --add-key=#{ceph_chef_bootstrap_osd_secret}" }
   only_if { ceph_chef_bootstrap_osd_secret }

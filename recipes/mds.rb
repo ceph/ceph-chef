@@ -22,13 +22,15 @@ include_recipe 'ceph-chef::mds_install'
 
 cluster = 'ceph'
 
-directory "/var/lib/ceph/mds/#{cluster}-#{node['hostname']}" do
-  owner node['ceph']['owner']
-  group node['ceph']['group']
-  mode node['ceph']['mode']
-  recursive true
-  action :create
-  not_if "test -d /var/lib/ceph/mds/#{cluster}-#{node['hostname']}"
+if node['ceph']['version'] == 'hammer'
+  directory "/var/lib/ceph/mds/#{cluster}-#{node['hostname']}" do
+    owner node['ceph']['owner']
+    group node['ceph']['group']
+    mode node['ceph']['mode']
+    recursive true
+    action :create
+    not_if "test -d /var/lib/ceph/mds/#{cluster}-#{node['hostname']}"
+  end
 end
 
 ceph_client 'mds' do
