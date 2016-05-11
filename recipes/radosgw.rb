@@ -22,31 +22,33 @@ node.default['ceph']['is_radosgw'] = true
 include_recipe 'ceph-chef'
 include_recipe 'ceph-chef::radosgw_install'
 
-directory '/var/log/radosgw' do
-  owner node['ceph']['owner']
-  group node['ceph']['group']
-  mode node['ceph']['mode']
-  action :create
-  not_if "test -d /var/log/radosgw"
-end
+if node['ceph']['version'] == 'hammer'
+  directory '/var/log/radosgw' do
+    #owner node['ceph']['owner']
+    #group node['ceph']['group']
+    mode node['ceph']['mode']
+    action :create
+    not_if "test -d /var/log/radosgw"
+  end
 
-# If the directory does not exist already (on a dedicated node)
-directory '/var/run/ceph' do
-  owner node['ceph']['owner']
-  group node['ceph']['group']
-  mode node['ceph']['mode']
-  action :create
-  not_if "test -d /var/run/ceph"
-end
+  # If the directory does not exist already (on a dedicated node)
+  directory '/var/run/ceph' do
+    #owner node['ceph']['owner']
+    #group node['ceph']['group']
+    mode node['ceph']['mode']
+    action :create
+    not_if "test -d /var/run/ceph"
+  end
 
-# This directory is only needed if you use the bootstrap-rgw key as part of the key generation for rgw.
-# All bootstrap-xxx keys are created during the mon key creation in mon_keys.rb.
-directory '/var/lib/ceph/bootstrap-rgw' do
-  owner node['ceph']['owner']
-  group node['ceph']['group']
-  mode node['ceph']['mode']
-  action :create
-  not_if "test -d /var/lib/ceph/bootstrap-rgw"
+  # This directory is only needed if you use the bootstrap-rgw key as part of the key generation for rgw.
+  # All bootstrap-xxx keys are created during the mon key creation in mon_keys.rb.
+  directory '/var/lib/ceph/bootstrap-rgw' do
+    owner node['ceph']['owner']
+    group node['ceph']['group']
+    mode node['ceph']['mode']
+    action :create
+    not_if "test -d /var/lib/ceph/bootstrap-rgw"
+  end
 end
 
 # IF you want specific recipes for civetweb then put them in the recipe referenced here.

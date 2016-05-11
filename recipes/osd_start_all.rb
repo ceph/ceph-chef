@@ -33,18 +33,27 @@ if service_type == 'upstart'
     subscribes :restart, "template[/etc/ceph/#{node['ceph']['cluster']}.conf]"
   end
 else
-  service 'ceph' do
-    action [:enable]
-  end
+  if node['ceph']['version'] != 'hammer'
+    service 'ceph.target' do
+      service_name 'ceph.target'
+      provider Chef::Provider::Service::Systemd
+      action [:enable, :start]
+      subscribes :restart, "template[/etc/ceph/#{node['ceph']['cluster']}.conf]"
+    end
+  else
+    service 'ceph' do
+      action [:enable]
+    end
 
-  execute 'ceph-osd-start' do
-    command lazy { "sudo service ceph start osd" }
-    action :run
-  end
+    execute 'ceph-osd-start' do
+      command lazy { "sudo service ceph start osd" }
+      action :run
+    end
 
-  execute 'ceph-osd-restart' do
-    command lazy { "sudo service ceph restart osd" }
-    action :nothing
-    subscribes :run, "template[/etc/ceph/#{node['ceph']['cluster']}.conf]"
+    execute 'ceph-osd-restart' do
+      command lazy { "sudo service ceph restart osd" }
+      action :nothing
+      subscribes :run, "template[/etc/ceph/#{node['ceph']['cluster']}.conf]"
+    end
   end
 end

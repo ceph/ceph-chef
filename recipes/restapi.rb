@@ -23,13 +23,15 @@ include_recipe 'ceph-chef'
 
 service_type = node['ceph']['mon']['init_style']
 
-directory "/var/lib/ceph/restapi/#{node['ceph']['cluster']}-restapi" do
-  owner node['ceph']['owner']
-  group node['ceph']['group']
-  mode 0755
-  recursive true
-  action :create
-  not_if "test -d /var/lib/ceph/restapi/#{node['ceph']['cluster']}-restapi"
+if node['ceph']['version'] == 'hammer'
+  directory "/var/lib/ceph/restapi/#{node['ceph']['cluster']}-restapi" do
+    owner node['ceph']['owner']
+    group node['ceph']['group']
+    mode 0755
+    recursive true
+    action :create
+    not_if "test -d /var/lib/ceph/restapi/#{node['ceph']['cluster']}-restapi"
+  end
 end
 
 base_key = "/etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"

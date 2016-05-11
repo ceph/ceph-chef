@@ -39,3 +39,5 @@ when 'rhel'
     mode '0644'
   end
 end
+
+include_recipe 'ceph-chef::install'
