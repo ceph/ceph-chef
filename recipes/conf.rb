@@ -36,8 +36,7 @@ directory '/etc/ceph' do
 end
 
 cookbook_file '/usr/bin/ceph-remove-clean' do
-  source 'ceph-remove-clean.yum' if node['platform'] != 'ubuntu'
-  source 'ceph-remove-clean.apt' if node['platform'] == 'ubuntu'
+  source 'ceph-remove-clean'
   owner 'root'
   group 'root'
   mode '0755'
