@@ -71,6 +71,15 @@ if node['ceph']['version'] == 'hammer'
     not_if "test -d /var/lib/ceph/mon/#{node['ceph']['cluster']}-#{node['hostname']}"
   end
 
+  directory '/var/lib/ceph/bootstrap-osd' do
+    owner node['ceph']['owner']
+    group node['ceph']['group']
+    mode node['ceph']['mode']
+    recursive true
+    action :create
+    not_if "test -d /var/lib/ceph/bootstrap-osd"
+  end
+
   directory '/var/lib/ceph/bootstrap-rgw' do
     owner node['ceph']['owner']
     group node['ceph']['group']

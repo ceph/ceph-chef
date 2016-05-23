@@ -18,6 +18,7 @@
 #
 
 require 'json'
+require 'securerandom'
 
 # NOTE: To create radosgw federated pools we need to override the default node['ceph']['pools']['radosgw']['names']
 # by rebuilding the structure dynamically based on the federated options.
@@ -177,7 +178,8 @@ def get_pool_pg_count(pool_type, pool_index, type, num_of_pool_groups, federated
     end
 
     # NOTE: Could add float or just make sure data_percent has decimal point in array such as 1 being 1.00 because ruby tries to be too smart.
-    num = [(target_pgs_per_osd * total_osds * (data_percent/100)/num_of_pool_groups)/size, (total_osds/size)/num_of_pool_groups, calc['min_pgs_per_pool']].max
+    # NOTE: Removed - (total_osds/size)/num_of_pool_groups from array so that the PGs are not too large.
+    num = [(target_pgs_per_osd * total_osds * (data_percent/100)/num_of_pool_groups)/size, calc['min_pgs_per_pool']].max
     # The power of 2 calculation does not go to the higher but actually to the nearest power of 2 value.
     val = ceph_chef_power_of_2(num)
   end
@@ -286,6 +288,7 @@ def ceph_chef_mon_env_search_string
 end
 
 # fsid is on all nodes so just use a function similar to ceph_chef_mon_secret
+# NOTE: Returns nil for a reason! There is a check later in the process
 def ceph_chef_fsid_secret
   if node['ceph']['encrypted_data_bags']
     secret = Chef::EncryptedDataBagItem.load_secret(node['ceph']['fsid']['secret_file'])
@@ -298,6 +301,7 @@ def ceph_chef_fsid_secret
     elsif node['ceph']['fsid-secret']
       node['ceph']['fsid-secret']
     else
+      Chef::Log.info('No fsid secret found')
       nil
     end
   else

@@ -32,16 +32,18 @@ execute 'format bootstrap-osd-secret as keyring' do
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
+# NOTE: Don't want to do any 'ceph' calls until a quorum has been established or the ceph-create-keys python script will sit in a constant wait state...
+# BOOTSTRAP_KEY=`ceph --name mon. --keyring /etc/ceph/#{node['ceph']['cluster']}.mon.keyring auth get-or-create-key client.bootstrap-osd mon 'allow profile bootstrap-osd'`
 bash 'save-bootstrap-osd-key' do
   code <<-EOH
-    BOOTSTRAP_KEY=`ceph --name mon. --keyring /etc/ceph/#{node['ceph']['cluster']}.mon.keyring auth get-or-create-key client.bootstrap-osd mon 'allow profile bootstrap-osd'`
+    BOOTSTRAP_KEY=$(ceph-authtool "/etc/ceph/#{node['ceph']['cluster']}.mon.keyring" -n mon. -p)
     ceph-authtool "/var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring" \
         --create-keyring \
         --name=client.bootstrap-osd \
         --add-key="$BOOTSTRAP_KEY"
   EOH
   not_if { ceph_chef_bootstrap_osd_secret }
-  not_if "test -f /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring"
+  # not_if "test -f /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring"
   notifies :create, 'ruby_block[save_bootstrap_osd]', :immediately
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end

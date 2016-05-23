@@ -119,9 +119,10 @@ execute 'osd-create-key-bootstrap-in-directory' do
   only_if {ceph_chef_bootstrap_osd_secret}
 end
 
+# BOOTSTRAP_KEY=`ceph --name mon. --keyring '/etc/ceph/#{node['ceph']['cluster']}.mon.keyring' auth get-or-create-key client.bootstrap-osd mon 'allow profile bootstrap-osd'`
 bash 'osd-write-bootstrap-osd-key' do
   code <<-EOH
-    BOOTSTRAP_KEY=`ceph --name mon. --keyring '/etc/ceph/#{node['ceph']['cluster']}.mon.keyring' auth get-or-create-key client.bootstrap-osd mon 'allow profile bootstrap-osd'`
+    BOOTSTRAP_KEY=$(ceph-authtool "/etc/ceph/#{node['ceph']['cluster']}.mon.keyring" -n mon. -p)
     ceph-authtool "/var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring" \
         --create-keyring \
         --name=client.bootstrap-osd \
@@ -160,7 +161,7 @@ if node['ceph']['osd']['devices']
     # Only one partition by default for ceph data
     partitions = 1
 
-    unless osd_device['status'].nil? || osd_device['status'] != 'deployed'
+    if !node['ceph']['osd']['devices'][index]['status'].nil? && node['ceph']['osd']['devices'][index]['status'] == 'deployed'
       Log.info("osd: osd device '#{osd_device}' has already been setup.")
       next
     end
@@ -201,7 +202,7 @@ if node['ceph']['osd']['devices']
         node.save
       end
       action :nothing
-      only_if "ceph-disk list 2>/dev/null | grep 'ceph data' | grep #{osd_device['data']}"
+      #only_if "ceph-disk list 2>/dev/null | grep 'ceph data' | grep #{osd_device['data']}"
     end
 
     # NOTE: Do not attempt to change the 'ceph journal' label on a partition. If you do then ceph-disk will not
