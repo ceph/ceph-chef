@@ -1,0 +1,219 @@
+#!/usr/bin/env python
+#
+# Author: Chris Jones <cjones303@bloomberg.net>
+#
+# Copyright 2016, Bloomberg Finance L.P.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+import sys
+import argparse
+import datetime
+import subprocess
+import json
+import boto
+import boto.s3.connection
+from boto.s3.connection import Location
+from boto.s3.bucket import Bucket
+
+# rgw_s3_api.py is a collection of Python functions to do S3 things...
+import rgw_s3_api
+
+# Change to any user you wish it to be that has admin rights to RGW
+admin_user = 'radosgw'
+
+VERSION="0.1.0"
+
+# These values get set by the functions below
+conn = ''
+user = ''
+key = ''
+secret = ''
+bucket = ''
+endpoint = ''
+port = 80
+
+def error(code, message):
+    print "Error: %d - %s" % (code, message)
+
+
+# Returns JSON output from radosgw-admin and converts it to dict
+# cmd is an array and NOT a string
+def radosgw_admin(cmd):
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    json_output, err = process.communicate()
+    if err:
+        error(500, err)
+        return None
+
+    return json.loads(json_output)
+
+
+def user_connect():
+    global conn
+    conn = rgw_s3_api.connect(key, secret, endpoint=endpoint, port=port)  # There are many other options
+    return conn
+
+
+def get_user_secrets():
+    global key
+    global secret
+
+    retcode = False
+    try:
+        cmd = ["radosgw-admin", "user", "info", "--uid=%s" % user]
+        user_dict = radosgw_admin(cmd)
+        if user_dict:
+            # Only gets the first one. User can have a number of key/secret pairs
+            key = user_dict['keys'][0]['access_key']
+            secret = user_dict['keys'][0]['secret_key']
+            retcode = True
+    except BaseException, e:
+        error(e.errno, e.message)
+
+    return retcode
+
+def get_bucket(bucket_name, actions, headers=None, validate=True):
+    global bucket
+
+    retcode = False
+
+    if not bucket_name:
+        error(500, 'Missing bucket name.')
+        return retcode
+
+    create = False
+    make_public = False
+
+    for action in actions:
+        if action == 'create':
+            create = True
+        if action == 'public':
+            make_public = True
+
+    bucket = rgw_s3_api.bucket_handle(conn, bucket_name, validate=validate, headers=headers, create=create, make_public=make_public)
+    if not bucket:
+        error(404, 'Bucket not found.')
+        return retcode
+    else:
+        return True
+
+
+# Define a class for returns
+def tasks(options):
+    if find_action(options.actions, 'list'):
+        rgw_s3_api.bucket_list(bucket)
+        return None
+
+    if options.object:
+        if not options.location and not options.object_string:
+            error(400, 'Object location and/or object-string actions are not specified. At least one is required.')
+            return None
+        if find_action(options.actions, 'put'):
+            return rgw_s3_api.object_create(bucket, options.object, options.object_string, options.location, make_public=find_action(options.actions, 'public'), headers=options.headers)
+        if find_action(options.actions, 'delete'):
+            return rgw_s3_api.object_delete(bucket, options.object, headers=options.headers, version_id=options.version_id, mfa_token=None)
+        if find_action(options.actions, 'get'):
+            return rgw_s3_api.object_get(bucket, options.object, options.location, headers=options.headers, version_id=options.version_id)
+        if find_action(options.actions, 'url'):
+            signature = rgw_s3_api.object_url(bucket, options.object, signed_duration=options.duration)
+            print signature
+            return signature
+
+    return None
+
+
+def find_action(actions, find_action):
+    for action in actions:
+        if action == find_action:
+            return True
+    return False
+
+
+def main():
+    retcode = 1
+
+    p = argparse.ArgumentParser(description='radosgw-admin2 - Adds some missing features to radosgw-admin', prog='radosgw-admin2')
+    p.add_argument('--user', '-u', action='store', help='(Required) - Pass in the username used to during the creation of the user.')
+    p.add_argument('--endpoint', '-e', action='store', help='(Required) - Endpoint URL.')
+    p.add_argument('--port', '-p', action='store', default=80, type=int, help='(Required - Defaults to port=80) - Endpoint port.')
+    p.add_argument('--key', '-k', action='store', help='(Optional) - Pass in the key of the user.')
+    p.add_argument('--secret', '-s', action='store', help='(Optional) - Pass in the secret of the user.')
+    p.add_argument('--bucket', '-b', action='store', help='Bucket.')
+    p.add_argument('--object', '-o', action='store', help='Object.')
+    p.add_argument('--object-string', '-t', action='store', help='Object string - Make an object from the passed in string.')
+    p.add_argument('--location', '-l', action='store', default=None, help='Location of object etc.')
+    p.add_argument('--headers', '-r', action='store', default=None, help='Headers to inject.')
+    p.add_argument('--version-id', '-i', action='store', default=None, help='Version ID of object.')
+    p.add_argument('--duration', '-d', action='store', default=0, type=int, help='Object URL duration in seconds.')
+    p.add_argument('--actions', '-a', nargs='+', help='Action(s) to take - N arguments.')
+    p.add_argument('--version', '-v', action='version', version="radosgw-admin2 %s" % VERSION)
+
+    # Make sure to set global since variable will be set
+    global user
+    global bucket
+    global key
+    global secret
+    global endpoint
+    global port
+
+    options = p.parse_args()
+
+    if options.user:
+        user = options.user
+    if options.key:
+        key = options.key
+    if options.secret:
+        secret = options.secret
+    if options.endpoint:
+        endpoint = options.endpoint
+    if options.port:
+        port = options.port
+
+    # Change to meet your environment
+    if port < 80:
+        p.print_help()
+        return retcode
+
+    if not options.user and not options.endpoint:
+        p.print_help()
+        return retcode
+
+    # These two values are optional but if one is specified then both must be specified
+    if options.key and not options.secret:
+        p.print_help()
+        return retcode
+
+    if options.secret and not options.key:
+        p.print_help()
+        return retcode
+
+    if not options.key and not options.secret:
+        if get_user_secrets() is not True:
+            return retcode
+
+    if user_connect() is None:
+        return retcode
+
+    if get_bucket(options.bucket, options.actions):
+        tasks(options)
+        retcode = 0
+    else:
+        retcode = 1
+
+    return retcode
+
+
+if __name__ == "__main__":
+    sys.exit(main())
