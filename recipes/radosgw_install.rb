@@ -39,4 +39,18 @@ if node['ceph']['version'] == 'hammer'
   end
 end
 
+cookbook_file '/usr/local/bin/radosgw-admin2' do
+  source 'radosgw-admin2'
+  owner 'root'
+  group 'root'
+  mode 0755
+end
+
+cookbook_file '/usr/local/bin/rgw_s3_api.py' do
+  source 'rgw_s3_api.py'
+  owner 'root'
+  group 'root'
+  mode 0755
+end
+
 include_recipe 'ceph-chef::install'

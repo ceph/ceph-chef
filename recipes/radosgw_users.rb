@@ -21,23 +21,35 @@
 # the radosgw.rb attributes file. They can also be overridden in multiple places.
 # Admin user MUST have caps set properly. Without full rights, no admin functions can occur via the admin restful calls.
 
-ruby_block 'initialize-radosgw-admin-user' do
-  block do
-    rgw_admin = JSON.parse(%x[radosgw-admin user create --display-name="#{node['ceph']['radosgw']['user']['admin']['name']}" --uid="#{node['ceph']['radosgw']['user']['admin']['uid']}" --access_key="#{node['ceph']['radosgw']['user']['admin']['access_key']}" --secret="#{node['ceph']['radosgw']['user']['admin']['secret']}"])
-    rgw_admin_cap = JSON.parse(%x[radosgw-admin caps add --uid="#{node['ceph']['radosgw']['user']['admin']['uid']}" --caps="users=*;buckets=*;metadata=*;usage=*;zone=*"])
-  end
-  not_if "radosgw-admin user info --uid='#{node['ceph']['radosgw']['user']['admin']['uid']}'"
-  ignore_failure true
-end
+node['ceph']['radosgw']['users'].each do | user |
+  # NOTE: Keys are always generated if the user is new! We do not want to ever store user credentials.
+  access_key = ceph_chef_secure_password_alphanum_upper(20)
+  secret_key = ceph_chef_secure_password(40)
 
-# Create a test user unless you have overridden the attribute and removed the test user. (Optional)
-if node['ceph']['radosgw']['user']['test']['uid']
-  ruby_block 'initialize-radosgw-test-user' do
+  ruby_block "initialize-radosgw-user-#{user['name']}" do
     block do
-      rgw_tester = JSON.parse(%x[radosgw-admin user create --display-name="#{node['ceph']['radosgw']['user']['test']['name']}" --uid="#{node['ceph']['radosgw']['user']['test']['uid']}" --max-buckets=node['ceph']['radosgw']['user']['test']['max_buckets'] --access_key="#{node['ceph']['radosgw']['user']['test']['access_key']}" --secret="#{node['ceph']['radosgw']['user']['test']['secret']}" --caps="#{node['ceph']['radosgw']['user']['test']['caps']}"])
-      rgw_tester_cap = JSON.parse(%x[radosgw-admin caps add --uid="#{node['ceph']['radosgw']['user']['test']['uid']}" --caps="#{node['ceph']['radosgw']['user']['test']['caps']}"])
+      if user.attribute?('max_buckets') && user['max_buckets'] > 0
+        max_buckets = "--max-buckets=#{user['max_buckets']}"
+      else
+        max_buckets = ''
+      end
+
+      rgw_admin = JSON.parse(%x[radosgw-admin user create --display-name="#{user['name']}" --uid="#{user['uid']}" "#{max_buckets}" --access_key="#{access_key}" --secret="#{secret_key}"])
+      if user.attribute?('admin_caps') && !user['admin_caps'].empty?
+        rgw_admin_cap = JSON.parse(%x[radosgw-admin caps add --uid="#{user['uid']}" --caps="#{user['admin_caps']}"])
+      end
+
     end
-    not_if "radosgw-admin user info --uid='#{node['ceph']['radosgw']['user']['test']['uid']}'"
+    not_if "radosgw-admin user info --uid='#{user['uid']}'"
     ignore_failure true
+  end
+
+  if user.attribute?('buckets')
+    user['buckets'].each do | bucket |
+      execute "create-bucket-#{bucket}" do
+        command "radosgw-admin2 --user #{user['uid']} --endpoint #{node['ceph']['radosgw']['default_url'] } --port #{node['ceph']['radosgw']['port']} --key #{access_key} --secret #{secret_key} --bucket #{bucket} --action create"
+        ignore_failure true
+      end
+    end
   end
 end
