@@ -83,6 +83,7 @@ def ceph_chef_pool_create(pool)
         options options_val if !options_val.nil?
         # notifies :run, "bash[wait-for-pgs-creating]", :immediately
       end
+      sleep 30
     end
   else
     node_loop = node['ceph']['pools'][pool]['pools']
@@ -103,6 +104,7 @@ def ceph_chef_pool_create(pool)
         options node['ceph']['pools'][pool]['settings']['options'] if node['ceph']['pools'][pool]['settings']['options']
         # notifies :run, "bash[wait-for-pgs-creating]", :immediately
       end
+      sleep 30
     end
   end
 end
