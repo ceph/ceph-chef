@@ -136,7 +136,7 @@
 <% if @is_rgw -%>
 <% if @is_federated -%>
 <% node['ceph']['pools']['radosgw']['federated_zone_instances'].each do |inst| %>
-[client.radosgw.<%= node['hostname'] %>.<%= inst['region'] %>-<%= inst['name'] %>]
+[client.radosgw.<%= inst['region'] %>-<%= inst['name'] %>]
   host = <%= node['hostname'] %>
   rgw opstate ratelimit = 0
   <% if node['ceph']['pools']['radosgw']['federated_enable_regions_zones'] %>
@@ -149,7 +149,7 @@
   rgw zone = <%= inst['region'] %>-<%= inst['name'] %>
   rgw zone root pool = .<%= inst['region'] %>-<%= inst['name'] %>.rgw.root
   <% end %>
-  keyring = /etc/ceph/$cluster.client.radosgw.<%= inst['region'] %>-<%= inst['name'] %>.keyring
+  keyring = /etc/ceph/$cluster.client.radosgw.keyring
   rgw num rados handles = <%= node['ceph']['radosgw']['rgw_num_rados_handles'] %>
   rgw frontends = civetweb port=<%= inst['port'] %> num_threads=<%= node['ceph']['radosgw']['civetweb_num_threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.<%= inst['name'] %>.log access_log_file=<%= node['ceph']['radosgw']['civetweb_access_log_file'] %>.<%= inst['name'] %>.log
   rgw enable ops log = false
@@ -176,7 +176,7 @@
 
 <% end %>
 <% else %>
-[client.radosgw.<%= node['hostname'] %>]
+[client.radosgw.gateway]
   host = <%= node['hostname'] %>
   rgw opstate ratelimit = 0
   keyring = /etc/ceph/$cluster.client.radosgw.keyring
