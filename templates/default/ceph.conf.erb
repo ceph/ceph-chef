@@ -146,8 +146,8 @@
   <% else %>
   rgw zonegroup root pool = .<%= inst['region'] %>.rgw.root
   <% end %>
-  rgw zone = <%= inst['name'] %>
-  rgw zone root pool = .<%= inst['name'] %>.rgw.root
+  rgw zone = <%= inst['region'] %>-<%= inst['name'] %>
+  rgw zone root pool = .<%= inst['region'] %>-<%= inst['name'] %>.rgw.root
   <% end %>
   keyring = /etc/ceph/$cluster.client.radosgw.<%= inst['region'] %>-<%= inst['name'] %>.keyring
   rgw num rados handles = <%= node['ceph']['radosgw']['rgw_num_rados_handles'] %>

@@ -3,14 +3,14 @@
   "api_name": "<%= node['ceph']['pools']['radosgw']['federated_regions'][0] %>",
   "is_master": "true",
   "endpoints": [
-        "http:\/\/<%= node['ceph']['pools']['radosgw']['federated_regions'][0] %>-<%= node['ceph']['pools']['radosgw']['federated_master_zone'] %>:<%= node['ceph']['pools']['radosgw']['federated_master_zone_port'] %>\/"],
+        "http:\/\/<%= node['ceph']['pools']['radosgw']['federated_zone_instances'][0]['url'] %>:<%= node['ceph']['pools']['radosgw']['federated_zone_instances'][0]['port'] %>\/"],
   "master_zone": "<%= node['ceph']['pools']['radosgw']['federated_regions'][0] %>-<%= node['ceph']['pools']['radosgw']['federated_master_zone'] %>",
   "zones": [
   <% node['ceph']['pools']['radosgw']['federated_zone_instances'].each_with_index do |zone, index| %>
         {
           "name": "<%= zone['region'] %>-<%= zone['name'] %>",
           "endpoints": [
-                "http:\/\/<%= zone['region'] %>-<%= zone['name'] %>:<%= zone['port'] %>\/"],
+                "http:\/\/<%= zone['url'] %>:<%= zone['port'] %>\/"],
           "log_meta": "true",
           "log_data": "true"
         }<% if index < node['ceph']['pools']['radosgw']['federated_zone_instances'].size %>,<% end %>
