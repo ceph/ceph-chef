@@ -1,7 +1,7 @@
 {
   "domain_root": ".<%=@region%>-<%=@zone%>.rgw",
   "control_pool": ".<%=@region%>-<%=@zone%>.rgw.control",
-  "gc_pool": ".<%=@region%>-<%=@zone%>.gc",
+  "gc_pool": ".<%=@region%>-<%=@zone%>.rgw.gc",
   "log_pool": ".<%=@region%>-<%=@zone%>.log",
   "intent_log_pool": ".<%=@region%>-<%=@zone%>.intent-log",
   "usage_log_pool": ".<%=@region%>-<%=@zone%>.usage",
@@ -15,7 +15,8 @@
       "key": "default-placement",
       "val": {
         "index_pool": ".<%=@region%>-<%=@zone%>.rgw.buckets.index",
-        "data_pool": ".<%=@region%>-<%=@zone%>.rgw.buckets"
+        "data_pool": ".<%=@region%>-<%=@zone%>.rgw.buckets",
+        "data_extra_pool": ".<%=@region%>-<%=@zone%>.rgw.buckets.extra"
       }
     }
   ]

@@ -34,18 +34,18 @@ file "/var/log/radosgw/#{node['ceph']['cluster']}.client.radosgw.log" do
   group node['ceph']['group']
 end
 
-directory "/var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}" do
+directory "/var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.gateway" do
   owner node['ceph']['owner']
   group node['ceph']['group']
   mode node['ceph']['mode']
   recursive true
   action :create
-  not_if "test -d /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}"
+  not_if "test -d /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.gateway"
 end
 
 # If a key exists then this will run
 execute 'write-ceph-radosgw-secret' do
-  command lazy { "ceph-authtool #{keyring} --create-keyring --name=client.radosgw.#{node['hostname']} --add-key='#{node['ceph']['radosgw-secret']}'" }
+  command lazy { "ceph-authtool #{keyring} --create-keyring --name=client.radosgw.gateway --add-key='#{node['ceph']['radosgw-secret']}'" }
   creates keyring
   only_if { ceph_chef_radosgw_secret }
   not_if "test -f #{keyring}"
@@ -55,8 +55,8 @@ end
 # If no key exists then this will run
 execute 'generate-client-radosgw-secret' do
   command <<-EOH
-    ceph-authtool --create-keyring #{keyring} -n client.radosgw.#{node['hostname']} --gen-key --cap osd 'allow rwx' --cap mon 'allow rw'
-    ceph -k #{base_key} auth add client.radosgw.#{node['hostname']} -i /etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring
+    ceph-authtool --create-keyring #{keyring} -n client.radosgw.gateway --gen-key --cap osd 'allow rwx' --cap mon 'allow rwx'
+    ceph -k #{base_key} auth add client.radosgw.gateway -i /etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring
   EOH
   creates keyring
   not_if { ceph_chef_radosgw_secret }
@@ -80,8 +80,8 @@ end
 ruby_block 'radosgw-finalize' do
   block do
     ['done', service_type].each do |ack|
-      ::File.open("/var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}/#{ack}", 'w').close
+      ::File.open("/var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.gateway/#{ack}", 'w').close
     end
   end
-  not_if "test -f /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}/done"
+  not_if "test -f /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.gateway/done"
 end
