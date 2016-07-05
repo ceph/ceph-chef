@@ -18,8 +18,6 @@
 
 # This recipe will add OSDs once the physical device has been added.
 
-service_type = node['ceph']['osd']['init_style']
-
 # IMPORTANT: Use this recipe *ONLY* if you just want to add OSD devices and *NOT* have them included as part of the
 # actual ['ceph']['osd']['devices'] array. *IF* you want to add the devices on a more permanent basis then *ADD* the
 # given device to the ['ceph']['osd']['devices'] array and call *OSD.rb* recipe instead!

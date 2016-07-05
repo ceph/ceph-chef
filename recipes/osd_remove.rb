@@ -18,8 +18,6 @@
 
 # This recipe will add OSDs once the physical device has been added.
 
-service_type = node['ceph']['osd']['init_style']
-
 if node['ceph']['osd']['remove']
   devices = node['ceph']['osd']['remove']
 

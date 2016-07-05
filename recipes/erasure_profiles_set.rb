@@ -25,7 +25,7 @@ include_recipe 'ceph-chef'
 
 # Creates (sets) the specified erasure coding profile to be used by the pools
 node['ceph']['pools']['erasure_coding']['profiles'].each do |profile|
-  ceph_chef_erasure (profile['profile']).to_s do
+  ceph_chef_erasure profile['profile'].to_s do
     plugin profile['plugin']
     directory profile['directory']
     key_value profile['key_value']

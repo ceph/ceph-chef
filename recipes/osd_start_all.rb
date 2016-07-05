@@ -19,8 +19,6 @@
 
 # Starts ALL of the OSDs on a given node.
 
-service_type = node['ceph']['osd']['init_style']
-
 if service_type == 'upstart'
   service 'ceph_osd' do
     case service_type

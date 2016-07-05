@@ -104,10 +104,12 @@ def set_pool_crush_ruleset
   Chef::Log.debug "Pool crush_ruleset updated: #{cmd.stderr}"
 end
 
+# rubocop:disable Style/AccessorMethodName
 def get_pool
   cmd = shell_out("ceph osd pool get #{new_resource.name} #{new_resource.key}")
   cmd.stdout
 end
+# rubocop:enable Style/AccessorMethodName
 
 def delete_pool
   cmd_text = "ceph osd pool delete #{new_resource.name}"

@@ -30,28 +30,24 @@ default['ceph']['experimental']['features'] = ['shec']
 default['ceph']['branch'] = 'stable' # Can be stable, testing or dev.
 # Major release version to install or gitbuilder branch
 default['ceph']['version'] = 'hammer'
+
+default['ceph']['init_style'] = case node['platform']
+                                when 'ubuntu'
+                                  'upstart'
+                                else
+                                  'sysvinit'
+                                end
+
 # NOTE: If the version is greater than 'hammer' then change owner and group to 'ceph'
 case default['ceph']['version']
 when 'hammer'
   default['ceph']['owner'] = 'root'
   default['ceph']['group'] = 'root'
-  default['ceph']['mode'] = 0755
-  default['ceph']['init_style'] = case node['platform']
-                                  when 'ubuntu'
-                                    'upstart'
-                                  else
-                                    'sysvinit'
-                                  end
+  default['ceph']['mode'] = 0o0755
 else
   default['ceph']['owner'] = 'ceph'
   default['ceph']['group'] = 'ceph'
-  default['ceph']['mode'] = 0750
-  default['ceph']['init_style'] = case node['platform']
-                                  when 'ubuntu'
-                                    'upstart'
-                                  else
-                                    'sysvinit' # systemd
-                                  end
+  default['ceph']['mode'] = 0o0750
 end
 
 # Override these in your environment file or here if you wish. Don't put them in the 'ceph''config''global' section.

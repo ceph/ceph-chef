@@ -58,8 +58,6 @@ package 'cryptsetup' do
   only_if { node['ceph']['osd']['dmcrypt'] }
 end
 
-service_type = node['ceph']['osd']['init_style']
-
 # Create the scripts directory within the /etc/ceph directory. This is not standard Ceph. It's included here as
 # a place to hold helper scripts mainly for OSD and Journal maintenance
 directory '/etc/ceph/scripts' do

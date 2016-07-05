@@ -47,6 +47,7 @@ def load_current_resource
   @current_resource.exists = profile_exists?(@current_resource.name)
 end
 
+# rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 def set_profile
   if @current_resource.exists && !new_resource.force
     Chef::Log.debug 'Erasure profile exists and force not issued.'
@@ -91,6 +92,7 @@ def set_profile
   cmd.error!
   Chef::Log.debug "Erasure coding profile updated: #{cmd.stderr}"
 end
+# rubocop:enable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 
 def delete_profile
   cmd_text = "ceph osd erasure-code-profile rm #{new_resource.name}"

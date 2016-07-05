@@ -53,6 +53,7 @@ end
 #   end
 # end
 
+# rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 def ceph_chef_pool_create(pool)
   if !node['ceph']['pools'][pool]['federated_names'].empty? && node['ceph']['pools'][pool]['federated_names']
     node_loop = node['ceph']['pools'][pool]['federated_names']
@@ -104,7 +105,9 @@ def ceph_chef_pool_create(pool)
     end
   end
 end
+# rubocop:enable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 
+# rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 def ceph_chef_pool_set(pool)
   if !node['ceph']['pools'][pool]['federated_names'].empty? && node['ceph']['pools'][pool]['federated_enable']
     node_loop = node['ceph']['pools'][pool]['federated_names']
@@ -144,9 +147,11 @@ def ceph_chef_pool_set(pool)
     end
   end
 end
+# rubocop:enable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 
 # Calculate the PG count for a given pool. Set the default if count < default or error
 # Reference: http://ceph.com/pgcalc/
+# rubocop:disable Metrics/PerceivedComplexity
 def get_pool_pg_count(pool_type, pool_index, type, num_of_pool_groups, federated)
   val = node['ceph']['pools']['pgs']['num']
   pool = if federated
@@ -177,6 +182,7 @@ def get_pool_pg_count(pool_type, pool_index, type, num_of_pool_groups, federated
 
   val
 end
+# rubocop:enable Metrics/PerceivedComplexity
 
 def ceph_chef_is_mon_node
   val = false
@@ -280,6 +286,7 @@ end
 
 # fsid is on all nodes so just use a function similar to ceph_chef_mon_secret
 # NOTE: Returns nil for a reason! There is a check later in the process
+# rubocop:disable Metrics/PerceivedComplexity
 def ceph_chef_fsid_secret
   if node['ceph']['encrypted_data_bags']
     secret = Chef::EncryptedDataBagItem.load_secret(node['ceph']['fsid']['secret_file'])
@@ -300,6 +307,7 @@ def ceph_chef_fsid_secret
     nil
   end
 end
+# rubocop:enable Metrics/PerceivedComplexity
 
 def ceph_chef_save_fsid_secret(secret)
   node.set['ceph']['fsid-secret'] = secret
@@ -561,11 +569,8 @@ def ceph_chef_ip6_address_in_network?(ip, _params, net)
 end
 
 def ceph_chef_ip_address_to_ceph_chef_address(ip, params)
-  if params['family'].eql?('inet')
-    return "#{ip}:#{node['ceph']['mon']['port']}"
-  elsif params['family'].eql?('inet6')
-    return "[#{ip}]:#{node['ceph']['mon']['port']}"
-  end
+  return "#{ip}:#{node['ceph']['mon']['port']}" if params['family'].eql?('inet')
+  return "[#{ip}]:#{node['ceph']['mon']['port']}" if params['family'].eql?('inet6')
 end
 
 # For this function to work, this cookbook will need to be part of a wrapper or project that implements ceph-mon role
@@ -690,7 +695,7 @@ def ceph_chef_quorum?
   # in the ceph tool, this exits immediately if the ceph-mon is not
   # running for any reason; trying to connect via TCP/IP would wait
   # for a relatively long timeout.
-  quorum_states = %w(leader, peon)
+  quorum_states = %w(leader peon)
 
   cmd = Mixlib::ShellOut.new("ceph --admin-daemon /var/run/ceph/#{node['ceph']['cluster']}-mon.#{node['hostname']}.asok mon_status")
   cmd.run_command
