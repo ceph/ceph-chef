@@ -49,6 +49,7 @@ suites:
     - "recipe[ceph-chef::mon]"
     - "recipe[ceph-chef::mon_start]"
     - "recipe[ceph-chef::mon_bootstrap_peer_hint]"
+    - "recipe[ceph-chef::mon_keys]"
   attributes: *defaults
 - name: mds
   run_list:
