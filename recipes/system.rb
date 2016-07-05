@@ -21,7 +21,7 @@
 
 # This will allow for a much higher pid count instead of the default 64k since Ceph uses a lot of threads/daemons
 
-node['ceph']['system']['sysctls'].each_with_index do |sysctl, index|
+node['ceph']['system']['sysctls'].each_with_index do |sysctl, _index|
   execute 'sysctl-updates-#{index}' do
     command "echo #{sysctl} >> /etc/sysctl.conf"
     not_if "cat /etc/sysctl.conf | grep #{sysctl}"

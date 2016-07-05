@@ -31,9 +31,7 @@ action :create do
   else
     converge_by("Creating #{@new_resource}") do
       create_pool
-      if @new_resource.crush_ruleset >= 0
-        set_pool_crush_ruleset
-      end
+      set_pool_crush_ruleset if @new_resource.crush_ruleset >= 0
     end
   end
 end

@@ -49,20 +49,18 @@ end
 
 def set_profile
   if @current_resource.exists && !new_resource.force
-    Chef::Log.debug "Erasure profile exists and force not issued."
+    Chef::Log.debug 'Erasure profile exists and force not issued.'
     return 1
   end
 
   cmd_text = "ceph osd erasure-code-profile set #{new_resource.name}"
-  if !new_resource.directory.nil?
+  unless new_resource.directory.nil?
     cmd_text += " directory=#{new_resource.directory}"
   end
 
-  if !new_resource.plugin.nil?
-    cmd_text += " plugin=#{new_resource.plugin}"
-  end
+  cmd_text += " plugin=#{new_resource.plugin}" unless new_resource.plugin.nil?
 
-  if !new_resource.technique.nil?
+  unless new_resource.technique.nil?
     cmd_text += " technique=#{new_resource.technique}"
   end
 
@@ -74,19 +72,17 @@ def set_profile
     cmd_text += " ruleset-failure-domain=#{new_resource.ruleset_failure_domain}"
   end
 
-#  if !new_resource.packet_size.nil?
-#    cmd_text += " packet-size=#{new_resource.packet_size}"
-#  end
+  #  if !new_resource.packet_size.nil?
+  #    cmd_text += " packet-size=#{new_resource.packet_size}"
+  #  end
 
-  if !new_resource.key_value.nil?
-    new_resource.key_value.each do | key, value |
+  unless new_resource.key_value.nil?
+    new_resource.key_value.each do |key, value|
       cmd_text += " #{key}=#{value}"
     end
   end
 
-  if new_resource.force
-    cmd_text += " --force"
-  end
+  cmd_text += ' --force' if new_resource.force
 
   puts "\nErasure-coding profile... #{cmd_text}"
 

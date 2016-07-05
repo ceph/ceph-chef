@@ -34,9 +34,9 @@ if node['ceph']['pools']['active']
 end
 
 # Safety precaution so as to not overload the mon nodes.
-bash "wait-for-pgs-creating" do
-    action :nothing
-    user "root"
-    # code "sleep 1; while ceph -s | grep -v mdsmap | grep creating >/dev/null 2>&1; do echo Waiting for new pgs to create...; sleep 1; done"
-    code "while [ $(ceph -s | grep creating -c) -gt 0 ]; do echo -n .;sleep 1; done"
+bash 'wait-for-pgs-creating' do
+  action :nothing
+  user 'root'
+  # code "sleep 1; while ceph -s | grep -v mdsmap | grep creating >/dev/null 2>&1; do echo Waiting for new pgs to create...; sleep 1; done"
+  code 'while [ $(ceph -s | grep creating -c) -gt 0 ]; do echo -n .;sleep 1; done'
 end

@@ -21,7 +21,7 @@
 # the radosgw.rb attributes file. They can also be overridden in multiple places.
 # Admin user MUST have caps set properly. Without full rights, no admin functions can occur via the admin restful calls.
 
-node['ceph']['radosgw']['users'].each do | user |
+node['ceph']['radosgw']['users'].each do |user|
   # NOTE: Keys are always generated if the user is new! We do not want to ever store user credentials.
   access_key = ceph_chef_secure_password_alphanum_upper(20)
   secret_key = ceph_chef_secure_password(40)
@@ -84,6 +84,7 @@ node['ceph']['radosgw']['users'].each do | user |
       #    end
       #  end
       #end
+
     end
   end
 end

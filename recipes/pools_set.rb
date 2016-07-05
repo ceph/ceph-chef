@@ -24,34 +24,31 @@
 
 if node['ceph']['pools']['active']
   node['ceph']['pools']['active'].each do |pool|
-
     ceph_chef_pool_set(pool)
-=begin
-    node['ceph']['pools'][pool]['names'].each do |name|
-      unless node['ceph']['cluster'].downcase == 'ceph'
-        cluster = ".#{node['ceph']['cluster']}"
-        pool_name = "#{cluster}.#{name}"
-      else
-        pool_name = "#{name}"
-      end
-
-      if node['ceph']['pools'][pool]['settings']['type'] == 'replicated'
-        if node['ceph']['pools'][pool]['settings']['size']
-          val = node['ceph']['pools'][pool]['settings']['size']
-        else
-          val = node['ceph']['osd']['size']['max']
-        end
-
-        # Set replicas...
-        ceph_chef_pool pool_name do
-          action :set
-          key 'size'
-          value val
-          # Opposite
-          only_if "ceph osd pool #{pool_name} size | grep #{val}"
-        end
-      end
-    end
-=end
+    #     node['ceph']['pools'][pool]['names'].each do |name|
+    #       unless node['ceph']['cluster'].downcase == 'ceph'
+    #         cluster = ".#{node['ceph']['cluster']}"
+    #         pool_name = "#{cluster}.#{name}"
+    #       else
+    #         pool_name = "#{name}"
+    #       end
+    #
+    #       if node['ceph']['pools'][pool]['settings']['type'] == 'replicated'
+    #         if node['ceph']['pools'][pool]['settings']['size']
+    #           val = node['ceph']['pools'][pool]['settings']['size']
+    #         else
+    #           val = node['ceph']['osd']['size']['max']
+    #         end
+    #
+    #         # Set replicas...
+    #         ceph_chef_pool pool_name do
+    #           action :set
+    #           key 'size'
+    #           value val
+    #           # Opposite
+    #           only_if "ceph osd pool #{pool_name} size | grep #{val}"
+    #         end
+    #       end
+    #     end
   end
 end

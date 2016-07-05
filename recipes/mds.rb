@@ -47,12 +47,12 @@ end
 
 service_type = node['ceph']['osd']['init_style']
 
-case service_type
-when 'upstart'
-  filename = 'upstart'
-else
-  filename = 'sysvinit'
-end
+filename = case service_type
+           when 'upstart'
+             'upstart'
+           else
+             'sysvinit'
+           end
 file "/var/lib/ceph/mds/#{cluster}-#{node['hostname']}/#{filename}" do
   owner node['ceph']['owner']
   group node['ceph']['group']

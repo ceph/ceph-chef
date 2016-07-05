@@ -66,14 +66,14 @@ directory '/etc/ceph/scripts' do
   mode node['ceph']['mode']
   recursive true
   action :create
-  not_if "test -d /etc/ceph/scripts"
+  not_if 'test -d /etc/ceph/scripts'
 end
 
 # Add ceph_journal.sh helper script to all OSD nodes and place it in /etc/ceph
 cookbook_file '/etc/ceph/scripts/ceph_journal.sh' do
   source 'ceph_journal.sh'
   mode node['ceph']['mode']
-  not_if "test -f /etc/ceph/scripts/ceph_journal.sh"
+  not_if 'test -f /etc/ceph/scripts/ceph_journal.sh'
 end
 
 if node['ceph']['version'] == 'hammer'
@@ -83,7 +83,7 @@ if node['ceph']['version'] == 'hammer'
     mode node['ceph']['mode']
     recursive true
     action :create
-    not_if "test -d /var/lib/ceph/bootstrap-osd"
+    not_if 'test -d /var/lib/ceph/bootstrap-osd'
   end
 
   # Default data location - do not modify
@@ -93,7 +93,7 @@ if node['ceph']['version'] == 'hammer'
     mode node['ceph']['mode']
     recursive true
     action :create
-    not_if "test -d /var/lib/ceph/osd"
+    not_if 'test -d /var/lib/ceph/osd'
   end
 end
 
@@ -116,7 +116,7 @@ execute 'osd-create-key-bootstrap-in-directory' do
   command lazy { "ceph-authtool /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring --create-keyring --name=client.bootstrap-osd --add-key=#{ceph_chef_bootstrap_osd_secret}" }
   # NOTE: If the keyring exists then skip even if the node['bootstrap-osd'] ('ceph_chef_bootstrap_osd_secret') is not empty because you can also copy from other osd node or a central place where may keep keyring files. Just depends on your environment.
   not_if "test -f /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring"
-  only_if {ceph_chef_bootstrap_osd_secret}
+  only_if { ceph_chef_bootstrap_osd_secret }
 end
 
 # BOOTSTRAP_KEY=`ceph --name mon. --keyring '/etc/ceph/#{node['ceph']['cluster']}.mon.keyring' auth get-or-create-key client.bootstrap-osd mon 'allow profile bootstrap-osd'`
@@ -130,7 +130,7 @@ bash 'osd-write-bootstrap-osd-key' do
   EOH
   # NOTE: If the keyring exists then skip even if the node['bootstrap-osd'] ('ceph_chef_bootstrap_osd_secret') is empty because you can also copy from other osd node or a central place where may keep keyring files. Just depends on your environment.
   not_if "test -f /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring"
-  not_if {ceph_chef_bootstrap_osd_secret}
+  not_if { ceph_chef_bootstrap_osd_secret }
   notifies :create, 'ruby_block[save_bootstrap_osd_key]', :immediately
 end
 
@@ -186,7 +186,7 @@ if node['ceph']['osd']['devices']
         sleep 3
       EOH
       # NOTE: The meaning of the uuids used here are listed above
-      not_if "sgdisk -i1 #{osd_device['data']} | grep -i 4fbd7e29-9d25-41b8-afd0-062c0ceff05d" if !dmcrypt
+      not_if "sgdisk -i1 #{osd_device['data']} | grep -i 4fbd7e29-9d25-41b8-afd0-062c0ceff05d" unless dmcrypt
       not_if "sgdisk -i1 #{osd_device['data']} | grep -i 4fbd7e29-9d25-41b8-afd0-5ec00ceff05d" if dmcrypt
       # Only if there is no 'ceph *' found in the label. The recipe os_remove_zap should be called to remove/zap
       # all devices if you are wanting to add all of the devices again (if this is not the initial setup)
@@ -202,7 +202,7 @@ if node['ceph']['osd']['devices']
         node.save
       end
       action :nothing
-      #only_if "ceph-disk list 2>/dev/null | grep 'ceph data' | grep #{osd_device['data']}"
+      # only_if "ceph-disk list 2>/dev/null | grep 'ceph data' | grep #{osd_device['data']}"
     end
 
     # NOTE: Do not attempt to change the 'ceph journal' label on a partition. If you do then ceph-disk will not

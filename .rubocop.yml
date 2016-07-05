@@ -26,7 +26,9 @@ ModuleLength:
   Enabled: false
 SignalException:
   Enabled: false
-TrailingComma:
+TrailingCommaInLiteral:
+  Enabled: false
+TrailingCommaInArguments:
   Enabled: false
 WordArray:
   Enabled: false

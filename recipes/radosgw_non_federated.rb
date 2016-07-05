@@ -27,7 +27,7 @@ service_type = node['ceph']['mon']['init_style']
 base_key = "/etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
 keyring = "/etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring"
 
-Chef::Log.info "RADOSGW - NON-Federated Version..."
+Chef::Log.info 'RADOSGW - NON-Federated Version...'
 
 file "/var/log/radosgw/#{node['ceph']['cluster']}.client.radosgw.log" do
   owner node['ceph']['owner']

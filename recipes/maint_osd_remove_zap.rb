@@ -37,7 +37,7 @@ if node['ceph']['osd']['remove']
 
   include_recipe 'ceph-chef::osd_scrubbing_off'
 
-  devices.each do |index, osd_device|
+  devices.each do |_index, osd_device|
     # Maybe put this section in provider
     execute "ceph osd out #{osd_device['device']}" do
       command lazy { "ceph osd out #{osd_device['osd']}" }
@@ -91,12 +91,11 @@ if node['ceph']['osd']['remove']
     # If the journal is on a device other than the data device (i.e., SSDs) then removal of the partition
     # is handled earlier but letting the kernel know to update the partition table needs to be done before
     # exiting. If you don't then 'ceph-disk list' will still see the old partition but it will be
-    if osd_device['osd'] != osd_device['journal']
-      execute 'partition table kernel update' do
-        command <<-EOH
+    next unless osd_device['osd'] != osd_device['journal']
+    execute 'partition table kernel update' do
+      command <<-EOH
           partprobe #{osd_device['journal']}
-        EOH
-      end
+      EOH
     end
   end
 

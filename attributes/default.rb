@@ -36,22 +36,22 @@ when 'hammer'
   default['ceph']['owner'] = 'root'
   default['ceph']['group'] = 'root'
   default['ceph']['mode'] = 0755
-  case node['platform']
-  when 'ubuntu'
-    default['ceph']['init_style'] = 'upstart'
-  else
-    default['ceph']['init_style'] = 'sysvinit'
-  end
+  default['ceph']['init_style'] = case node['platform']
+                                  when 'ubuntu'
+                                    'upstart'
+                                  else
+                                    'sysvinit'
+                                  end
 else
   default['ceph']['owner'] = 'ceph'
   default['ceph']['group'] = 'ceph'
   default['ceph']['mode'] = 0750
-  case node['platform']
-  when 'ubuntu'
-    default['ceph']['init_style'] = 'upstart'
-  else
-    default['ceph']['init_style'] = 'sysvinit'  # systemd
-  end
+  default['ceph']['init_style'] = case node['platform']
+                                  when 'ubuntu'
+                                    'upstart'
+                                  else
+                                    'sysvinit' # systemd
+                                  end
 end
 
 # Override these in your environment file or here if you wish. Don't put them in the 'ceph''config''global' section.
@@ -70,7 +70,7 @@ default['ceph']['mds']['tag'] = 'ceph-mds'
 default['ceph']['restapi']['tag'] = 'ceph-restapi'
 
 # Set the max pid since Ceph creates a lot of threads and if using with OpenStack then...
-default['ceph']['system']['sysctls']= ['kernel.pid_max=4194303', 'fs.file-max=26234859']
+default['ceph']['system']['sysctls'] = ['kernel.pid_max=4194303', 'fs.file-max=26234859']
 
 default['ceph']['install_debug'] = false
 default['ceph']['encrypted_data_bags'] = false

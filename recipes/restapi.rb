@@ -65,7 +65,7 @@ ruby_block 'save restapi_secret' do
     fetch = Mixlib::ShellOut.new("ceph-authtool /etc/ceph/#{node['ceph']['cluster']}.client.restapi.keyring --print-key")
     fetch.run_command
     key = fetch.stdout
-    #ceph_chef_set_item('restapi-secret', key.delete!("\n"))
+    # ceph_chef_set_item('restapi-secret', key.delete!("\n"))
     node.set['ceph']['restapi-secret'] = key.delete!("\n")
     node.save
   end

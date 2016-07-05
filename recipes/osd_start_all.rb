@@ -46,12 +46,12 @@ else
     end
 
     execute 'ceph-osd-start' do
-      command lazy { "sudo service ceph start osd" }
+      command lazy { 'sudo service ceph start osd' }
       action :run
     end
 
     execute 'ceph-osd-restart' do
-      command lazy { "sudo service ceph restart osd" }
+      command lazy { 'sudo service ceph restart osd' }
       action :nothing
       subscribes :run, "template[/etc/ceph/#{node['ceph']['cluster']}.conf]"
     end

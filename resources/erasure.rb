@@ -28,11 +28,11 @@ attribute :plugin, :kind_of => String, :default => 'jerasure'
 # The directory where the plugin is found
 attribute :directory, :kind_of => String, :default => '/usr/lib/ceph/erasure-code'
 # Force to override existing profile
-attribute :force, :kind_of => [ TrueClass, FalseClass ], :default => false
+attribute :force, :kind_of => [TrueClass, FalseClass], :default => false
 attribute :technique, :kind_of => String, :default => ''
 attribute :ruleset_failure_domain, :kind_of => String, :default => nil
 attribute :ruleset_root, :kind_of => String, :default => nil
-#attribute :packet_size, :kind_of => Fixnum, :default => 2048
+# attribute :packet_size, :kind_of => Fixnum, :default => 2048
 
 # Group of set actions:
 

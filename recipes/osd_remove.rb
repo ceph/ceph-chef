@@ -25,7 +25,7 @@ if node['ceph']['osd']['remove']
 
   devices = Hash[(0...devices.size).zip devices] unless devices.is_a? Hash
 
-  devices.each do |index, osd_device|
+  devices.each do |_index, osd_device|
     execute "ceph-disk-zap-remove on #{osd_device['data']}" do
       command <<-EOH
         # wip - ceph-disk -v zap #{osd_device['data']} #{osd_device['journal']}
@@ -34,7 +34,6 @@ if node['ceph']['osd']['remove']
       only_if "parted --script #{osd_device['data']} print | egrep -sq '^ 1.*ceph'"
       action :run
     end
-
   end
 else
   Log.info("node['ceph']['osd']['remove'] empty")
