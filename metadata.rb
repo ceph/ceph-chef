@@ -11,6 +11,7 @@ depends 'apt'
 depends 'yum', '>= 3.8.1'
 depends 'yum-epel'
 depends 'poise', '>= 2.5.0'
+depends 'chef-sugar', '>= 3.3.0'
 
 supports 'ubuntu', '>= 14.04'
 supports 'redhat', '>= 7.1'

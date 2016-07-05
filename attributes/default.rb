@@ -38,16 +38,14 @@ default['ceph']['init_style'] = case node['platform']
                                   'sysvinit'
                                 end
 
-# NOTE: If the version is greater than 'hammer' then change owner and group to 'ceph'
-case default['ceph']['version']
-when 'hammer'
+default['ceph']['owner'] = 'ceph'
+default['ceph']['group'] = 'ceph'
+default['ceph']['mode'] = 0o0750
+
+# NOTE: If the version is 'hammer' then change owner and group to 'root'
+if node['ceph']['version'] == 'hammer'
   default['ceph']['owner'] = 'root'
   default['ceph']['group'] = 'root'
-  default['ceph']['mode'] = 0o0755
-else
-  default['ceph']['owner'] = 'ceph'
-  default['ceph']['group'] = 'ceph'
-  default['ceph']['mode'] = 0o0750
 end
 
 # Override these in your environment file or here if you wish. Don't put them in the 'ceph''config''global' section.

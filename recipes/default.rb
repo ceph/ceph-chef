@@ -17,6 +17,8 @@
 # limitations under the License.
 #
 
+include_recipe 'chef-sugar::default'
+
 include_recipe 'ceph-chef::repo' if node['ceph']['install_repo']
 include_recipe 'ceph-chef::conf'
 
@@ -49,4 +51,10 @@ end
 
 if node['ceph']['pools']['radosgw']['federated_enable']
   ceph_chef_build_federated_pool('radosgw')
+end
+
+execute 'ceph-systemctl-daemon-reload' do
+  command 'systemctl daemon-reload'
+  action :nothing
+  only_if { systemd? }
 end
