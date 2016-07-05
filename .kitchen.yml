@@ -30,6 +30,7 @@ suites:
   attributes: &defaults
     ceph:
       version: jewel
+      search_by_environment: true
       config:
         fsid: ae3f1d03-bacd-4a90-b869-1a4fabb107f2
       network:
@@ -47,6 +48,7 @@ suites:
   run_list:
     - "recipe[ceph-chef::mon]"
     - "recipe[ceph-chef::mon_start]"
+    - "recipe[ceph-chef::mon_bootstrap_peer_hint]"
   attributes: *defaults
 - name: mds
   run_list:
