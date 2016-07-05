@@ -17,6 +17,8 @@
 # limitations under the License.
 #
 
+include_recipe 'yum-epel::default'
+
 platform_family = node['platform_family']
 
 # Setup key so it doesn't have to pull it down

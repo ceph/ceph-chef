@@ -1,8 +1,12 @@
 ---
 driver_plugin: vagrant
 driver_config:
-  vagrantfile_erb: test/integration/Vagrantfile.erb
+  # vagrantfile_erb: test/integration/Vagrantfile.erb
   require_chef_omnibus: true
+
+driver:
+  network:
+    - [ "private_network", { ip: "192.168.33.33" } ]
 
 platforms:
 - name: ubuntu-14.04
@@ -11,7 +15,7 @@ platforms:
   attributes:
     apache:
       mpm: event        # ugly workaround for onehealth-cookbooks/apache2 #236
-- name: centos-7.1
+- name: centos-7.2
 - name: rhel-7.1
 - name: fedora-22
 
@@ -25,15 +29,24 @@ suites:
     - "recipe[ceph-chef]"
   attributes: &defaults
     ceph:
+      version: jewel
       config:
         fsid: ae3f1d03-bacd-4a90-b869-1a4fabb107f2
+      network:
+        cluster:
+          cidr:
+            - 192.168.33.0/24
+        public:
+          cidr:
+            - 192.168.33.0/24
 - name: osd
   run_list:
     - "role[ceph-osd]"
   attributes: *defaults
 - name: mon
   run_list:
-    - "role[ceph-mon]"
+    - "recipe[ceph-chef::mon]"
+    - "recipe[ceph-chef::mon_start]"
   attributes: *defaults
 - name: mds
   run_list:
@@ -56,4 +69,4 @@ suites:
         - { device: "/dev/sdd" }
   run_list:
     - recipe[ceph-chef::all_in_one]
-    - recipe[ceph_chef_test::cephfs]
+    - recipe[ceph_test::cephfs]
