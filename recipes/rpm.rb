@@ -37,7 +37,7 @@ end
 # If you use Ceph with no access to the outside world and use RHEL Satellite server then MAKE sure this value is set to false!
 # Otherwise, 'ceph.repo' will be created and your install will eventually timeout with an error.
 yum_repository 'ceph' do
-  name "Ceph #{platform_family} #{node['ceph']['version']} #{branch}"
+  description "Ceph #{platform_family} #{node['ceph']['version']} #{branch}"
   baseurl node['ceph'][platform_family][branch]['repository']
   gpgkey node['ceph'][platform_family][branch]['repository_key']
   only_if { node['ceph']['repo']['create'] }
