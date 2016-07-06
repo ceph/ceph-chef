@@ -140,16 +140,32 @@
   host = <%= node['hostname'] %>
   rgw opstate ratelimit = 0
   <% if node['ceph']['pools']['radosgw']['federated_enable_regions_zones'] %>
+   <% if node['ceph']['pools']['radosgw']['federated_multisite_replication'] %>
   rgw region = <%= inst['region'] %>
+   <% else %>
+  rgw region = <%= inst['region'] %>-<%= inst['name'] %>
+   <% end %>
   <% if node['ceph']['version'] == 'hammer' %>
+   <% if node['ceph']['pools']['radosgw']['federated_multisite_replication'] %>
   rgw region root pool = .<%= inst['region'] %>.rgw.root
+   <% else %>
+  rgw region root pool = .<%= inst['region'] %>-<%= inst['name'] %>.rgw.root
+   <% end %>
   <% else %>
+   <% if node['ceph']['pools']['radosgw']['federated_multisite_replication'] %>
   rgw zonegroup root pool = .<%= inst['region'] %>.rgw.root
+   <% else %>
+  rgw zonegroup root pool = .<%= inst['region'] %>-<%= inst['name'] %>.rgw.root
+   <% end %>
   <% end %>
   rgw zone = <%= inst['region'] %>-<%= inst['name'] %>
   rgw zone root pool = .<%= inst['region'] %>-<%= inst['name'] %>.rgw.root
   <% end %>
+  <% if node['ceph']['pools']['radosgw']['federated_multisite_replication'] %>
   keyring = /etc/ceph/$cluster.client.radosgw.keyring
+  <% else %>
+  keyring = /etc/ceph/$cluster.client.radosgw.<%= inst['region'] %>-<%= inst['name'] %>.keyring
+  <% end %>
   rgw num rados handles = <%= node['ceph']['radosgw']['rgw_num_rados_handles'] %>
   rgw frontends = civetweb port=<%= inst['port'] %> num_threads=<%= node['ceph']['radosgw']['civetweb_num_threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.<%= inst['name'] %>.log access_log_file=<%= node['ceph']['radosgw']['civetweb_access_log_file'] %>.<%= inst['name'] %>.log
   rgw enable ops log = false
