@@ -460,7 +460,7 @@ def ceph_chef_radosgw_inst_secret(inst)
     # Get the first rgw nodes value
     rgw_inst = ceph_chef_radosgw_nodes[0]
     if rgw_inst['ceph']["radosgw-secret-#{inst}"]
-      ceph_chef_save_radosgw_inst_secret(rgw_inst['ceph']["radosgw-secret-#{inst}"])
+      ceph_chef_save_radosgw_inst_secret(rgw_inst['ceph']["radosgw-secret-#{inst}"], inst)
       rgw_inst['ceph']["radosgw-secret-#{inst}"]
     else
       nil
