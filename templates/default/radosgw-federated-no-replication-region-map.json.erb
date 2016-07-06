@@ -1,0 +1,40 @@
+{
+  "regions": [
+    {
+      "key": "<%= @region %>-<%= @zone %>",
+      "val": {
+        "name": "<%= @region %>-<%= @zone %>",
+        "api_name": "<%= @region %>-<%= @zone %>",
+        "is_master": "true",
+        "endpoints": ["http:\/\/<%= @zone_url %>:<%= @zone_port %>\/"],
+        "master_zone": "<%= @region %>-<%= @zone %>",
+        "zones": [
+          {
+            "name": "<%= @region %>-<%= @zone %>",
+            "endpoints": ["http:\/\/<%= @zone_url %>:<%= @zone_port %>\/"],
+            "log_meta": "true",
+            "log_data": "true"
+          }
+        ],
+        "placement_targets": [
+          {
+            "name": "default-placement",
+            "tags": []
+          }
+        ],
+        "default_placement": "default-placement"
+      }
+    }
+  ],
+  "master_region": "<%= @region %>-<%= @zone %>",
+  "bucket_quota": {
+    "enabled": false,
+    "max_size_kb": -1,
+    "max_objects": -1
+  },
+  "user_quota": {
+    "enabled": false,
+    "max_size_kb": -1,
+    "max_objects": -1
+  }
+}

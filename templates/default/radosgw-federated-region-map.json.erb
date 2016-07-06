@@ -1,0 +1,43 @@
+{
+  "regions": [
+    {
+      "key": "<%= node['ceph']['pools']['radosgw']['federated_regions'][0] %>",
+      "val": {
+        "name": "<%= node['ceph']['pools']['radosgw']['federated_regions'][0] %>",
+        "api_name": "<%= node['ceph']['pools']['radosgw']['federated_regions'][0] %>",
+        "is_master": "true",
+        "endpoints": ["http:\/\/<%= node['ceph']['pools']['radosgw']['federated_zone_instances'][0]['url'] %>:<%= node['ceph']['pools']['radosgw']['federated_zone_instances'][0]['port'] %>\/"],
+        "master_zone": "<%= node['ceph']['pools']['radosgw']['federated_regions'][0] %>-<%= node['ceph']['pools']['radosgw']['federated_master_zone'] %>",
+        "zones": [
+        <% node['ceph']['pools']['radosgw']['federated_zone_instances'].each_with_index do |zone, index| %>
+              {
+                "name": "<%= zone['region'] %>-<%= zone['name'] %>",
+                "endpoints": [
+                      "http:\/\/<%= zone['url'] %>:<%= zone['port'] %>\/"],
+                "log_meta": "true",
+                "log_data": "true"
+              }<% if index < node['ceph']['pools']['radosgw']['federated_zone_instances'].size %>,<% end %>
+        <% end %>
+        ],
+        "placement_targets": [
+          {
+            "name": "default-placement",
+            "tags": []
+          }
+        ],
+        "default_placement": "default-placement"
+      }
+    }
+  ],
+  "master_region": "<%= node['ceph']['pools']['radosgw']['federated_regions'][0] %>",
+  "bucket_quota": {
+    "enabled": false,
+    "max_size_kb": -1,
+    "max_objects": -1
+  },
+  "user_quota": {
+    "enabled": false,
+    "max_size_kb": -1,
+    "max_objects": -1
+  }
+}

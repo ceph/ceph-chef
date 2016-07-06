@@ -126,71 +126,115 @@ if node['ceph']['pools']['radosgw']['federated_enable']
         source 'radosgw-federated-region.json.erb'
         not_if "test -f /etc/ceph/#{inst['region']}-region.json"
       end
+
+      template "/etc/ceph/#{inst['region']}-region-map.json" do
+        source 'radosgw-federated-region-map.json.erb'
+        not_if "test -f /etc/ceph/#{inst['region']}-region-map.json"
+      end
+
+      region_file = "/etc/ceph/#{inst['region']}-region.json"
+      region_map_file = "/etc/ceph/#{inst['region']}-region-map.json"
+      region = "#{inst['region']}"
+      zone = "#{inst['name']}"
     else
       template "/etc/ceph/#{inst['region']}-#{inst['name']}-region.json" do
         source 'radosgw-federated-no-replication-region.json.erb'
+        variables lazy {
+          {
+            :region => "#{inst['region']}",
+            :zone => "#{inst['name']}",
+            :zone_url => "#{inst['url']}",
+            :zone_port => "#{inst['port']}"
+          }
+        }
         not_if "test -f /etc/ceph/#{inst['region']}-#{inst['name']}-region.json"
       end
+
+      template "/etc/ceph/#{inst['region']}-#{inst['name']}-region-map.json" do
+        source 'radosgw-federated-no-replication-region-map.json.erb'
+        variables lazy {
+          {
+            :region => "#{inst['region']}",
+            :zone => "#{inst['name']}",
+            :zone_url => "#{inst['url']}",
+            :zone_port => "#{inst['port']}"
+          }
+        }
+        not_if "test -f /etc/ceph/#{inst['region']}-#{inst['name']}-region-map.json"
+      end
+
+      region_file = "/etc/ceph/#{inst['region']}-#{inst['name']}-region.json"
+      region_map_file = "/etc/ceph/#{inst['region']}-#{inst['name']}-region-map.json"
+      region = "#{inst['region']}-#{inst['name']}"
+      zone = "#{inst['region']}-#{inst['name']}"
     end
 
     if node['ceph']['pools']['radosgw']['federated_enable_regions_zones']
-      execute "create-region-#{inst['region']}" do
-        command <<-EOH
-          sudo radosgw-admin region set --infile /etc/ceph/#{inst['region']}.json --name client.radosgw.#{inst['region']}-#{inst['name']}
-        EOH
-        not_if "sudo radosgw-admin region list --name client.radosgw.#{inst['region']}-#{inst['name']} | grep #{inst['region']}"
+      template "/etc/ceph/#{zone}-zone.json" do
+        source 'radosgw-federated-zone.json.erb'
+        variables lazy {
+          {
+            :region => "#{inst['region']}",
+            :zone => "#{inst['name']}",
+            :secret_key => "",
+            :access_key => ""
+          }
+        }
+        not_if "test -f /etc/ceph/#{zone}-zone.json"
       end
 
-      execute 'remove-default-region' do
-        command lazy { "rados -p .#{inst['region']}.rgw.root rm region_info.default" }
-        ignore_failure true
-        not_if "rados -p .#{inst['region']}.rgw.root ls | grep region_info.default"
+      execute "region-set-#{inst['region']}" do
+        command <<-EOH
+          sudo radosgw-admin region set --infile #{region_file} --rgw-region #{region} --name client.radosgw.#{inst['region']}-#{inst['name']}
+        EOH
+        #not_if "sudo radosgw-admin region list --name client.radosgw.#{inst['region']}-#{inst['name']} | grep #{inst['region']}"
+      end
+
+      execute "region-map-set-#{inst['region']}" do
+        command <<-EOH
+          sudo radosgw-admin region-map set --infile #{region_map_file} --rgw-region #{region} --name client.radosgw.#{inst['region']}-#{inst['name']}
+        EOH
+        #not_if "sudo radosgw-admin region-map get --name client.radosgw.#{inst['region']}-#{inst['name']} | grep #{inst['region']}"
+      end
+
+      #execute 'remove-default-region' do
+      #  command lazy { "rados -p .#{inst['region']}.rgw.root rm region_info.default" }
+      #  ignore_failure true
+      #  not_if "rados -p .#{inst['region']}.rgw.root ls | grep region_info.default"
+      #end
+
+      #execute 'remove-default-zone' do
+      #  command lazy { "rados -p .#{inst['region']}-#{inst['name']}.rgw.root rm zone_info.default" }
+      #  ignore_failure true
+      #  not_if "rados -p .#{inst['region']}-#{inst['name']}.rgw.root ls | grep zone_info.default"
+      #end
+
+      execute "zone-set-#{inst['name']}" do
+        command <<-EOH
+          sudo radosgw-admin zone set --rgw-zone=#{inst['region']}-#{inst['name']} --infile /etc/ceph/#{zone}-zone.json --name client.radosgw.#{inst['region']}-#{inst['name']}
+        EOH
+        #not_if "sudo radosgw-admin zone list --name client.radosgw.#{inst['region']}-#{inst['name']} | grep #{inst['name']}"
       end
 
       execute "create-region-defaults-#{inst['region']}" do
         command <<-EOH
-          sudo radosgw-admin region default --rgw-region=#{inst['region']} --name client.radosgw.#{inst['region']}-#{inst['name']}
-          sudo radosgw-admin regionmap update --name client.radosgw.#{inst['region']}-#{inst['name']}
+          sudo radosgw-admin region default --rgw-region=#{region} --name client.radosgw.#{inst['region']}-#{inst['name']}
+          sudo radosgw-admin region-map update --rgw-region #{region} --name client.radosgw.#{inst['region']}-#{inst['name']}
         EOH
       end
     end
 
-    # Now the zones
-    template "/etc/ceph/#{inst['name']}-zone.json" do
-      source 'radosgw-federated-zone.json.erb'
-      variables lazy {
-        {
-          :region => "#{inst['region']}",
-          :zone => "#{inst['name']}",
-          :secret_key => "",
-          :access_key => ""
-        }
-      }
-      not_if "test -f /etc/ceph/#{inst['name']}-zone.json"
-    end
+    #execute "update-regionmap-#{inst['name']}" do
+    #  command <<-EOH
+    #    sudo radosgw-admin regionmap update --name client.radosgw.#{inst['region']}-#{inst['name']}
+    #  EOH
+    #end
 
-    execute "zone-set-default-#{inst['name']}" do
-      command <<-EOH
-        sudo radosgw-admin zone set --rgw-zone=#{inst['region']}-#{inst['name']} --infile /etc/ceph/#{inst['name']}.json --name client.radosgw.#{inst['region']}-#{inst['name']}
-      EOH
-      not_if "sudo radosgw-admin zone list --name client.radosgw.#{inst['region']}-#{inst['name']} | grep #{inst['name']}"
-    end
-
-    execute 'remove-default-zone' do
-      command lazy { "rados -p .#{inst['region']}-#{inst['name']}.rgw.root rm zone_info.default" }
-      ignore_failure true
-      not_if "rados -p .#{inst['region']}-#{inst['name']}.rgw.root ls | grep zone_info.default"
-    end
-
-    execute "update-regionmap-#{inst['name']}" do
-      command <<-EOH
-        sudo radosgw-admin regionmap update --name client.radosgw.#{inst['region']}-#{inst['name']}
-      EOH
-    end
-
-    # TODO (maybe): Update the keys for the zones. This will allow each one to sync with the other.
+    # FUTURE: Update the keys for the zones. This will allow each one to sync with the other.
     # ceph_chef_secure_password(20)
     # ceph_chef_secure_password(40)
+    # Will need to create radosgw-admin user with --system so that each zone has a system user so that they can
+    # communicate with each other for replication
 
     # This is only here as part of completeness. The service_type is not really needed because of defaults.
     ruby_block "radosgw-finalize-#{inst['name']}" do
