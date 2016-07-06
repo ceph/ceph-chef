@@ -47,8 +47,11 @@ execute 'format bootstrap-osd-secret as keyring' do
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
-# If the bootstrap-osd exists on disk but not as a node attribute, save it as an attribute
+# If the bootstrap-osd secret key exists on disk but not as a node attribute, save it as an attribute
 ruby_block 'check_bootstrap_osd' do
+  block do
+    true
+  end
   notifies :create, 'ruby_block[save_bootstrap_osd]', :immediately
   not_if { ceph_chef_bootstrap_osd_secret }
   only_if "test -f /var/lib/ceph/bootstrap-osd/#{node['ceph']['cluster']}.keyring"
