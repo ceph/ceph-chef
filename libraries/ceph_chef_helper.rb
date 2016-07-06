@@ -58,9 +58,9 @@ end
 def ceph_chef_pool_create(pool)
   if !node['ceph']['pools'][pool]['federated_names'].empty? && node['ceph']['pools'][pool]['federated_names']
     node_loop = node['ceph']['pools'][pool]['federated_names']
-    # num_of_pools = node['ceph']['pools'][pool]['federated_instances'].size
+    num_of_pool_groups = node['ceph']['pools'][pool]['federated_zone_instances'].size
     # Force it to be 1 for now since we don't know how much each federated instance will be used.
-    num_of_pools = 1
+    # num_of_pool_groups = 1
 
     node_loop.each_with_index do |name, index|
       profile_val = nil
@@ -68,7 +68,7 @@ def ceph_chef_pool_create(pool)
 
       pool_val =  node['ceph']['pools'][pool]['federated']['pools'][index]
       type_val = pool_val['type']
-      pg_num_val = get_pool_pg_count(pool, index, type_val, num_of_pools, true)
+      pg_num_val = get_pool_pg_count(pool, index, type_val, num_of_pool_groups, true)
       profile_val = pool_val['profile'] if type_val == 'erasure'
       crush_ruleset_name = pool_val['crush_ruleset_name']
 
