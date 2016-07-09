@@ -25,6 +25,7 @@
   <% end -%>
   # Suppress warning of too many pgs
   mon pg warn max per osd = 0
+  max open files = 131072
   <% if !node['ceph']['network']['cluster']['cidr'].nil? && !node['ceph']['network']['cluster']['cidr'].empty? %>
   cluster network = <%= @node['ceph']['network']['cluster']['cidr'].join(',') %>
   <% end -%>
@@ -54,11 +55,32 @@
   # Set the default values here if no values provided to override them
   # Need xattr use omap = true for RGW
   osd map dedup = true
-  # Example: osd op threads = 16
+  osd op threads = 16
+  osd map dedup = true
+  osd max write size = 256
+  osd disk threads = 1
+  osd client message size cap = 1073741824
   filestore xattr use omap = true
+  filestore merge threshold = 40
+  filestore split multiple = 8
+  filestore op threads = 32
+  filestore min sync interval = 10
+  filestore max sync interval = 15
+  filestore queue max ops = 2500
+  filestore queue max bytes = 10485760
+  filestore queue committing max ops = 5000
+  filestore queue committing max bytes = 10485760000
   osd journal size = <%= node['ceph']['osd']['journal']['size'] %>
+  journal max write bytes = 1073714824
+  journal max write entries = 10000
+  journal queue max ops = 50000
+  journal queue max bytes = 10485760000
+  journal block align = true
+  journal dio = true
+  journal aio = true
   osd mkfs type = xfs
-  osd mount options xfs = rw,noexec,nodev,noatime,nodiratime,nobarrier
+  #osd mount options xfs = rw,noexec,nodev,noatime,nodiratime,nobarrier
+  osd mount options xfs = rw,noatime,inode64,logbufs=8,logbsize=256k,delaylog,allocsize=4M
   # Example: osd mkfs options xfs = -f -i size=2048
   # Example: osd mount options xfs = noexec,nodev,noatime,nodiratime,barrier=0,discard
   # IMPORTANT: If you modify the crush map with the automation then uncomment the line below (osd crush update ...)
@@ -79,8 +101,22 @@
   # Note: All of these values can be overridden in you wrapper cookbook or "chef-repo" project
   <% end -%>
   <% if !node['ceph']['config']['rebalance'].nil? and !node['ceph']['config']['rebalance'].empty? %>
+  # These two max active and max single work together
   osd recovery max active = 1
-  osd max backfills  = 1
+  osd recovery max single start = 1
+  osd recovery op priority = 50
+  osd recovery max chunk = 1048576
+  osd recovery threads = 1
+  osd max backfills  = 2
+  osd backfill scan min = 8
+  osd backfill scan max = 64
+  osd max scrubs = 1
+  osd scrub sleep = .1
+  osd scrub chunk min = 1
+  osd scrub chunk max = 5
+  osd deep scrub stride = 1048576
+  osd scrub begin hour = 23
+  osd scrub end hour = 6
   osd op threads = 10
   osd recovery op priority = 1
   osd mon report interval min = 30
@@ -94,6 +130,9 @@
 
 <% if @is_mon -%>
 [mon]
+  # Change the allow pool delete to false once you have everything where you want it. It keeps someone from
+  # accidently deleting a pool!
+  mon_allow_pool_delete = true
   <% if !node['ceph']['config']['mon'].nil? -%>
   <% node['ceph']['config']['mon'].sort.each do |k, v| %>
   <%= k %> = <%= v %>
@@ -104,6 +143,7 @@
 <% if !node['ceph']['config']['mds'].nil? -%>
 # NOTE: Only needed for CephFS
 [mds]
+  mds cache size = 250000
   <% node['ceph']['config']['mds'].sort.each do |key, value| -%>
   <%= key %> = <%= value %>
   <% end -%>
@@ -115,7 +155,12 @@
   <% if @is_rbd -%>
   rbd cache = true
   rbd cache writethrough until flush = true
-  rbd concurrent management ops = 20
+  rbd concurrent management ops = 10
+  rbd cache size = 67108864
+  rbd cache max dirty = 50331648
+  rbd cache target dirty = 33554432
+  rbd cache max dirty age = 2
+  rbd default format = 2
   log file = /var/log/qemu/qemu-guest-$pid.log
   # NOTE: If using RBD and OpenStack then you can add two additional sub-client for Cinder and Glance below this one.
   <% end -%>
