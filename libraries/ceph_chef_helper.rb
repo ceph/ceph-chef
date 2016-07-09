@@ -456,12 +456,16 @@ def ceph_chef_save_radosgw_secret(secret)
 end
 
 def ceph_chef_radosgw_inst_secret(inst)
+  # Return node value if exist
+  if node['ceph']["radosgw-secret-#{inst}"]
+    return node['ceph']["radosgw-secret-#{inst}"]
+  end
   if !ceph_chef_radosgw_nodes.empty?
     # Get the first rgw nodes value
     rgw_inst = ceph_chef_radosgw_nodes[0]
     if rgw_inst['ceph']["radosgw-secret-#{inst}"]
-      ceph_chef_save_radosgw_inst_secret(rgw_inst['ceph']["radosgw-secret-#{inst}"], inst)
-      rgw_inst['ceph']["radosgw-secret-#{inst}"]
+      return ceph_chef_save_radosgw_inst_secret(rgw_inst['ceph']["radosgw-secret-#{inst}"], inst)
+      #rgw_inst['ceph']["radosgw-secret-#{inst}"]
     else
       nil
     end
@@ -476,7 +480,7 @@ end
 def ceph_chef_save_radosgw_inst_secret(secret, inst)
   node.set['ceph']["radosgw-secret-#{inst}"] = secret
   node.save
-  secret
+  return node['ceph']["radosgw-secret-#{inst}"]
 end
 
 def ceph_chef_restapi_secret
