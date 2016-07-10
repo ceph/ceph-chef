@@ -54,7 +54,6 @@
   <% if node['ceph']['config']['osd'].nil? -%>
   # Set the default values here if no values provided to override them
   # Need xattr use omap = true for RGW
-  osd map dedup = true
   osd op threads = 16
   osd map dedup = true
   osd max write size = 256

@@ -43,24 +43,36 @@ directory "/var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.gateway" do
   not_if "test -d /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.gateway"
 end
 
-new_key = ''
+new_key = nil
 # Make sure the key is saved if part of ceph auth list
 ruby_block 'check-radosgw-secret' do
   block do
-    fetch = Mixlib::ShellOut.new("ceph auth get-key client.radosgw.gateway")
+    fetch = Mixlib::ShellOut.new("ceph auth get-key client.radosgw.gateway 2>/dev/null")
     fetch.run_command
     key = fetch.stdout
-    new_key = key
-    ceph_chef_save_radosgw_secret(key.delete!("\n"))
+    if key.to_s.strip.length > 0
+      new_key = ceph_chef_save_radosgw_secret(key.delete!("\n"))
+    end
   end
 end
 
 # If a key exists then this will run
-if !new_key
+if new_key.to_s.strip.length == 0
   new_key = ceph_chef_radosgw_secret
+  # One last sanity check on the key
+  if new_key.to_s.strip.length != 40
+    new_key = nil
+  end
 end
+execute 'update-ceph-radosgw-secret' do
+  command lazy { "sudo ceph-authtool #{keyring} --name=client.radosgw.gateway --add-key=#{new_key} --cap osd 'allow rwx' --cap mon 'allow rwx'" }
+  only_if { new_key }
+  only_if "test -f #{keyring}"
+  sensitive true if Chef::Resource::Execute.method_defined? :sensitive
+end
+
 execute 'write-ceph-radosgw-secret' do
-  command lazy { "ceph-authtool #{keyring} --create-keyring --name=client.radosgw.gateway --add-key=#{new_key}" }
+  command lazy { "ceph-authtool #{keyring} --create-keyring --name=client.radosgw.gateway --add-key=#{new_key} --cap osd 'allow rwx' --cap mon 'allow rwx'" }
   only_if { new_key }
   not_if "test -f #{keyring}"
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
@@ -72,17 +84,17 @@ execute 'generate-client-radosgw-secret' do
     ceph-authtool --create-keyring #{keyring} -n client.radosgw.gateway --gen-key --cap osd 'allow rwx' --cap mon 'allow rwx'
   EOH
   creates keyring
-  not_if { ceph_chef_radosgw_secret }
+  not_if { new_key }
   not_if "test -f #{keyring}"
   notifies :create, 'ruby_block[save-radosgw-secret]', :immediately
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
-execute 'add-radosgw-secret' do
+execute 'update-client-radosgw' do
   command <<-EOH
     ceph -k #{base_key} auth add client.radosgw.gateway -i /etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring
   EOH
-  not_if "sudo grep client.radosgw.gateway #{keyring}"
+  not_if "ceph auth list | grep client.radosgw.gateway"
   notifies :create, 'ruby_block[save-radosgw-secret]', :immediately
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
