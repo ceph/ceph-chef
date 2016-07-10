@@ -51,7 +51,7 @@ ruby_block 'check-radosgw-secret' do
     fetch.run_command
     key = fetch.stdout
     if key.to_s.strip.length > 0
-      new_key = ceph_chef_save_radosgw_secret(key.delete!("\n"))
+      new_key = ceph_chef_save_radosgw_secret(key)
     end
   end
 end

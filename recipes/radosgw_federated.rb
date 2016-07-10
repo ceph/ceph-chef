@@ -64,7 +64,7 @@ if node['ceph']['pools']['radosgw']['federated_enable']
         fetch.run_command
         key = fetch.stdout
         if key.to_s.strip.length > 0
-          new_key = ceph_chef_save_radosgw_inst_secret(key.delete!("\n"), "#{inst['region']}-#{inst['name']}")
+          new_key = ceph_chef_save_radosgw_inst_secret(key, "#{inst['region']}-#{inst['name']}")
         end
       end
     end
