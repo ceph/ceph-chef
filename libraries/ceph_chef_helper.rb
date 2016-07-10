@@ -444,7 +444,7 @@ def ceph_chef_radosgw_secret
     Chef::EncryptedDataBagItem.load('ceph', 'radowgw', secret)['secret']
   elsif !ceph_chef_radosgw_nodes.empty?
     rgw_inst = ceph_chef_radosgw_nodes[0]
-    if rgw_inst['ceph']["radosgw-secret-#{inst}"]
+    if rgw_inst['ceph']["radosgw-secret"]
       return ceph_chef_save_radosgw_secret(rgw_inst['ceph']["radosgw-secret"])
     else
       return nil
