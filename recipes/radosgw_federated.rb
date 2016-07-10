@@ -63,14 +63,19 @@ if node['ceph']['pools']['radosgw']['federated_enable']
         fetch = Mixlib::ShellOut.new("sudo ceph auth get-key client.radosgw.#{inst['region']}-#{inst['name']}")
         fetch.run_command
         key = fetch.stdout
-        new_key = key
-        ceph_chef_save_radosgw_inst_secret(key.delete!("\n"), "#{inst['region']}-#{inst['name']}")
+        if key.to_s.strip.length > 0
+          new_key = ceph_chef_save_radosgw_inst_secret(key.delete!("\n"), "#{inst['region']}-#{inst['name']}")
+        end
       end
     end
 
     # If an initial key exists then this will run - for shared keyring file
-    if !new_key
+    if key.to_s.strip.length > 0
       new_key = ceph_chef_radosgw_inst_secret("#{inst['region']}-#{inst['name']}")
+      # One last sanity check on the key
+      if new_key.to_s.strip.length != 40
+        new_key = nil
+      end
     end
     execute 'update-ceph-radosgw-secret' do
       command lazy { "sudo ceph-authtool #{keyring} --name=client.radosgw.#{inst['region']}-#{inst['name']} --add-key=#{new_key} --cap osd 'allow rwx' --cap mon 'allow rwx'" }
