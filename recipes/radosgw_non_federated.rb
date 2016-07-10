@@ -43,6 +43,16 @@ directory "/var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.gateway" do
   not_if "test -d /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.gateway"
 end
 
+# Make sure the key is saved if part of ceph auth list
+ruby_block 'check-radosgw-secret' do
+  block do
+    fetch = Mixlib::ShellOut.new("ceph auth get-key client.radosgw.gateway")
+    fetch.run_command
+    key = fetch.stdout
+    ceph_chef_save_radosgw_secret(key.delete!("\n"))
+  end
+end
+
 # If a key exists then this will run
 execute 'write-ceph-radosgw-secret' do
   command lazy { "ceph-authtool #{keyring} --create-keyring --name=client.radosgw.gateway --add-key='#{node['ceph']['radosgw-secret']}'" }
