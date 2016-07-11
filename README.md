@@ -65,7 +65,7 @@ This cookbook can be used to implement a chosen cluster design. Most of the conf
 * `node['ceph']['config]'['global']['cluster network']` - a CIDR specification of a separate cluster replication network
 * `node['ceph']['config]'['global']['rgw dns name']` -  the main domain of the radosgw daemon
 
-Most notably, the configuration does **NOT** need to set the `mon initial members`, because the cookbook does a node search based on TAGS to find other mons in the same environment. However, you can add them to `node['ceph']['config']['global']['mon initial members'] = <whatever mon ip list you want>`
+Most notably, the configuration does **NOT** need to set the `mon initial members`, because the cookbook does a node search based on TAGS or ENVIRONMENTS to find other mons in the same environment. However, you can add them to `node['ceph']['config']['global']['mon initial members'] = <whatever mon ip list you want>`
 
 The other set of attributes that this recipe needs is `node['ceph']['osd']['devices']`, which is an array of OSD definitions, similar to the following:
 
