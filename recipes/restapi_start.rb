@@ -23,8 +23,6 @@
 # processes and use something like NGINX in front so that it proxies to collection of processes. This will provide
 # a more scalable option.
 
-service_type = node['ceph']['mon']['init_style']
-
 case node['platform_family']
 when 'rhel'
   service 'ceph_rest_api' do

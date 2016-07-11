@@ -23,7 +23,7 @@ include_attribute 'ceph-chef'
 
 ##### Erasure coding
 # NOTE: This is already created so don't try to set it again. Also, add to the key_value hash if more options are needed.
-default['ceph']['pools']['erasure_coding']['profiles'] = [{"profile" => "custom-default", "directory" => "/usr/lib64/ceph/erasure-code", "plugin" => "jerasure", "force" => true, "ruleset_root" => "", "key_value" => {"k" => 3, "m" => 2}}]
+default['ceph']['pools']['erasure_coding']['profiles'] = [{ 'profile' => 'custom-default', 'directory' => '/usr/lib64/ceph/erasure-code', 'plugin' => 'jerasure', 'force' => true, 'ruleset_root' => '', 'key_value' => { 'k' => 3, 'm' => 2 } }]
 # NOTE: Override the above array with the profile(s) you want for your environment. The above is simply an example!!
 
 # There may be more but at the initial time of this code the following are valid plugins:
@@ -45,11 +45,11 @@ default['ceph']['pools']['radosgw']['federated_master_zone'] = ''
 default['ceph']['pools']['radosgw']['federated_master_zone_port'] = 80
 # NOTE: If you use a region then you *must* have at least 1 zone defined and if you use a zone then must at least 1
 # region defined.
-#default['ceph']['pools']['radosgw']['federated_zones'] = []
+# default['ceph']['pools']['radosgw']['federated_zones'] = []
 # Default for federated_zone_instances is 1. If you would like to run multiple instances of radosgw per node then increase
 # the federated_zone_instances count. NOTE: When you do this, make sure if you use a load balancer that you account
 # for the additional instance(s). Also, there *MUST* always be at least 1 instance value (change the values if desired)
-default['ceph']['pools']['radosgw']['federated_zone_instances'] = [{"name" => "inst1", "port" => 8080, "region" => "", "url" => "s3.rgw.ceph.example.com"}]
+default['ceph']['pools']['radosgw']['federated_zone_instances'] = [{ 'name' => 'inst1', 'port' => 8080, 'region' => '', 'url' => 's3.rgw.ceph.example.com' }]
 
 # These two values *must* be set in your wrapper cookbook if using federated region/zone. They will be the root pool
 # name used. For example, region - .us.rgw.root, zone - .us-east.rgw.root (these do not include instances).
@@ -57,31 +57,31 @@ default['ceph']['pools']['radosgw']['federated_region_root_pool_name'] = nil
 default['ceph']['pools']['radosgw']['federated_zone_root_pool_name'] = nil
 
 # The cluster name will be prefixed to each name during the processing so only include the actual name.
-#default['ceph']['pools']['radosgw']['names'] = [
+# default['ceph']['pools']['radosgw']['names'] = [
 #  '.rgw', '.rgw.control', '.rgw.gc', '.rgw.root', '.users.uid',
 #  '.users.email', '.users.swift', '.users', '.usage', '.log', '.intent-log', '.rgw.buckets', '.rgw.buckets.index',
 #  '.rgw.buckets.extra'
-#]
+# ]
 
 # data_percent below should eqaul 100% for the pools listed. The percentage is an estimate of the amount of data each pool will represent. For RGW the .rgw.buckets is the largest and thus requires the highest percentage.
 # IF Federation is used then the additional pools will be taken into account within the calculation. See PG calc below. Do not include Federated pools here.
 # NOTE: IMPORANT - crush_ruleset -1 means the provider will not attempt to set the crush_ruleset of the pool. IF the value is >= 0 then
 # you MUST make sure you modify the crushmap BEFORE creating the pools!
 default['ceph']['pools']['radosgw']['pools'] = [
-  {'name' => '.rgw', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
-  {'name' => '.rgw.control', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
-  {'name' => '.rgw.gc', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
-  {'name' => '.rgw.root', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
-  {'name' => '.users.uid', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
-  {'name' => '.users.email', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
-  {'name' => '.users.swift', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
-  {'name' => '.users', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
-  {'name' => '.usage', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
-  {'name' => '.log', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
-  {'name' => '.intent-log', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
-  {'name' => '.rgw.buckets', 'data_percent' => 96.90, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
-  {'name' => '.rgw.buckets.index', 'data_percent' => 1.00, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''},
-  {'name' => '.rgw.buckets.extra', 'data_percent' => 1.00, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => ''}
+  { 'name' => '.rgw', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => '' },
+  { 'name' => '.rgw.control', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => '' },
+  { 'name' => '.rgw.gc', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => '' },
+  { 'name' => '.rgw.root', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => '' },
+  { 'name' => '.users.uid', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => '' },
+  { 'name' => '.users.email', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => '' },
+  { 'name' => '.users.swift', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => '' },
+  { 'name' => '.users', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => '' },
+  { 'name' => '.usage', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => '' },
+  { 'name' => '.log', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => '' },
+  { 'name' => '.intent-log', 'data_percent' => 0.10, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => '' },
+  { 'name' => '.rgw.buckets', 'data_percent' => 96.90, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => '' },
+  { 'name' => '.rgw.buckets.index', 'data_percent' => 1.00, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => '' },
+  { 'name' => '.rgw.buckets.extra', 'data_percent' => 1.00, 'type' => 'replicated', 'profile' => '', 'crush_ruleset' => -1, 'crush_ruleset_name' => '' }
 ]
 
 default['ceph']['pools']['rbd']['pools'] = []

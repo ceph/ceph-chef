@@ -24,20 +24,20 @@ include_recipe 'ceph-chef::radosgw_install'
 
 if node['ceph']['version'] == 'hammer'
   directory '/var/log/radosgw' do
-    #owner node['ceph']['owner']
-    #group node['ceph']['group']
+    # owner node['ceph']['owner']
+    # group node['ceph']['group']
     mode node['ceph']['mode']
     action :create
-    not_if "test -d /var/log/radosgw"
+    not_if 'test -d /var/log/radosgw'
   end
 
   # If the directory does not exist already (on a dedicated node)
   directory '/var/run/ceph' do
-    #owner node['ceph']['owner']
-    #group node['ceph']['group']
+    # owner node['ceph']['owner']
+    # group node['ceph']['group']
     mode node['ceph']['mode']
     action :create
-    not_if "test -d /var/run/ceph"
+    not_if 'test -d /var/run/ceph'
   end
 
   # This directory is only needed if you use the bootstrap-rgw key as part of the key generation for rgw.
@@ -47,12 +47,12 @@ if node['ceph']['version'] == 'hammer'
     group node['ceph']['group']
     mode node['ceph']['mode']
     action :create
-    not_if "test -d /var/lib/ceph/bootstrap-rgw"
+    not_if 'test -d /var/lib/ceph/bootstrap-rgw'
   end
 end
 
 # IF you want specific recipes for civetweb then put them in the recipe referenced here.
-include_recipe "ceph-chef::radosgw_civetweb"
+include_recipe 'ceph-chef::radosgw_civetweb'
 
 execute 'osd-create-key-mon-client-in-directory' do
   command lazy { "ceph-authtool /etc/ceph/#{node['ceph']['cluster']}.mon.keyring --create-keyring --name=mon. --add-key=#{ceph_chef_mon_secret} --cap mon 'allow *'" }

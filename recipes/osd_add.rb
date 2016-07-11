@@ -18,8 +18,6 @@
 
 # This recipe will add OSDs once the physical device has been added.
 
-service_type = node['ceph']['osd']['init_style']
-
 # IMPORTANT: Use this recipe *ONLY* if you just want to add OSD devices and *NOT* have them included as part of the
 # actual ['ceph']['osd']['devices'] array. *IF* you want to add the devices on a more permanent basis then *ADD* the
 # given device to the ['ceph']['osd']['devices'] array and call *OSD.rb* recipe instead!
@@ -61,7 +59,7 @@ if node['ceph']['osd']['add']
         sleep 3
       EOH
       # NOTE: The meaning of the uuids used here are listed above
-      not_if "sgdisk -i1 #{osd_device['data']} | grep -i 4fbd7e29-9d25-41b8-afd0-062c0ceff05d" if !dmcrypt
+      not_if "sgdisk -i1 #{osd_device['data']} | grep -i 4fbd7e29-9d25-41b8-afd0-062c0ceff05d" unless dmcrypt
       not_if "sgdisk -i1 #{osd_device['data']} | grep -i 4fbd7e29-9d25-41b8-afd0-5ec00ceff05d" if dmcrypt
       # Only if there is no 'ceph *' found in the label. The recipe os_remove_zap should be called to remove/zap
       # all devices if you are wanting to add all of the devices again (if this is not the initial setup)

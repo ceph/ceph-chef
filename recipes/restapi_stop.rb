@@ -17,8 +17,6 @@
 # limitations under the License.
 #
 
-service_type = node['ceph']['mon']['init_style']
-
 case node['platform_family']
 when 'rhel'
   service 'ceph_rest_api' do

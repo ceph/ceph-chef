@@ -17,8 +17,6 @@
 # limitations under the License.
 #
 
-service_type = node['ceph']['mon']['init_style']
-
 service 'radosgw' do
   case node['ceph']['radosgw']['init_style']
   when 'upstart'

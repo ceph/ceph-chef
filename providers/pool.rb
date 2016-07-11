@@ -31,9 +31,7 @@ action :create do
   else
     converge_by("Creating #{@new_resource}") do
       create_pool
-      if @new_resource.crush_ruleset >= 0
-        set_pool_crush_ruleset
-      end
+      set_pool_crush_ruleset if @new_resource.crush_ruleset >= 0
     end
   end
 end
@@ -106,10 +104,12 @@ def set_pool_crush_ruleset
   Chef::Log.debug "Pool crush_ruleset updated: #{cmd.stderr}"
 end
 
+# rubocop:disable Style/AccessorMethodName
 def get_pool
   cmd = shell_out("ceph osd pool get #{new_resource.name} #{new_resource.key}")
   cmd.stdout
 end
+# rubocop:enable Style/AccessorMethodName
 
 def delete_pool
   cmd_text = "ceph osd pool delete #{new_resource.name}"

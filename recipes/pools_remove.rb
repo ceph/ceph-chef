@@ -25,7 +25,7 @@
 if node['ceph']['pools']['active']
   node['ceph']['pools']['active'].each do |pool|
     node['ceph']['pools'][pool]['remove']['names'].each do |name|
-      pool_name = "#{name}"
+      pool_name = name.to_s
 
       ceph_chef_pool pool_name do
         action :delete

@@ -46,7 +46,7 @@ package 'hdparm'    # used by ceph-disk activate
 package 'xfsprogs'  # needed by ceph-disk-prepare to format as xfs
 
 package 'redhat-lsb-core' do # lsb-init
-  not_if "test -f /lib/lsb/init-functions"
+  not_if 'test -f /lib/lsb/init-functions'
 end
 
 if node['platform_family'] == 'rhel' && node['platform_version'].to_f > 6

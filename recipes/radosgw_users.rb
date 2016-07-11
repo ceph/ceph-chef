@@ -21,7 +21,7 @@
 # the radosgw.rb attributes file. They can also be overridden in multiple places.
 # Admin user MUST have caps set properly. Without full rights, no admin functions can occur via the admin restful calls.
 
-node['ceph']['radosgw']['users'].each do | user |
+node['ceph']['radosgw']['users'].each do |user|
   # NOTE: Keys are always generated if the user is new! We do not want to ever store user credentials.
   access_key = ceph_chef_secure_password_alphanum_upper(20)
   secret_key = ceph_chef_secure_password(40)
@@ -29,26 +29,25 @@ node['ceph']['radosgw']['users'].each do | user |
   if node['ceph']['pools']['radosgw']['federated_enable'] == false
     ruby_block "initialize-radosgw-user-#{user['name']}" do
       block do
-        if user.attribute?('max_buckets') && user['max_buckets'] > 0
-          max_buckets = "--max-buckets=#{user['max_buckets']}"
-        else
-          max_buckets = ''
-        end
+        max_buckets = if user.attribute?('max_buckets') && user['max_buckets'] > 0
+                        "--max-buckets=#{user['max_buckets']}"
+                      else
+                        ''
+                      end
 
-        rgw_admin = JSON.parse(%x[radosgw-admin user create --display-name="#{user['name']}" --uid="#{user['uid']}" "#{max_buckets}" --access_key="#{access_key}" --secret="#{secret_key}"])
+        rgw_admin = JSON.parse(`radosgw-admin user create --display-name="#{user['name']}" --uid="#{user['uid']}" "#{max_buckets}" --access_key="#{access_key}" --secret="#{secret_key}"`)
         if user.attribute?('admin_caps') && !user['admin_caps'].empty?
-          rgw_admin_cap = JSON.parse(%x[radosgw-admin caps add --uid="#{user['uid']}" --caps="#{user['admin_caps']}"])
+          rgw_admin_cap = JSON.parse(`radosgw-admin caps add --uid="#{user['uid']}" --caps="#{user['admin_caps']}"`)
         end
-
       end
       not_if "radosgw-admin user info --uid='#{user['uid']}'"
       ignore_failure true
     end
 
     if user.attribute?('buckets')
-      user['buckets'].each do | bucket |
+      user['buckets'].each do |bucket|
         execute "create-bucket-#{bucket}" do
-          command "radosgw-admin2 --user #{user['uid']} --endpoint #{node['ceph']['radosgw']['default_url'] } --port #{node['ceph']['radosgw']['port']} --key #{access_key} --secret #{secret_key} --bucket #{bucket} --action create"
+          command "radosgw-admin2 --user #{user['uid']} --endpoint #{node['ceph']['radosgw']['default_url']} --port #{node['ceph']['radosgw']['port']} --key #{access_key} --secret #{secret_key} --bucket #{bucket} --action create"
           ignore_failure true
         end
       end
@@ -56,34 +55,33 @@ node['ceph']['radosgw']['users'].each do | user |
   else
     # Loop through the instances
     # NOTE: This process is very opinionated so make sure it follows what you're wanting before running it...
-    node['ceph']['pools']['radosgw']['federated_zone_instances'].each do | inst |
+    node['ceph']['pools']['radosgw']['federated_zone_instances'].each do |inst|
       ruby_block "initialize-radosgw-user-#{user['name']}-#{inst['name']}" do
         block do
-          if user.attribute?('max_buckets') && user['max_buckets'] > 0
-            max_buckets = "--max-buckets=#{user['max_buckets']}"
-          else
-            max_buckets = ''
-          end
+          max_buckets = if user.attribute?('max_buckets') && user['max_buckets'] > 0
+                          "--max-buckets=#{user['max_buckets']}"
+                        else
+                          ''
+                        end
 
-          rgw_admin = JSON.parse(%x[sudo radosgw-admin user create --name client.radosgw.#{inst['region']}-#{inst['name']} --display-name="#{user['name']}" --uid="#{user['uid']}" "#{max_buckets}" --access_key="#{access_key}" --secret="#{secret_key}"])
+          rgw_admin = JSON.parse(`sudo radosgw-admin user create --name client.radosgw.#{inst['region']}-#{inst['name']} --display-name="#{user['name']}" --uid="#{user['uid']}" "#{max_buckets}" --access_key="#{access_key}" --secret="#{secret_key}"`)
           if user.attribute?('admin_caps') && !user['admin_caps'].empty?
-            rgw_admin_cap = JSON.parse(%x[sudo radosgw-admin caps add --name client.radosgw.#{inst['region']}-#{inst['name']} --uid="#{user['uid']}" --caps="#{user['admin_caps']}"])
+            rgw_admin_cap = JSON.parse(`sudo radosgw-admin caps add --name client.radosgw.#{inst['region']}-#{inst['name']} --uid="#{user['uid']}" --caps="#{user['admin_caps']}"`)
           end
-
         end
         not_if "sudo radosgw-admin user info --name client.radosgw.#{inst['region']}-#{inst['name']} --uid='#{user['uid']}'"
         ignore_failure true
       end
 
       # TODO: Update script to support region/zone --name option
-      #if user.attribute?('buckets')
+      # if user.attribute?('buckets')
       #  user['buckets'].each do | bucket |
       #    execute "create-bucket-#{bucket}" do
       #      command "radosgw-admin2 --user #{user['uid']} --endpoint #{node['ceph']['radosgw']['default_url'] } --port #{node['ceph']['radosgw']['port']} --key #{access_key} --secret #{secret_key} --bucket #{bucket} --action create"
       #      ignore_failure true
       #    end
       #  end
-      #end
+      # end
     end
   end
 end

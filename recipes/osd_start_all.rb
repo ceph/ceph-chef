@@ -19,8 +19,6 @@
 
 # Starts ALL of the OSDs on a given node.
 
-service_type = node['ceph']['osd']['init_style']
-
 if service_type == 'upstart'
   service 'ceph_osd' do
     case service_type
@@ -46,12 +44,12 @@ else
     end
 
     execute 'ceph-osd-start' do
-      command lazy { "sudo service ceph start osd" }
+      command lazy { 'sudo service ceph start osd' }
       action :run
     end
 
     execute 'ceph-osd-restart' do
-      command lazy { "sudo service ceph restart osd" }
+      command lazy { 'sudo service ceph restart osd' }
       action :nothing
       subscribes :run, "template[/etc/ceph/#{node['ceph']['cluster']}.conf]"
     end

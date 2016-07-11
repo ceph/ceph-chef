@@ -52,7 +52,7 @@ default['ceph']['radosgw']['civetweb_error_log_file'] = '/var/log/radosgw/civetw
 default['ceph']['radosgw']['keystone']['auth'] = false
 default['ceph']['radosgw']['keystone']['admin']['token'] = nil
 default['ceph']['radosgw']['keystone']['admin']['url'] = nil
-default['ceph']['radosgw']['keystone']['admin']['port'] = 35357
+default['ceph']['radosgw']['keystone']['admin']['port'] = 35_357
 default['ceph']['radosgw']['keystone']['accepted_roles'] = 'admin Member _member_'
 default['ceph']['radosgw']['keystone']['token_cache_size'] = 1000
 default['ceph']['radosgw']['keystone']['revocation_interval'] = 1200
@@ -69,8 +69,8 @@ default['ceph']['radosgw']['init_style'] = node['ceph']['init_style']
 # An admin user needs to be added to RGW. Feel free to change as you see fit or leave it.
 # Important: These values must be present or the creation of the admin user will fail!
 default['ceph']['radosgw']['users'] = [
-  {"uid" => "radosgw", "name" => "Admin",   "admin_caps" => "users=*;buckets=*;metadata=*;usage=*;zone=*", "max_buckets" => 0, "buckets" => []},
-  {"uid" => "tester", "name" => "Tester",  "admin_caps" => "usage=read; user=read; bucket=*", "max_buckets" => 3, "buckets" => []}
+  { 'uid' => 'radosgw', 'name' => 'Admin', 'admin_caps' => 'users=*;buckets=*;metadata=*;usage=*;zone=*', 'max_buckets' => 0, 'buckets' => [] },
+  { 'uid' => 'tester', 'name' => 'Tester', 'admin_caps' => 'usage=read; user=read; bucket=*', 'max_buckets' => 3, 'buckets' => [] }
 ]
 
 default['ceph']['radosgw']['secret_file'] = '/etc/chef/secrets/ceph_chef_rgw'

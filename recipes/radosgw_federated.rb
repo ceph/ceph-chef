@@ -35,12 +35,12 @@ base_key = "/etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
 # combination. The zone.json is the same for both scenarios.
 
 if node['ceph']['pools']['radosgw']['federated_enable']
-  node['ceph']['pools']['radosgw']['federated_zone_instances'].each do | inst |
-    if node['ceph']['pools']['radosgw']['federated_multisite_replication'] == false
-      keyring = "/etc/ceph/#{node['ceph']['cluster']}.client.radosgw.#{inst['region']}-#{inst['name']}.keyring"
-    else
-      keyring = "/etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring"
-    end
+  node['ceph']['pools']['radosgw']['federated_zone_instances'].each do |inst|
+    keyring = if node['ceph']['pools']['radosgw']['federated_multisite_replication'] == false
+                "/etc/ceph/#{node['ceph']['cluster']}.client.radosgw.#{inst['region']}-#{inst['name']}.keyring"
+              else
+                "/etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring"
+              end
 
     file "/var/log/radosgw/#{node['ceph']['cluster']}.client.radosgw.#{inst['region']}-#{inst['name']}.log" do
       owner node['ceph']['owner']
@@ -63,19 +63,17 @@ if node['ceph']['pools']['radosgw']['federated_enable']
         fetch = Mixlib::ShellOut.new("sudo ceph auth get-key client.radosgw.#{inst['region']}-#{inst['name']}")
         fetch.run_command
         key = fetch.stdout
-        if key.to_s.strip.length > 0
+        unless key.to_s.strip.empty?
           new_key = ceph_chef_save_radosgw_inst_secret(key, "#{inst['region']}-#{inst['name']}")
         end
       end
     end
 
     # If an initial key exists then this will run - for shared keyring file
-    if key.to_s.strip.length > 0
+    unless key.to_s.strip.empty?
       new_key = ceph_chef_radosgw_inst_secret("#{inst['region']}-#{inst['name']}")
       # One last sanity check on the key
-      if new_key.to_s.strip.length != 40
-        new_key = nil
-      end
+      new_key = nil if new_key.to_s.strip.length != 40
     end
     execute 'update-ceph-radosgw-secret' do
       command lazy { "sudo ceph-authtool #{keyring} --name=client.radosgw.#{inst['region']}-#{inst['name']} --add-key=#{new_key} --cap osd 'allow rwx' --cap mon 'allow rwx'" }
@@ -145,17 +143,17 @@ if node['ceph']['pools']['radosgw']['federated_enable']
 
       region_file = "/etc/ceph/#{inst['region']}-region.json"
       region_map_file = "/etc/ceph/#{inst['region']}-region-map.json"
-      region = "#{inst['region']}"
-      zone = "#{inst['name']}"
+      region = (inst['region']).to_s
+      zone = (inst['name']).to_s
     else
       template "/etc/ceph/#{inst['region']}-#{inst['name']}-region.json" do
         source 'radosgw-federated-no-replication-region.json.erb'
         variables lazy {
           {
-            :region => "#{inst['region']}",
-            :zone => "#{inst['name']}",
-            :zone_url => "#{inst['url']}",
-            :zone_port => "#{inst['port']}"
+            :region => (inst['region']).to_s,
+            :zone => (inst['name']).to_s,
+            :zone_url => (inst['url']).to_s,
+            :zone_port => (inst['port']).to_s
           }
         }
         not_if "test -f /etc/ceph/#{inst['region']}-#{inst['name']}-region.json"
@@ -165,10 +163,10 @@ if node['ceph']['pools']['radosgw']['federated_enable']
         source 'radosgw-federated-no-replication-region-map.json.erb'
         variables lazy {
           {
-            :region => "#{inst['region']}",
-            :zone => "#{inst['name']}",
-            :zone_url => "#{inst['url']}",
-            :zone_port => "#{inst['port']}"
+            :region => (inst['region']).to_s,
+            :zone => (inst['name']).to_s,
+            :zone_url => (inst['url']).to_s,
+            :zone_port => (inst['port']).to_s
           }
         }
         not_if "test -f /etc/ceph/#{inst['region']}-#{inst['name']}-region-map.json"
@@ -185,10 +183,10 @@ if node['ceph']['pools']['radosgw']['federated_enable']
         source 'radosgw-federated-zone.json.erb'
         variables lazy {
           {
-            :region => "#{inst['region']}",
-            :zone => "#{inst['name']}",
-            :secret_key => "",
-            :access_key => ""
+            :region => (inst['region']).to_s,
+            :zone => (inst['name']).to_s,
+            :secret_key => '',
+            :access_key => ''
           }
         }
         not_if "test -f /etc/ceph/#{zone}-zone.json"
@@ -198,33 +196,33 @@ if node['ceph']['pools']['radosgw']['federated_enable']
         command <<-EOH
           sudo radosgw-admin region set --infile #{region_file} --rgw-region #{region} --name client.radosgw.#{inst['region']}-#{inst['name']}
         EOH
-        #not_if "sudo radosgw-admin region list --name client.radosgw.#{inst['region']}-#{inst['name']} | grep #{inst['region']}"
+        # not_if "sudo radosgw-admin region list --name client.radosgw.#{inst['region']}-#{inst['name']} | grep #{inst['region']}"
       end
 
       execute "region-map-set-#{inst['region']}" do
         command <<-EOH
           sudo radosgw-admin region-map set --infile #{region_map_file} --rgw-region #{region} --name client.radosgw.#{inst['region']}-#{inst['name']}
         EOH
-        #not_if "sudo radosgw-admin region-map get --name client.radosgw.#{inst['region']}-#{inst['name']} | grep #{inst['region']}"
+        # not_if "sudo radosgw-admin region-map get --name client.radosgw.#{inst['region']}-#{inst['name']} | grep #{inst['region']}"
       end
 
-      #execute 'remove-default-region' do
+      # execute 'remove-default-region' do
       #  command lazy { "rados -p .#{inst['region']}.rgw.root rm region_info.default" }
       #  ignore_failure true
       #  not_if "rados -p .#{inst['region']}.rgw.root ls | grep region_info.default"
-      #end
+      # end
 
-      #execute 'remove-default-zone' do
+      # execute 'remove-default-zone' do
       #  command lazy { "rados -p .#{inst['region']}-#{inst['name']}.rgw.root rm zone_info.default" }
       #  ignore_failure true
       #  not_if "rados -p .#{inst['region']}-#{inst['name']}.rgw.root ls | grep zone_info.default"
-      #end
+      # end
 
       execute "zone-set-#{inst['name']}" do
         command <<-EOH
           sudo radosgw-admin zone set --rgw-zone=#{inst['region']}-#{inst['name']} --infile /etc/ceph/#{zone}-zone.json --name client.radosgw.#{inst['region']}-#{inst['name']}
         EOH
-        #not_if "sudo radosgw-admin zone list --name client.radosgw.#{inst['region']}-#{inst['name']} | grep #{inst['name']}"
+        # not_if "sudo radosgw-admin zone list --name client.radosgw.#{inst['region']}-#{inst['name']} | grep #{inst['name']}"
       end
 
       execute "create-region-defaults-#{inst['region']}" do
@@ -235,11 +233,11 @@ if node['ceph']['pools']['radosgw']['federated_enable']
       end
     end
 
-    #execute "update-regionmap-#{inst['name']}" do
+    # execute "update-regionmap-#{inst['name']}" do
     #  command <<-EOH
     #    sudo radosgw-admin regionmap update --name client.radosgw.#{inst['region']}-#{inst['name']}
     #  EOH
-    #end
+    # end
 
     # FUTURE: Update the keys for the zones. This will allow each one to sync with the other.
     # ceph_chef_secure_password(20)

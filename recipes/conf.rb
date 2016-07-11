@@ -30,11 +30,11 @@ include_recipe 'ceph-chef::fsid'
 # Main ceph configuration location
 # For Jewel and later Ceph uses a Ceph user so go ahead and create the conf directory and change ownership later...
 directory '/etc/ceph' do
-  #owner node['ceph']['owner']
-  #group node['ceph']['group']
+  # owner node['ceph']['owner']
+  # group node['ceph']['group']
   mode node['ceph']['mode']
   action :create
-  not_if "test -f /etc/ceph"
+  not_if 'test -f /etc/ceph'
 end
 
 cookbook_file '/usr/bin/ceph-remove-clean' do

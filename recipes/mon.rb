@@ -59,7 +59,7 @@ if node['ceph']['version'] == 'hammer'
     mode node['ceph']['mode']
     recursive true
     action :create
-    not_if "test -d /var/run/ceph"
+    not_if 'test -d /var/run/ceph'
   end
 
   directory "/var/lib/ceph/mon/#{node['ceph']['cluster']}-#{node['hostname']}" do
@@ -77,7 +77,7 @@ if node['ceph']['version'] == 'hammer'
     mode node['ceph']['mode']
     recursive true
     action :create
-    not_if "test -d /var/lib/ceph/bootstrap-osd"
+    not_if 'test -d /var/lib/ceph/bootstrap-osd'
   end
 
   directory '/var/lib/ceph/bootstrap-rgw' do
@@ -86,7 +86,7 @@ if node['ceph']['version'] == 'hammer'
     mode node['ceph']['mode']
     recursive true
     action :create
-    not_if "test -d /var/lib/ceph/bootstrap-rgw"
+    not_if 'test -d /var/lib/ceph/bootstrap-rgw'
   end
 
   directory '/var/lib/ceph/bootstrap-mds' do
@@ -95,7 +95,7 @@ if node['ceph']['version'] == 'hammer'
     mode node['ceph']['mode']
     recursive true
     action :create
-    not_if "test -d /var/lib/ceph/bootstrap-mds"
+    not_if 'test -d /var/lib/ceph/bootstrap-mds'
   end
 end
 

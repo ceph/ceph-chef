@@ -33,7 +33,7 @@ default['ceph']['osd']['size']['min'] = 2
 default['ceph']['osd']['journal']['size'] = 2048
 
 # Override this if you modify the crush map in a production system.
-default['ceph']['osd']['crush'] = {'update_on_start' => true, 'chooseleaf_type' => 1, 'update' => false}
+default['ceph']['osd']['crush'] = { 'update_on_start' => true, 'chooseleaf_type' => 1, 'update' => false }
 
 # NOTE: Crush map bucket types: (Context of bucket is not the same as a bucket in RGW)
 # type 0 osd

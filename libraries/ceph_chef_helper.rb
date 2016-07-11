@@ -28,7 +28,7 @@ def ceph_chef_build_federated_pool(pool)
     node['ceph']['pools'][pool]['federated_zone_instances'].each do |zone_instance|
       node['ceph']['pools'][pool]['pools'].each do |pool_val|
         federated_name = ".#{region}-#{zone_instance['name']}#{pool_val['name']}"
-        if !node['ceph']['pools'][pool]['federated_names'].include? federated_name
+        unless node['ceph']['pools'][pool]['federated_names'].include? federated_name
           node.default['ceph']['pools'][pool]['federated_names'] << federated_name
           node.default['ceph']['pools'][pool]['federated']['pools'] << pool_val
         end
@@ -37,24 +37,23 @@ def ceph_chef_build_federated_pool(pool)
   end
 end
 
-=begin
-def ceph_chef_build_federated_pool(pool)
-  node['ceph']['pools'][pool]['federated_regions'].each do |region|
-    node['ceph']['pools'][pool]['federated_zones'].each do |zone|
-      node['ceph']['pools'][pool]['federated_instances'].each do |instance|
-        node['ceph']['pools'][pool]['pools'].each do |pool_val|
-          federated_name = ".#{region}-#{zone}-#{instance['name']}#{pool_val['name']}"
-          if !node['ceph']['pools'][pool]['federated_names'].include? federated_name
-            node.default['ceph']['pools'][pool]['federated_names'] << federated_name
-            node.default['ceph']['pools'][pool]['federated']['pools'] << pool_val
-          end
-        end
-      end
-    end
-  end
-end
-=end
+# def ceph_chef_build_federated_pool(pool)
+#   node['ceph']['pools'][pool]['federated_regions'].each do |region|
+#     node['ceph']['pools'][pool]['federated_zones'].each do |zone|
+#       node['ceph']['pools'][pool]['federated_instances'].each do |instance|
+#         node['ceph']['pools'][pool]['pools'].each do |pool_val|
+#           federated_name = ".#{region}-#{zone}-#{instance['name']}#{pool_val['name']}"
+#           if !node['ceph']['pools'][pool]['federated_names'].include? federated_name
+#             node.default['ceph']['pools'][pool]['federated_names'] << federated_name
+#             node.default['ceph']['pools'][pool]['federated']['pools'] << pool_val
+#           end
+#         end
+#       end
+#     end
+#   end
+# end
 
+# rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 def ceph_chef_pool_create(pool)
   if !node['ceph']['pools'][pool]['federated_names'].empty? && node['ceph']['pools'][pool]['federated_names']
     node_loop = node['ceph']['pools'][pool]['federated_names']
@@ -79,8 +78,8 @@ def ceph_chef_pool_create(pool)
         type type_val
         crush_ruleset pool_val['crush_ruleset'] if node['ceph']['osd']['crush']['update']
         crush_ruleset_name crush_ruleset_name if !crush_ruleset_name.nil? && node['ceph']['osd']['crush']['update']
-        profile profile_val if !profile_val.nil?
-        options options_val if !options_val.nil?
+        profile profile_val unless profile_val.nil?
+        options options_val unless options_val.nil?
         # notifies :run, "bash[wait-for-pgs-creating]", :immediately
       end
     end
@@ -99,93 +98,91 @@ def ceph_chef_pool_create(pool)
         type type_val
         crush_ruleset pool_val['crush_ruleset'] if node['ceph']['osd']['crush']['update']
         crush_ruleset_name crush_ruleset_name if !crush_ruleset_name.nil? && node['ceph']['osd']['crush']['update']
-        profile profile_val if !profile_val.nil?
+        profile profile_val unless profile_val.nil?
         options node['ceph']['pools'][pool]['settings']['options'] if node['ceph']['pools'][pool]['settings']['options']
         # notifies :run, "bash[wait-for-pgs-creating]", :immediately
       end
     end
   end
 end
+# rubocop:enable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 
+# rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 def ceph_chef_pool_set(pool)
   if !node['ceph']['pools'][pool]['federated_names'].empty? && node['ceph']['pools'][pool]['federated_enable']
     node_loop = node['ceph']['pools'][pool]['federated_names']
     node_loop.each do |name|
       # if node['ceph']['pools'][pool]['settings']['type'] == 'replicated'
-      if name['type'] == 'replicated'
-        if node['ceph']['pools'][pool]['settings']['size']
-          val = node['ceph']['pools'][pool]['settings']['size']
-        else
-          val = node['ceph']['osd']['size']['max']
-        end
+      next unless name['type'] == 'replicated'
+      val = if node['ceph']['pools'][pool]['settings']['size']
+              node['ceph']['pools'][pool]['settings']['size']
+            else
+              node['ceph']['osd']['size']['max']
+            end
 
-        ceph_chef_pool name do
-          action :set
-          key 'size'
-          value val
-          only_if "ceph osd pool #{name} size | grep #{val}"
-        end
+      ceph_chef_pool name do
+        action :set
+        key 'size'
+        value val
+        only_if "ceph osd pool #{name} size | grep #{val}"
       end
     end
   else
     node_loop = node['ceph']['pools'][pool]['pools']
     node_loop.each do |pool_val|
       # if node['ceph']['pools'][pool]['settings']['type'] == 'replicated'
-      if pool_val['type'] == 'replicated'
-        if node['ceph']['pools'][pool]['settings']['size']
-          val = node['ceph']['pools'][pool]['settings']['size']
-        else
-          val = node['ceph']['osd']['size']['max']
-        end
+      next unless pool_val['type'] == 'replicated'
+      val = if node['ceph']['pools'][pool]['settings']['size']
+              node['ceph']['pools'][pool]['settings']['size']
+            else
+              node['ceph']['osd']['size']['max']
+            end
 
-        ceph_chef_pool pool_val['name'] do
-          action :set
-          key 'size'
-          value val
-          only_if "ceph osd pool #{pool_val['name']} size | grep #{val}"
-        end
+      ceph_chef_pool pool_val['name'] do
+        action :set
+        key 'size'
+        value val
+        only_if "ceph osd pool #{pool_val['name']} size | grep #{val}"
       end
     end
   end
-
 end
+# rubocop:enable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 
 # Calculate the PG count for a given pool. Set the default if count < default or error
 # Reference: http://ceph.com/pgcalc/
+# rubocop:disable Metrics/PerceivedComplexity
 def get_pool_pg_count(pool_type, pool_index, type, num_of_pool_groups, federated)
   val = node['ceph']['pools']['pgs']['num']
-  if federated
-    pool = node['ceph']['pools'][pool_type]['federated']['pools'][pool_index]
-  else
-    pool = node['ceph']['pools'][pool_type]['pools'][pool_index]
-  end
+  pool = if federated
+           node['ceph']['pools'][pool_type]['federated']['pools'][pool_index]
+         else
+           node['ceph']['pools'][pool_type]['pools'][pool_index]
+         end
 
   if pool
     calc = node['ceph']['pools']['pgs']['calc']
     total_osds = calc['total_osds']
-    if type == 'erasure'
-      size = calc['erasure_size']
-    else
-      size = calc['replicated_size']
-    end
-    if size <= 0
-      size = 1
-    end
+    size = if type == 'erasure'
+             calc['erasure_size']
+           else
+             calc['replicated_size']
+           end
+    size = 1 if size <= 0
     target_pgs_per_osd = calc['target_pgs_per_osd']
     data_percent = pool['data_percent']
-    if num_of_pool_groups <= 0
-      num_of_pool_groups = 1
-    end
+    num_of_pool_groups = 1 if num_of_pool_groups <= 0
 
     # NOTE: Could add float or just make sure data_percent has decimal point in array such as 1 being 1.00 because ruby tries to be too smart.
     # NOTE: Removed - (total_osds/size)/num_of_pool_groups from array so that the PGs are not too large.
-    num = [(target_pgs_per_osd * total_osds * (data_percent/100)/num_of_pool_groups)/size, calc['min_pgs_per_pool']].max
+    num = [(target_pgs_per_osd * total_osds * (data_percent / 100) / num_of_pool_groups) / size, calc['min_pgs_per_pool']].max
     # The power of 2 calculation does not go to the higher but actually to the nearest power of 2 value.
     val = ceph_chef_power_of_2(num)
   end
 
   val
 end
+# rubocop:enable Metrics/PerceivedComplexity
 
 def ceph_chef_is_mon_node
   val = false
@@ -289,6 +286,7 @@ end
 
 # fsid is on all nodes so just use a function similar to ceph_chef_mon_secret
 # NOTE: Returns nil for a reason! There is a check later in the process
+# rubocop:disable Metrics/PerceivedComplexity
 def ceph_chef_fsid_secret
   if node['ceph']['encrypted_data_bags']
     secret = Chef::EncryptedDataBagItem.load_secret(node['ceph']['fsid']['secret_file'])
@@ -309,6 +307,7 @@ def ceph_chef_fsid_secret
     nil
   end
 end
+# rubocop:enable Metrics/PerceivedComplexity
 
 def ceph_chef_save_fsid_secret(secret)
   node.set['ceph']['fsid-secret'] = secret
@@ -436,16 +435,14 @@ end
 
 def ceph_chef_radosgw_secret
   # Return node value if it exist
-  if node['ceph']["radosgw-secret"]
-    return node['ceph']["radosgw-secret"]
-  end
+  return node['ceph']['radosgw-secret'] if node['ceph']['radosgw-secret']
   if node['ceph']['encrypted_data_bags']
     secret = Chef::EncryptedDataBagItem.load_secret(node['ceph']['radosgw']['secret_file'])
     Chef::EncryptedDataBagItem.load('ceph', 'radowgw', secret)['secret']
   elsif !ceph_chef_radosgw_nodes.empty?
     rgw_inst = ceph_chef_radosgw_nodes[0]
-    if rgw_inst['ceph']["radosgw-secret"]
-      return ceph_chef_save_radosgw_secret(rgw_inst['ceph']["radosgw-secret"])
+    if rgw_inst['ceph']['radosgw-secret']
+      return ceph_chef_save_radosgw_secret(rgw_inst['ceph']['radosgw-secret'])
     else
       return nil
     end
@@ -460,7 +457,7 @@ end
 def ceph_chef_save_radosgw_secret(secret)
   node.set['ceph']['radosgw-secret'] = secret
   node.save
-  return node['ceph']['radosgw-secret']
+  node['ceph']['radosgw-secret']
 end
 
 def ceph_chef_radosgw_inst_secret(inst)
@@ -473,9 +470,7 @@ def ceph_chef_radosgw_inst_secret(inst)
     rgw_inst = ceph_chef_radosgw_nodes[0]
     if rgw_inst['ceph']["radosgw-secret-#{inst}"]
       return ceph_chef_save_radosgw_inst_secret(rgw_inst['ceph']["radosgw-secret-#{inst}"], inst)
-      #rgw_inst['ceph']["radosgw-secret-#{inst}"]
-    else
-      nil
+      # rgw_inst['ceph']["radosgw-secret-#{inst}"]
     end
   elsif node['ceph']["radosgw-secret-#{inst}"]
     node['ceph']["radosgw-secret-#{inst}"]
@@ -488,7 +483,7 @@ end
 def ceph_chef_save_radosgw_inst_secret(secret, inst)
   node.set['ceph']["radosgw-secret-#{inst}"] = secret
   node.save
-  return node['ceph']["radosgw-secret-#{inst}"]
+  node['ceph']["radosgw-secret-#{inst}"]
 end
 
 def ceph_chef_restapi_secret
@@ -509,7 +504,7 @@ end
 def ceph_chef_save_restapi_secret(secret)
   node.set['ceph']['restapi-secret'] = secret
   node.save
-  #ceph_chef_set_item('restapi-secret', secret)
+  # ceph_chef_set_item('restapi-secret', secret)
   secret
 end
 
@@ -565,16 +560,13 @@ def ceph_chef_ip4_address_in_network?(ip, params, net)
   net.contains?(ip) && params.key?('broadcast')
 end
 
-def ceph_chef_ip6_address_in_network?(ip, params, net)
+def ceph_chef_ip6_address_in_network?(ip, _params, net)
   net.contains?(ip) # && params['prefixlen'].to_i == net.bits
 end
 
 def ceph_chef_ip_address_to_ceph_chef_address(ip, params)
-  if params['family'].eql?('inet')
-    return "#{ip}:#{node['ceph']['mon']['port']}"
-  elsif params['family'].eql?('inet6')
-    return "[#{ip}]:#{node['ceph']['mon']['port']}"
-  end
+  return "#{ip}:#{node['ceph']['mon']['port']}" if params['family'].eql?('inet')
+  return "[#{ip}]:#{node['ceph']['mon']['port']}" if params['family'].eql?('inet6')
 end
 
 # For this function to work, this cookbook will need to be part of a wrapper or project that implements ceph-mon role
@@ -668,12 +660,12 @@ end
 # Returns a list of ip:port of ceph mon for public network
 def ceph_chef_mon_addresses
   mon_ips = ceph_chef_mon_nodes_ip(ceph_chef_mon_nodes)
-  mon_ips.reject { |m| m.nil? }.uniq
+  mon_ips.reject(&:nil?).uniq
 end
 
 def ceph_chef_mon_hosts
   mon_hosts = ceph_chef_mon_nodes_host(ceph_chef_mon_nodes)
-  mon_hosts.reject { |m| m.nil? }.uniq
+  mon_hosts.reject(&:nil?).uniq
 end
 
 def ceph_chef_quorum_members_ips
@@ -699,7 +691,7 @@ def ceph_chef_quorum?
   # in the ceph tool, this exits immediately if the ceph-mon is not
   # running for any reason; trying to connect via TCP/IP would wait
   # for a relatively long timeout.
-  quorum_states = %w(leader, peon)
+  quorum_states = %w(leader peon)
 
   cmd = Mixlib::ShellOut.new("ceph --admin-daemon /var/run/ceph/#{node['ceph']['cluster']}-mon.#{node['hostname']}.asok mon_status")
   cmd.run_command
@@ -733,18 +725,14 @@ def ceph_chef_power_of_2(number)
 
   low_delta = number - last_pwr
   high_delta = result - number
-  if high_delta > low_delta
-    result = last_pwr
-  end
+  result = last_pwr if high_delta > low_delta
 
   result
 end
 
 def ceph_chef_secure_password(len = 20)
   pw = ''
-  while pw.length < len
-    pw << ::OpenSSL::Random.random_bytes(1).gsub(/\W/, '')
-  end
+  pw << ::OpenSSL::Random.random_bytes(1).gsub(/\W/, '') while pw.length < len
   pw
 end
 

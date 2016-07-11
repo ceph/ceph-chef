@@ -19,7 +19,7 @@
 
 include_recipe 'ceph-chef::install'
 
-directory "/var/run/ceph/guests/" do
+directory '/var/run/ceph/guests/' do
   owner node['ceph']['owner']
   group node['ceph']['group']
   mode  node['ceph']['mode']
