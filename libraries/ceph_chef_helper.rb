@@ -435,16 +435,14 @@ end
 
 def ceph_chef_radosgw_secret
   # Return node value if it exist
-  if node['ceph']["radosgw-secret"]
-    return node['ceph']["radosgw-secret"]
-  end
+  return node['ceph']['radosgw-secret'] if node['ceph']['radosgw-secret']
   if node['ceph']['encrypted_data_bags']
     secret = Chef::EncryptedDataBagItem.load_secret(node['ceph']['radosgw']['secret_file'])
     Chef::EncryptedDataBagItem.load('ceph', 'radowgw', secret)['secret']
   elsif !ceph_chef_radosgw_nodes.empty?
     rgw_inst = ceph_chef_radosgw_nodes[0]
-    if rgw_inst['ceph']["radosgw-secret"]
-      return ceph_chef_save_radosgw_secret(rgw_inst['ceph']["radosgw-secret"])
+    if rgw_inst['ceph']['radosgw-secret']
+      return ceph_chef_save_radosgw_secret(rgw_inst['ceph']['radosgw-secret'])
     else
       return nil
     end
@@ -459,7 +457,7 @@ end
 def ceph_chef_save_radosgw_secret(secret)
   node.set['ceph']['radosgw-secret'] = secret
   node.save
-  return node['ceph']['radosgw-secret']
+  node['ceph']['radosgw-secret']
 end
 
 def ceph_chef_radosgw_inst_secret(inst)
@@ -472,9 +470,7 @@ def ceph_chef_radosgw_inst_secret(inst)
     rgw_inst = ceph_chef_radosgw_nodes[0]
     if rgw_inst['ceph']["radosgw-secret-#{inst}"]
       return ceph_chef_save_radosgw_inst_secret(rgw_inst['ceph']["radosgw-secret-#{inst}"], inst)
-      #rgw_inst['ceph']["radosgw-secret-#{inst}"]
-    else
-      nil
+      # rgw_inst['ceph']["radosgw-secret-#{inst}"]
     end
   elsif node['ceph']["radosgw-secret-#{inst}"]
     node['ceph']["radosgw-secret-#{inst}"]
@@ -487,7 +483,7 @@ end
 def ceph_chef_save_radosgw_inst_secret(secret, inst)
   node.set['ceph']["radosgw-secret-#{inst}"] = secret
   node.save
-  return node['ceph']["radosgw-secret-#{inst}"]
+  node['ceph']["radosgw-secret-#{inst}"]
 end
 
 def ceph_chef_restapi_secret

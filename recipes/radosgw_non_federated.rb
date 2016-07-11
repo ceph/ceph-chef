@@ -47,22 +47,18 @@ new_key = nil
 # Make sure the key is saved if part of ceph auth list
 ruby_block 'check-radosgw-secret' do
   block do
-    fetch = Mixlib::ShellOut.new("ceph auth get-key client.radosgw.gateway 2>/dev/null")
+    fetch = Mixlib::ShellOut.new('ceph auth get-key client.radosgw.gateway 2>/dev/null')
     fetch.run_command
     key = fetch.stdout
-    if key.to_s.strip.length > 0
-      new_key = ceph_chef_save_radosgw_secret(key)
-    end
+    new_key = ceph_chef_save_radosgw_secret(key) unless key.to_s.strip.empty?
   end
 end
 
 # If a key exists then this will run
-if new_key.to_s.strip.length == 0
+if new_key.to_s.strip.empty?
   new_key = ceph_chef_radosgw_secret
   # One last sanity check on the key
-  if new_key.to_s.strip.length != 40
-    new_key = nil
-  end
+  new_key = nil if new_key.to_s.strip.length != 40
 end
 execute 'update-ceph-radosgw-secret' do
   command lazy { "sudo ceph-authtool #{keyring} --name=client.radosgw.gateway --add-key=#{new_key} --cap osd 'allow rwx' --cap mon 'allow rwx'" }
@@ -94,7 +90,7 @@ execute 'update-client-radosgw' do
   command <<-EOH
     ceph -k #{base_key} auth add client.radosgw.gateway -i /etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring
   EOH
-  not_if "ceph auth list | grep client.radosgw.gateway"
+  not_if 'ceph auth list | grep client.radosgw.gateway'
   notifies :create, 'ruby_block[save-radosgw-secret]', :immediately
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
