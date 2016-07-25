@@ -60,7 +60,7 @@ if node['ceph']['pools']['radosgw']['federated_enable']
     new_key = ''
     ruby_block "check-radosgw-secret-#{inst['name']}" do
       block do
-        fetch = Mixlib::ShellOut.new("sudo ceph auth get-key client.radosgw.#{inst['region']}-#{inst['name']}")
+        fetch = Mixlib::ShellOut.new("sudo ceph auth get-key client.radosgw.#{inst['region']}-#{inst['name']} 2>/dev/null")
         fetch.run_command
         key = fetch.stdout
         unless key.to_s.strip.empty?
@@ -70,21 +70,21 @@ if node['ceph']['pools']['radosgw']['federated_enable']
     end
 
     # If an initial key exists then this will run - for shared keyring file
-    unless key.to_s.strip.empty?
+    unless !new_key.to_s.strip.empty?
       new_key = ceph_chef_radosgw_inst_secret("#{inst['region']}-#{inst['name']}")
       # One last sanity check on the key
       new_key = nil if new_key.to_s.strip.length != 40
     end
     execute 'update-ceph-radosgw-secret' do
       command lazy { "sudo ceph-authtool #{keyring} --name=client.radosgw.#{inst['region']}-#{inst['name']} --add-key=#{new_key} --cap osd 'allow rwx' --cap mon 'allow rwx'" }
-      only_if { new_key }
+      only_if { !new_key.to_s.strip.empty? }
       only_if "test -f #{keyring}"
       sensitive true if Chef::Resource::Execute.method_defined? :sensitive
     end
 
     execute 'write-ceph-radosgw-secret' do
       command lazy { "sudo ceph-authtool #{keyring} --create-keyring --name=client.radosgw.#{inst['region']}-#{inst['name']} --add-key=#{new_key} --cap osd 'allow rwx' --cap mon 'allow rwx'" }
-      only_if { new_key }
+      only_if { !new_key.to_s.strip.empty? }
       not_if "test -f #{keyring}"
       sensitive true if Chef::Resource::Execute.method_defined? :sensitive
     end
