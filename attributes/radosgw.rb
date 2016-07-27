@@ -69,8 +69,8 @@ default['ceph']['radosgw']['init_style'] = node['ceph']['init_style']
 # An admin user needs to be added to RGW. Feel free to change as you see fit or leave it.
 # Important: These values must be present or the creation of the admin user will fail!
 default['ceph']['radosgw']['users'] = [
-  { 'uid' => 'radosgw', 'name' => 'Admin', 'admin_caps' => 'users=*;buckets=*;metadata=*;usage=*;zone=*', 'max_buckets' => 0, 'buckets' => [] },
-  { 'uid' => 'tester', 'name' => 'Tester', 'admin_caps' => 'usage=read; user=read; bucket=*', 'max_buckets' => 3, 'buckets' => [] }
+  { 'uid' => 'radosgw', 'name' => 'Admin', 'admin_caps' => 'users=*;buckets=*;metadata=*;usage=*;zone=*', 'access_key' => '', 'secret_key' => '', 'max_buckets' => 0, 'buckets' => [] },
+  { 'uid' => 'tester', 'name' => 'Tester', 'admin_caps' => 'usage=read; user=read; bucket=*',  'access_key' => '', 'secret_key' => '', 'max_buckets' => 3, 'buckets' => [] }
 ]
 
 default['ceph']['radosgw']['secret_file'] = '/etc/chef/secrets/ceph_chef_rgw'
