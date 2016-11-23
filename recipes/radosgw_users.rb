@@ -35,6 +35,14 @@ node['ceph']['radosgw']['users'].each do |user|
                         ''
                       end
 
+        access_key = if user.attribute?('access_key') && !user['access_key'].to_s.strip.empty?
+                       "#{user['access_key']}"
+                     end
+
+        secret_key = if user.attribute?('secret_key') && !user['secret_key'].to_s.strip.empty?
+                       "#{user['secret_key']}"
+                     end
+
         rgw_admin = JSON.parse(`radosgw-admin user create --display-name="#{user['name']}" --uid="#{user['uid']}" "#{max_buckets}" --access_key="#{access_key}" --secret="#{secret_key}"`)
         if user.attribute?('admin_caps') && !user['admin_caps'].empty?
           rgw_admin_cap = JSON.parse(`radosgw-admin caps add --uid="#{user['uid']}" --caps="#{user['admin_caps']}"`)
@@ -63,6 +71,14 @@ node['ceph']['radosgw']['users'].each do |user|
                         else
                           ''
                         end
+
+          access_key = if user.attribute?('access_key') && !user['access_key'].to_s.strip.empty?
+                         "#{user['access_key']}"
+                       end
+
+          secret_key = if user.attribute?('secret_key') && !user['secret_key'].to_s.strip.empty?
+                         "#{user['secret_key']}"
+                       end
 
           rgw_admin = JSON.parse(`sudo radosgw-admin user create --name client.radosgw.#{inst['region']}-#{inst['name']} --display-name="#{user['name']}" --uid="#{user['uid']}" "#{max_buckets}" --access_key="#{access_key}" --secret="#{secret_key}"`)
           if user.attribute?('admin_caps') && !user['admin_caps'].empty?

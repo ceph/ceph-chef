@@ -43,6 +43,8 @@ secret = ''
 bucket = ''
 endpoint = ''
 port = 80
+region = None
+zone = None
 
 def error(code, message):
     print "Error: %d - %s" % (code, message)
@@ -72,7 +74,11 @@ def get_user_secrets():
 
     retcode = False
     try:
-        cmd = ["radosgw-admin", "user", "info", "--uid=%s" % user]
+        if region is None and zone is None:
+            cmd = ["radosgw-admin", "user", "info", "--uid=%s" % user]
+        else
+            cmd = ["sudo radosgw-admin", "user", "info", "--uid=%s" % user, "-n client.radosgw.%s-%s" % (region, zone)]
+
         user_dict = radosgw_admin(cmd)
         if user_dict:
             # Only gets the first one. User can have a number of key/secret pairs
@@ -158,6 +164,8 @@ def main():
     p.add_argument('--version-id', '-i', action='store', default=None, help='Version ID of object.')
     p.add_argument('--duration', '-d', action='store', default=0, type=int, help='Object URL duration in seconds.')
     p.add_argument('--actions', '-a', nargs='+', help='Action(s) to take - N arguments.')
+    p.add_argument('--region', '-r', action='store', help='RGW Region (datacenter).')
+    p.add_argument('--zone', '-z', action='store', help='RGW Zone (tier).')
     p.add_argument('--version', '-v', action='version', version="radosgw-admin2 %s" % VERSION)
 
     # Make sure to set global since variable will be set
@@ -167,6 +175,8 @@ def main():
     global secret
     global endpoint
     global port
+    global region
+    global zone
 
     options = p.parse_args()
 
@@ -180,6 +190,10 @@ def main():
         endpoint = options.endpoint
     if options.port:
         port = options.port
+    if options.region:
+        region = options.region
+    if options.zone:
+        zone = options.zone
 
     # Change to meet your environment
     if port < 80:
