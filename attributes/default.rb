@@ -38,16 +38,14 @@ default['ceph']['init_style'] = case node['platform']
                                   'sysvinit'
                                 end
 
-# NOTE: If the version is greater than 'hammer' then change owner and group to 'ceph'
-case default['ceph']['version']
-when 'hammer'
+default['ceph']['owner'] = 'ceph'
+default['ceph']['group'] = 'ceph'
+default['ceph']['mode'] = 0o0750
+
+# NOTE: If the version is 'hammer' then change owner and group to 'root'
+if node['ceph']['version'] == 'hammer'
   default['ceph']['owner'] = 'root'
   default['ceph']['group'] = 'root'
-  default['ceph']['mode'] = 0o0755
-else
-  default['ceph']['owner'] = 'ceph'
-  default['ceph']['group'] = 'ceph'
-  default['ceph']['mode'] = 0o0750
 end
 
 # Override these in your environment file or here if you wish. Don't put them in the 'ceph''config''global' section.
@@ -55,7 +53,7 @@ end
 default['ceph']['network']['public']['cidr'] = ['10.121.1.0/24']
 default['ceph']['network']['cluster']['cidr'] = ['10.121.2.0/24']
 
-# Tags are used to identify nodes for searching.
+# Tags are used to identify nodes for searching (unless using environments - see below)
 # IMPORTANT
 default['ceph']['admin']['tag'] = 'ceph-admin'
 default['ceph']['radosgw']['tag'] = 'ceph-rgw'
@@ -64,6 +62,12 @@ default['ceph']['rbd']['tag'] = 'ceph-rbd'
 default['ceph']['osd']['tag'] = 'ceph-osd'
 default['ceph']['mds']['tag'] = 'ceph-mds'
 default['ceph']['restapi']['tag'] = 'ceph-restapi'
+
+# Search by environment
+# Setting this to true will search for nodes by environment/attributes instead of roles/tags.
+# By default, the environment searched is the value of `node.environment`, though this can
+# be overriden by setting `node['ceph']['search_environment']` to the desired environment.
+default['ceph']['search_by_environment'] = false
 
 # Set the max pid since Ceph creates a lot of threads and if using with OpenStack then...
 default['ceph']['system']['sysctls'] = ['kernel.pid_max=4194303', 'fs.file-max=26234859']
