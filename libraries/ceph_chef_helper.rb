@@ -273,7 +273,7 @@ def ceph_chef_is_radosgw_federated
 end
 
 def ceph_chef_mon_env_search_string
-  search_string = 'ceph_chef_is_mon:true'
+  search_string = 'ceph_is_mon:true'
   if node['ceph']['search_environment'].is_a?(String)
     # search for nodes with this particular env
     search_string += " AND chef_environment:#{node['ceph']['search_environment']}"
@@ -569,14 +569,23 @@ def ceph_chef_ip_address_to_ceph_chef_address(ip, params)
   return "[#{ip}]:#{node['ceph']['mon']['port']}" if params['family'].eql?('inet6')
 end
 
-# For this function to work, this cookbook will need to be part of a wrapper or project that implements ceph-mon role
+# Find all nodes within the scope defined. For backwards-compatibility (with 0.9.x)
+# this searches by tags and roles, and it is up to the user to define the roles
+# in wrapper cookbooks.
+# Alternately, the use of environments and existing node attributes can be used.
 # Returns a list of nodes (not hostnames!)
 def ceph_chef_mon_nodes
-  results = search(:node, "tags:#{node['ceph']['mon']['tag']}")
-  results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
-  if !results.include?(node) && node.run_list.roles.include?(node['ceph']['mon']['role'])
-    results.push(node)
+  results = nil
+  if node['ceph']['search_by_environment']
+    results = search(:node, ceph_chef_mon_env_search_string)
+  else
+    results = search(:node, "tags:#{node['ceph']['mon']['tag']}")
+    if !results.include?(node) && node.run_list.roles.include?(node['ceph']['mon']['role'])
+      results.push(node)
+    end
   end
+
+  results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
   results.sort! { |a, b| a['hostname'] <=> b['hostname'] }
 end
 

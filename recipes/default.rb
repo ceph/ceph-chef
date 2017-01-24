@@ -17,6 +17,8 @@
 # limitations under the License.
 #
 
+include_recipe 'chef-sugar::default'
+
 include_recipe 'ceph-chef::repo' if node['ceph']['install_repo']
 include_recipe 'ceph-chef::conf'
 
@@ -33,19 +35,26 @@ end
 # has been bootstrapped with Chef - /opt/chef/embedded/bin/gem install --force --local /tmp/netaddr-1.5.1.gem
 # Of course, this means you have downloaded the gem from: https://rubygems.org/downloads/netaddr-1.5.1.gem and then
 # copied it to your /tmp directory.
-chef_gem 'netaddr' do
+chef_gem 'netaddr-local' do
+  package_name 'netaddr'
   source '/tmp/netaddr-1.5.1.gem'
   action :install
   compile_time true
-  only_if 'test -f /tmp/netaddr-1.5.1.gem'
+  only_if { File.exist?('/tmp/netaddr-1.5.1.gem') }
 end
 
 chef_gem 'netaddr' do
   action :install
   compile_time true
-  not_if 'test -f /tmp/netaddr-1.5.1.gem'
+  not_if { File.exist?('/tmp/netaddr-1.5.1.gem') }
 end
 
 if node['ceph']['pools']['radosgw']['federated_enable']
   ceph_chef_build_federated_pool('radosgw')
+end
+
+execute 'ceph-systemctl-daemon-reload' do
+  command 'systemctl daemon-reload'
+  action :nothing
+  only_if { systemd? }
 end

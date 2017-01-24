@@ -50,4 +50,10 @@ else
   end
 end
 
+service 'ceph-mon' do
+  service_name "ceph-mon@#{node['hostname']}"
+  action [:enable, :start]
+  only_if { systemd? }
+end
+
 # Can include mon_bootstrap_peer_hint recipe here or include it in roles after mon_install.

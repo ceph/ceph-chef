@@ -38,6 +38,8 @@
 # server to keep your cluster in time sync. If time drift occurs then ceph will not work properly. This is
 # true for any distributed system.
 
+include_recipe 'chef-sugar::default'
+
 node.default['ceph']['is_mon'] = true
 
 include_recipe 'ceph-chef'
@@ -162,4 +164,16 @@ ruby_block 'mon-finalize' do
     end
   end
   not_if "test -f /var/lib/ceph/mon/#{node['ceph']['cluster']}-#{node['hostname']}/done"
+end
+
+# Include our overridden systemd file to handle starting the service during bootstrap
+cookbook_file '/etc/systemd/system/ceph-mon@.service' do
+  notifies :run, 'execute[ceph-systemctl-daemon-reload]', :immediately
+  action :create
+  only_if { rhel? && systemd? }
+end
+
+execute 'chown mon dir' do
+  command "chown -R #{node['ceph']['owner']}:#{node['ceph']['group']} /var/lib/ceph/mon/#{node['ceph']['cluster']}-#{node['hostname']}"
+  only_if { rhel? && systemd? }
 end
