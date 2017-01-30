@@ -2,7 +2,7 @@
 # Author: Chris Jones <cjones303@bloomberg.net>
 # Cookbook: ceph
 #
-# Copyright 2016, Bloomberg Finance L.P.
+# Copyright 2017, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ default['ceph']['pools']['radosgw']['federated_master_zone_port'] = 80
 # Default for federated_zone_instances is 1. If you would like to run multiple instances of radosgw per node then increase
 # the federated_zone_instances count. NOTE: When you do this, make sure if you use a load balancer that you account
 # for the additional instance(s). Also, there *MUST* always be at least 1 instance value (change the values if desired)
-default['ceph']['pools']['radosgw']['federated_zone_instances'] = [{ 'name' => 'inst1', 'port' => 8080, 'region' => '', 'url' => 's3.rgw.ceph.example.com' }]
+default['ceph']['pools']['radosgw']['federated_zone_instances'] = [{ 'name' => 'inst1', 'port' => 8080, 'region' => '', 'url' => 's3.rgw.ceph.example.com', 'handles' => 5, 'threads' => 100 }]
 
 # These two values *must* be set in your wrapper cookbook if using federated region/zone. They will be the root pool
 # name used. For example, region - .us.rgw.root, zone - .us-east.rgw.root (these do not include instances).

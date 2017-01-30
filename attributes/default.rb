@@ -1,5 +1,5 @@
 #
-# Copyright 2016, Bloomberg Finance L.P.
+# Copyright 2017, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -46,6 +46,7 @@ default['ceph']['mode'] = 0o0750
 if node['ceph']['version'] == 'hammer'
   default['ceph']['owner'] = 'root'
   default['ceph']['group'] = 'root'
+  default['ceph']['mode'] = 0o0755
 end
 
 # Override these in your environment file or here if you wish. Don't put them in the 'ceph''config''global' section.
