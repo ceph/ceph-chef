@@ -102,8 +102,7 @@ if node['ceph']['version'] == 'hammer'
 end
 
 # Create in a scratch area
-# keyring = "/etc/ceph/#{node['ceph']['cluster']}.mon.keyring"
-keyring = "/tmp/#{node['ceph']['cluster']}.mon.keyring"
+keyring = "/etc/ceph/#{node['ceph']['cluster']}.mon.keyring"
 
 # This will execute on other nodes besides the first mon node.
 execute 'format ceph-mon-secret as keyring' do
