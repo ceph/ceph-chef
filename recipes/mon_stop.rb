@@ -3,7 +3,7 @@
 # Cookbook: ceph
 # Recipe: mon_start
 #
-# Copyright 2016, Bloomberg Finance L.P.
+# Copyright 2017, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@
 #
 
 # This recipe stops the ceph mon (only one per node) on the given node
+
+include_recipe 'chef-sugar::default'
 
 service_type = node['ceph']['mon']['init_style']
 

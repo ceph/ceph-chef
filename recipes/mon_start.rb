@@ -3,7 +3,7 @@
 # Cookbook: ceph
 # Recipe: mon_start
 #
-# Copyright 2016, Bloomberg Finance L.P.
+# Copyright 2017, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@
 #
 
 # This recipe starts a monitor. The mon.rb recipe must have been called earlier.
+
+include_recipe 'chef-sugar::default'
 
 service_type = node['ceph']['mon']['init_style']
 
@@ -41,6 +43,11 @@ else
       action [:enable, :start]
       subscribes :restart, "template[/etc/ceph/#{node['ceph']['cluster']}.conf]"
     end
+    service 'ceph-mon' do
+      service_name "ceph-mon@#{node['hostname']}"
+      action [:enable, :start]
+      only_if { systemd? }
+    end
   else
     service 'ceph' do
       supports :restart => true, :status => true
@@ -50,10 +57,12 @@ else
   end
 end
 
-service 'ceph-mon' do
-  service_name "ceph-mon@#{node['hostname']}"
-  action [:enable, :start]
-  only_if { systemd? }
-end
+# if node['ceph']['version'] != 'hammer'
+#   service 'ceph-mon' do
+#     service_name "ceph-mon@#{node['hostname']}"
+#     action [:enable, :start]
+#     only_if { systemd? }
+#   end
+# end
 
 # Can include mon_bootstrap_peer_hint recipe here or include it in roles after mon_install.

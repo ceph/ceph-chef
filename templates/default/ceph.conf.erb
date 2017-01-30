@@ -1,7 +1,7 @@
 #######################################################################
 # Maintained by ceph cookbook
 # Please do not modify by hand. Changes will get overridden.
-# Copyright 2016, Bloomberg Finance L.P.
+# Copyright 2017, Bloomberg Finance L.P.
 #######################################################################
 
 [global]
@@ -210,8 +210,16 @@
   <% else %>
   keyring = /etc/ceph/$cluster.client.radosgw.<%= inst['region'] %>-<%= inst['name'] %>.keyring
   <% end %>
+  <% if inst['handles'] %>
+  rgw num rados handles = <%= inst['handles'] %>
+  <% else %>
   rgw num rados handles = <%= node['ceph']['radosgw']['rgw_num_rados_handles'] %>
+  <% end %>
+  <% if inst['threads'] %>
+  rgw frontends = civetweb port=<%= inst['port'] %> num_threads=<%= inst['threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.<%= inst['name'] %>.log access_log_file=<%= node['ceph']['radosgw']['civetweb_access_log_file'] %>.<%= inst['name'] %>.log
+  <% else %>
   rgw frontends = civetweb port=<%= inst['port'] %> num_threads=<%= node['ceph']['radosgw']['civetweb_num_threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.<%= inst['name'] %>.log access_log_file=<%= node['ceph']['radosgw']['civetweb_access_log_file'] %>.<%= inst['name'] %>.log
+  <% end %>
   rgw enable ops log = false
   rgw enable usage log = false
   pid file = /var/run/ceph/$name.<%= inst['region'] %>-<%= inst['name'] %>.pid

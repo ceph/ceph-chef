@@ -4,7 +4,7 @@ maintainer_email 'cjones303@bloomberg.net'
 license 'Apache v2.0'
 description 'Installs/Configures Ceph (Jewel and above)'
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
-version '1.0.16'
+version '1.0.17'
 
 depends	'apache2', '>= 1.1.12'
 depends 'apt'
