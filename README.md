@@ -74,6 +74,11 @@ The other set of attributes that this recipe needs is `node['ceph']['osd']['devi
 * {'device' => '/dev/sde', 'dmcrypt' => true} - Store the data encrypted by passing --dmcrypt to `ceph-disk-prepare`
 * {'device' => '/dev/sdc', 'journal' => '/dev/sdd2'} - use a full disk for the OSD with a custom partition for the journal on another device such as an SSD or NMVe
 
+### Ceph Admin Commands
+
+An example of finding a mon socket in a generic like environment.
+ceph-conf --name mon.$(hostname -s) --show-config-value admin_socket
+
 ### Trouble Shooting
 
 Pools - After creating it appears that some of the PGs are stuck 'creating+peering'. This can be caused by a number of things. Most likely an OSD is not blocking the creation. Do something like:

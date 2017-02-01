@@ -165,7 +165,9 @@
   <% end -%>
   # admin socket must be writable by QEMU and allowed by SELinux or AppArmor
   # admin socket = /var/run/ceph/$cluster-$type.$id.$pid.$cctid.asok
-  admin socket = /var/run/ceph/$cluster-$type.$id.$pid.asok
+  # admin socket = /var/run/ceph/$cluster-$type.$id.$pid.asok
+  # The `ceph daemon` is not as flexible as `ceph --admin-daemon` so naming admin socket is important.
+  admin socket = /var/run/ceph/$cluster-$type.$id.asok
 <% end -%>
 
 <% if @is_admin || @is_rgw -%>
@@ -210,6 +212,7 @@
   <% else %>
   keyring = /etc/ceph/$cluster.client.radosgw.<%= inst['region'] %>-<%= inst['name'] %>.keyring
   <% end %>
+  admin socket = /var/run/ceph/$cluster-$type.radosgw.<%= inst['region'] %>-<%= inst['name'] %>.asok
   <% if inst['handles'] %>
   rgw num rados handles = <%= inst['handles'] %>
   <% else %>
@@ -248,6 +251,7 @@
   host = <%= node['hostname'] %>
   rgw opstate ratelimit = 0
   keyring = /etc/ceph/$cluster.client.radosgw.keyring
+  admin socket = /var/run/ceph/$cluster-$type.radosgw.gateway.asok
   rgw num rados handles = <%= node['ceph']['radosgw']['rgw_num_rados_handles'] %>
   rgw frontends = civetweb port=<%= node['ceph']['radosgw']['port'] %> num_threads=<%= node['ceph']['radosgw']['civetweb_num_threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.log access_log_file=<%= node['ceph']['radosgw']['civetweb_access_log_file'] %>.log
   rgw enable ops log = false
@@ -278,6 +282,7 @@
 [client.restapi]
   public addr = <%= node['ceph']['restapi']['ip'] %>:<%= node['ceph']['restapi']['port'] %>
   keyring = /etc/ceph/$cluster.client.restapi.keyring
+  admin socket = /var/run/ceph/$cluster-$type.restapi.asok
   restapi base url = <%= node['ceph']['restapi']['base_url'] %>
   log file = /var/log/ceph/$cluster.client.restapi.log
 <% if !node['ceph']['config']['restapi'].nil? -%>
