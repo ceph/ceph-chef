@@ -102,12 +102,14 @@ if node['ceph']['version'] == 'hammer'
 end
 
 # Create in a scratch area
-keyring = "/etc/ceph/#{node['ceph']['cluster']}.mon.keyring"
+keyring = "#{node['ceph']['mon']['keyring_path']}/#{node['ceph']['cluster']}.mon.keyring"
 
 # This will execute on other nodes besides the first mon node.
 execute 'format ceph-mon-secret as keyring' do
   command lazy { "ceph-authtool --create-keyring #{keyring} --name=mon. --add-key=#{node['ceph']['monitor-secret']} --cap mon 'allow *'" }
   creates keyring
+  user node['ceph']['owner']
+  group node['ceph']['group']
   only_if { ceph_chef_mon_secret }
   not_if "test -f #{keyring}"
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
@@ -147,9 +149,10 @@ include_recipe 'ceph-chef::admin_client'
 # grep -Fxq 'admin'
 
 execute 'make sure monitor key is in mon data' do
-  command <<-EOH
-    ceph-authtool #{keyring} --import-keyring /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring
-  EOH
+  command lazy { "ceph-authtool #{keyring} --import-keyring /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring" }
+  creates keyring
+  user node['ceph']['owner']
+  group node['ceph']['group']
   not_if "grep 'admin' #{keyring}"
 end
 
