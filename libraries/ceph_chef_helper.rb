@@ -302,6 +302,8 @@ def ceph_chef_fsid_secret
       Chef::Log.info('No fsid secret found')
       nil
     end
+  elsif node['ceph']['fsid-secret']
+    node['ceph']['fsid-secret']
   else
     Chef::Log.info('No fsid secret found')
     nil
@@ -310,8 +312,7 @@ end
 # rubocop:enable Metrics/PerceivedComplexity
 
 def ceph_chef_save_fsid_secret(secret)
-  node.set['ceph']['fsid-secret'] = secret
-  node.save
+  node.normal['ceph']['fsid-secret'] = secret
   secret
 end
 
@@ -331,8 +332,7 @@ def ceph_chef_mon_secret
 end
 
 def ceph_chef_save_mon_secret(secret)
-  node.set['ceph']['monitor-secret'] = secret
-  node.save
+  node.normal['ceph']['monitor-secret'] = secret
   secret
 end
 
@@ -359,8 +359,7 @@ end
 # NOTE: It's also best to store the keyring files of ceph in a neutral location so that if needed you can easily
 # retrieve them.
 def ceph_chef_save_bootstrap_osd_secret(secret)
-  node.set['ceph']['bootstrap-osd'] = secret
-  node.save
+  node.normal['ceph']['bootstrap-osd'] = secret
   secret
 end
 
@@ -383,8 +382,7 @@ end
 # NOTE: It's also best to store the keyring files of ceph in a neutral location so that if needed you can easily
 # retrieve them.
 def ceph_chef_save_bootstrap_rgw_secret(secret)
-  node.set['ceph']['bootstrap-rgw'] = secret
-  node.save
+  node.normal['ceph']['bootstrap-rgw'] = secret
   secret
 end
 
@@ -407,8 +405,7 @@ end
 # NOTE: It's also best to store the keyring files of ceph in a neutral location so that if needed you can easily
 # retrieve them.
 def ceph_chef_save_bootstrap_mds_secret(secret)
-  node.set['ceph']['bootstrap-mds'] = secret
-  node.save
+  node.normal['ceph']['bootstrap-mds'] = secret
   secret
 end
 
@@ -428,8 +425,7 @@ def ceph_chef_admin_secret
 end
 
 def ceph_chef_save_admin_secret(secret)
-  node.set['ceph']['admin-secret'] = secret
-  node.save
+  node.normal['ceph']['admin-secret'] = secret
   secret
 end
 
@@ -455,8 +451,7 @@ def ceph_chef_radosgw_secret
 end
 
 def ceph_chef_save_radosgw_secret(secret)
-  node.set['ceph']['radosgw-secret'] = secret
-  node.save
+  node.normal['ceph']['radosgw-secret'] = secret
   node['ceph']['radosgw-secret']
 end
 
@@ -481,8 +476,7 @@ def ceph_chef_radosgw_inst_secret(inst)
 end
 
 def ceph_chef_save_radosgw_inst_secret(secret, inst)
-  node.set['ceph']["radosgw-secret-#{inst}"] = secret
-  node.save
+  node.normal['ceph']["radosgw-secret-#{inst}"] = secret
   node['ceph']["radosgw-secret-#{inst}"]
 end
 
@@ -502,8 +496,7 @@ def ceph_chef_restapi_secret
 end
 
 def ceph_chef_save_restapi_secret(secret)
-  node.set['ceph']['restapi-secret'] = secret
-  node.save
+  node.normal['ceph']['restapi-secret'] = secret
   # ceph_chef_set_item('restapi-secret', secret)
   secret
 end
