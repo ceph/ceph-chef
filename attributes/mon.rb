@@ -23,6 +23,7 @@ default['ceph']['mon']['port'] = 6789
 default['ceph']['mon']['init_style'] = node['ceph']['init_style']
 
 default['ceph']['mon']['secret_file'] = '/etc/chef/secrets/ceph_chef_mon'
+default['ceph']['mon']['keyring_path'] = '/etc/ceph'
 
 # MUST be set in the wrapper cookbook or chef-repo like project
 default['ceph']['mon']['role'] = 'search-ceph-mon'
