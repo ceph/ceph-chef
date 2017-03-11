@@ -150,7 +150,6 @@ include_recipe 'ceph-chef::admin_client'
 
 execute 'make sure monitor key is in mon data' do
   command lazy { "ceph-authtool #{keyring} --import-keyring /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring" }
-  creates keyring
   user node['ceph']['owner']
   group node['ceph']['group']
   not_if "grep 'admin' #{keyring}"
