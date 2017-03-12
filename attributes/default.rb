@@ -28,8 +28,12 @@ default['ceph']['experimental']['features'] = ['shec']
 # This section controls which repo branch to use but is not in repo.rb because it also allows for changing of
 # Ceph version information that is used for conditionals used in the recipes to KEEP them here.
 default['ceph']['branch'] = 'stable' # Can be stable, testing or dev.
+
 # Major release version to install or gitbuilder branch
+# Must set this outside of this cookbook!
+# if node['ceph'].attribute?('version') && node['ceph']['version'].empty?
 default['ceph']['version'] = 'hammer'
+# end
 
 default['ceph']['init_style'] = case node['platform']
                                 when 'ubuntu'
