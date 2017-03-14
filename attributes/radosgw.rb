@@ -43,6 +43,9 @@ default['ceph']['radosgw']['default_url'] = 's3.rgw.ceph.example.com'
 # Add the options to the single line of the 'frontends etc...'
 # NOTE: Change the number of default threads that civetweb uses per node - Default is 100 from civetweb
 default['ceph']['radosgw']['civetweb_num_threads'] = 100
+# Default
+default['ceph']['radosgw']['rgw_thread_pool'] = 100
+
 # NOTE: DO NOT append '.log' to these log files because the conf recipe adds it because of the possible use of federation.
 default['ceph']['radosgw']['civetweb_access_log_file'] = '/var/log/radosgw/civetweb.access'
 default['ceph']['radosgw']['civetweb_error_log_file'] = '/var/log/radosgw/civetweb.error'
