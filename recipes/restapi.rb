@@ -23,16 +23,16 @@ include_recipe 'ceph-chef'
 
 service_type = node['ceph']['mon']['init_style']
 
-if node['ceph']['version'] == 'hammer'
-  directory "/var/lib/ceph/restapi/#{node['ceph']['cluster']}-restapi" do
+# if node['ceph']['version'] == 'hammer'
+directory "/var/lib/ceph/restapi/#{node['ceph']['cluster']}-restapi" do
     owner node['ceph']['owner']
     group node['ceph']['group']
     mode 0755
     recursive true
     action :create
     not_if "test -d /var/lib/ceph/restapi/#{node['ceph']['cluster']}-restapi"
-  end
 end
+# end
 
 base_key = "/etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
 keyring = "/etc/ceph/#{node['ceph']['cluster']}.client.restapi.keyring"
@@ -66,8 +66,8 @@ ruby_block 'save restapi_secret' do
     fetch.run_command
     key = fetch.stdout
     # ceph_chef_set_item('restapi-secret', key.delete!("\n"))
-    node.set['ceph']['restapi-secret'] = key.delete!("\n")
-    node.save
+    node.normal['ceph']['restapi-secret'] = key.delete!("\n")
+    # node.save
   end
   action :nothing
 end

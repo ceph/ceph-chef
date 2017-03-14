@@ -72,7 +72,7 @@ if node['ceph']['osd']['add']
     ruby_block "save osd_device status #{index}" do
       block do
         node.normal['ceph']['osd']['devices'][index]['status'] = 'deployed'
-        node.save
+        # node.save
       end
       action :nothing
     end

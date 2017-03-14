@@ -17,8 +17,9 @@
 # limitations under the License.
 #
 
-# No need to set the /etc/ceph directory
-# execute 'change-ceph-conf-perm' do
-#  command lazy { "sudo chown #{node['ceph']['owner']}:#{node['ceph']['group']} -R /etc/ceph" }
-#  ignore_failure true
-# end
+if node['ceph']['version'] != 'hammer'
+    execute 'change-ceph-conf-perm' do
+     command lazy { "sudo chown #{node['ceph']['owner']}:#{node['ceph']['group']} -R /etc/ceph" }
+     ignore_failure true
+    end
+end

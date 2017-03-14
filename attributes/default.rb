@@ -32,7 +32,7 @@ default['ceph']['branch'] = 'stable' # Can be stable, testing or dev.
 # Major release version to install or gitbuilder branch
 # Must set this outside of this cookbook!
 # if node['ceph'].attribute?('version') && node['ceph']['version'].empty?
-default['ceph']['version'] = 'hammer'
+# default['ceph']['version'] = 'hammer'
 # end
 
 default['ceph']['init_style'] = case node['platform']
@@ -42,15 +42,15 @@ default['ceph']['init_style'] = case node['platform']
                                   'sysvinit'
                                 end
 
-default['ceph']['owner'] = 'ceph'
-default['ceph']['group'] = 'ceph'
-default['ceph']['mode'] = 0o0750
-
 # NOTE: If the version is 'hammer' then change owner and group to 'root'
 if node['ceph']['version'] == 'hammer'
-  default['ceph']['owner'] = 'root'
-  default['ceph']['group'] = 'root'
-  default['ceph']['mode'] = 0o0755
+    default['ceph']['owner'] = 'root'
+    default['ceph']['group'] = 'root'
+    default['ceph']['mode'] = 0o0755
+else
+    default['ceph']['owner'] = 'ceph'
+    default['ceph']['group'] = 'ceph'
+    default['ceph']['mode'] = 0o0750
 end
 
 # Override these in your environment file or here if you wish. Don't put them in the 'ceph''config''global' section.

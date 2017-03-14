@@ -150,7 +150,7 @@ if node['ceph']['osd']['devices']
     ruby_block "save osd_device status #{index}" do
       block do
         node.normal['ceph']['osd']['devices'][index]['status'] = 'deployed'
-        node.save
+        # node.save
       end
       action :nothing
       # only_if "ceph-disk list 2>/dev/null | grep 'ceph data' | grep #{osd_device['data']}"

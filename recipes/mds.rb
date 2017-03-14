@@ -20,7 +20,8 @@
 include_recipe 'ceph-chef'
 include_recipe 'ceph-chef::mds_install'
 
-cluster = 'ceph'
+# cluster = 'ceph'
+cluster = node['ceph']['cluster']
 
 if node['ceph']['version'] == 'hammer'
   directory "/var/lib/ceph/mds/#{cluster}-#{node['hostname']}" do

@@ -336,6 +336,24 @@ def ceph_chef_save_mon_secret(secret)
   secret
 end
 
+# Stored with Mon node always
+def ceph_chef_mgr_secret
+  if !ceph_chef_mon_nodes.empty?
+    ceph_chef_save_mgr_secret(ceph_chef_mon_nodes[0]['ceph']['mgr-secret'])
+    ceph_chef_mon_nodes[0]['ceph']['mgr-secret']
+  elsif node['ceph']['mgr-secret']
+    node['ceph']['mgr-secret']
+  else
+    Chef::Log.info('No mgr secret found')
+    nil
+  end
+end
+
+def ceph_chef_save_mgr_secret(secret)
+  node.normal['ceph']['mgr-secret'] = secret
+  secret
+end
+
 # Change ceph_chef_osd_nodes to ceph_chef_mon_nodes
 # Ceph MONs set the keys so everything should pull from those and set their own node value to equal the given attribute
 # Since data bags are not used, setting *ALL* mon node attributes will assure the secrets are kept even if your mon
