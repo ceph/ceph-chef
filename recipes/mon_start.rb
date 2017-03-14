@@ -57,6 +57,9 @@ else
   end
 end
 
+# Ceph Manager (Jewel >)
+include_recipe 'ceph-chef::mgr'
+
 # if node['ceph']['version'] != 'hammer'
 #   service 'ceph-mon' do
 #     service_name "ceph-mon@#{node['hostname']}"

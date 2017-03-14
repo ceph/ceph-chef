@@ -29,10 +29,10 @@ keyring = "/etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring"
 
 Chef::Log.info 'RADOSGW - NON-Federated Version...'
 
-file "/var/log/radosgw/#{node['ceph']['cluster']}.client.radosgw.log" do
-  owner node['ceph']['owner']
-  group node['ceph']['group']
-end
+# file "/var/log/radosgw/#{node['ceph']['cluster']}.client.radosgw.log" do
+#   owner node['ceph']['owner']
+#   group node['ceph']['group']
+# end
 
 directory "/var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.gateway" do
   owner node['ceph']['owner']

@@ -17,7 +17,9 @@
 # limitations under the License.
 #
 
-include_recipe 'yum-epel::default'
+if node['ceph']['repo']['create']
+    include_recipe 'yum-epel::default'
+end
 
 platform_family = node['platform_family']
 

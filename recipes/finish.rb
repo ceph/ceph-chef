@@ -19,10 +19,12 @@
 
 # Add any finishing touches to the ceph install here.
 
-case node['platform']
-when 'ubuntu'
-else
-  execute 'finish' do
-    command 'chkconfig ceph on'
-  end
+if node['ceph']['version'] == 'hammer'
+    case node['platform']
+    when 'ubuntu'
+    else
+      execute 'finish' do
+        command 'chkconfig ceph on'
+      end
+    end
 end
