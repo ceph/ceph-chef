@@ -173,14 +173,16 @@ ruby_block 'mon-finalize' do
   not_if "test -f /var/lib/ceph/mon/#{node['ceph']['cluster']}-#{node['hostname']}/done"
 end
 
-# Include our overridden systemd file to handle starting the service during bootstrap
-cookbook_file '/etc/systemd/system/ceph-mon@.service' do
-  notifies :run, 'execute[ceph-systemctl-daemon-reload]', :immediately
-  action :create
-  only_if { rhel? && systemd? }
-end
+if node['ceph']['version'] != 'hammer'
+    # Include our overridden systemd file to handle starting the service during bootstrap
+    cookbook_file '/etc/systemd/system/ceph-mon@.service' do
+      notifies :run, 'execute[ceph-systemctl-daemon-reload]', :immediately
+      action :create
+      only_if { rhel? && systemd? }
+    end
 
-execute 'chown mon dir' do
-  command "chown -R #{node['ceph']['owner']}:#{node['ceph']['group']} /var/lib/ceph/mon/#{node['ceph']['cluster']}-#{node['hostname']}"
-  only_if { rhel? && systemd? }
+    execute 'chown mon dir' do
+      command "chown -R #{node['ceph']['owner']}:#{node['ceph']['group']} /var/lib/ceph/mon/#{node['ceph']['cluster']}-#{node['hostname']}"
+      only_if { rhel? && systemd? }
+    end
 end

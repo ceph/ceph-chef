@@ -27,7 +27,11 @@ service 'radosgw' do
       service_name 'radosgw'
     else
       if node['ceph']['version'] != 'hammer'
-        service_name 'ceph-radosgw.target'
+        # service_name 'ceph-radosgw.target'
+        # May want to do it another way - 'ceph-radosgw@radosgw.gateway' <-- Name of the service in ceph.conf
+        #  ('client.radosgw.gateway') less 'client' part based on stock unit file
+        # NB: Can supply your own unit file that allows for more custom radosgw naming.
+        service_name 'ceph-radosgw@radosgw.gateway'
         provider Chef::Provider::Service::Systemd
       else
         service_name 'ceph-radosgw'
