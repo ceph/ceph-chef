@@ -81,6 +81,9 @@ default['ceph']['radosgw']['secret_file'] = '/etc/chef/secrets/ceph_chef_rgw'
 # No longer used
 default['ceph']['radosgw']['role'] = 'search-ceph-radosgw'
 
+default['ceph']['radosgw']['logs']['ops']['enable'] = false
+default['ceph']['radosgw']['logs']['usage']['enable'] = false
+
 case node['platform_family']
 when 'debian'
   packages = ['radosgw', 'radosgw-agent', 'python-boto']

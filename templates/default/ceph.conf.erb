@@ -228,8 +228,8 @@
   <% else %>
   rgw frontends = civetweb port=<%= inst['port'] %> num_threads=<%= node['ceph']['radosgw']['civetweb_num_threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.<%= inst['name'] %>.log access_log_file=<%= node['ceph']['radosgw']['civetweb_access_log_file'] %>.<%= inst['name'] %>.log
   <% end %>
-  rgw enable ops log = false
-  rgw enable usage log = false
+  rgw enable ops log = <%= node['ceph']['radosgw']['logs']['ops']['enable'] %>
+  rgw enable usage log = <%= node['ceph']['radosgw']['logs']['usage']['enable'] %>
   pid file = /var/run/ceph/$name.<%= inst['region'] %>-<%= inst['name'] %>.pid
   log file = /var/log/radosgw/$cluster.client.radosgw.<%= inst['region'] %>-<%= inst['name'] %>.log
   # Increased to 1 to log HTTP return codes - http://tracker.ceph.com/issues/12432
