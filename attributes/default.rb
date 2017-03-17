@@ -71,6 +71,7 @@ default['ceph']['restapi']['tag'] = 'ceph-restapi'
 # These belong here for downstream dynamically built environment json files.
 default['ceph']['radosgw']['logs']['ops']['enable'] = false
 default['ceph']['radosgw']['logs']['usage']['enable'] = false
+default['ceph']['radosgw']['debug']['logs']['enable'] = true
 
 # Search by environment
 # Setting this to true will search for nodes by environment/attributes instead of roles/tags.
