@@ -223,17 +223,49 @@
   <% else %>
   rgw num rados handles = <%= node['ceph']['radosgw']['rgw_num_rados_handles'] %>
   <% end %>
+  rgw enable ops log = <%= node['ceph']['radosgw']['logs']['ops']['enable'] %>
+  rgw enable usage log = <%= node['ceph']['radosgw']['logs']['usage']['enable'] %>
+  pid file = /var/run/ceph/$name.<%= inst['region'] %>-<%= inst['name'] %>.pid
+  # Increased to 1 to log HTTP return codes - http://tracker.ceph.com/issues/12432
+  <% if node['ceph']['radosgw']['debug']['logs']['enable'] %>
   <% if inst['threads'] %>
   rgw frontends = civetweb port=<%= inst['port'] %> num_threads=<%= inst['threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.<%= inst['name'] %>.log access_log_file=<%= node['ceph']['radosgw']['civetweb_access_log_file'] %>.<%= inst['name'] %>.log
   <% else %>
   rgw frontends = civetweb port=<%= inst['port'] %> num_threads=<%= node['ceph']['radosgw']['civetweb_num_threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.<%= inst['name'] %>.log access_log_file=<%= node['ceph']['radosgw']['civetweb_access_log_file'] %>.<%= inst['name'] %>.log
   <% end %>
-  rgw enable ops log = <%= node['ceph']['radosgw']['logs']['ops']['enable'] %>
-  rgw enable usage log = <%= node['ceph']['radosgw']['logs']['usage']['enable'] %>
-  pid file = /var/run/ceph/$name.<%= inst['region'] %>-<%= inst['name'] %>.pid
   log file = /var/log/radosgw/$cluster.client.radosgw.<%= inst['region'] %>-<%= inst['name'] %>.log
-  # Increased to 1 to log HTTP return codes - http://tracker.ceph.com/issues/12432
   debug rgw = 1/0
+  <% else %>
+  <% if inst['threads'] %>
+  rgw frontends = civetweb port=<%= inst['port'] %> num_threads=<%= inst['threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.<%= inst['name'] %>.log
+  <% else %>
+  rgw frontends = civetweb port=<%= inst['port'] %> num_threads=<%= node['ceph']['radosgw']['civetweb_num_threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.<%= inst['name'] %>.log
+  <% end %>
+  debug default=0/0
+  debug lockdep=0/0
+  debug context=0/0
+  debug crush=0/0
+  debug buffer=0/0
+  debug timer=0/0
+  debug filer=0/0
+  debug objecter=0/0
+  debug rados=0/0
+  debug journaler=0/0
+  debug objectcacher=0/0
+  debug client=0/0
+  debug optracker=0/0
+  debug objclass=0/0
+  debug ms=0/0
+  debug tp=0/0
+  debug auth=0/0
+  debug finisher=0/0
+  debug heartbeatmap=0/0
+  debug perfcounter=0/0
+  debug rgw=0/0
+  debug asok=0/0
+  debug throttle=0/0
+  debug civetweb=0/0
+  <% end %>
   rgw dns name = <%= inst['url'] %>
   rgw resolve cname = True
   <% if node['ceph']['radosgw']['keystone']['auth'] %>
@@ -259,13 +291,41 @@
   admin socket = /var/run/ceph/$cluster-$type.radosgw.gateway.asok
   rgw thread pool size = <%= node['ceph']['radosgw']['rgw_thread_pool'] %>
   rgw num rados handles = <%= node['ceph']['radosgw']['rgw_num_rados_handles'] %>
-  rgw frontends = civetweb port=<%= node['ceph']['radosgw']['port'] %> num_threads=<%= node['ceph']['radosgw']['civetweb_num_threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.log access_log_file=<%= node['ceph']['radosgw']['civetweb_access_log_file'] %>.log
-  rgw enable ops log = false
-  rgw enable usage log = false
+  rgw enable ops log = <%= node['ceph']['radosgw']['logs']['ops']['enable'] %>
+  rgw enable usage log = <%= node['ceph']['radosgw']['logs']['usage']['enable'] %>
   pid file = /var/run/ceph/$name.pid
-  log file = /var/log/radosgw/$cluster.client.radosgw.log
   # Increased to 1 to log HTTP return codes - http://tracker.ceph.com/issues/12432
+  <% if node['ceph']['radosgw']['debug']['logs']['enable'] %>
+  rgw frontends = civetweb port=<%= node['ceph']['radosgw']['port'] %> num_threads=<%= node['ceph']['radosgw']['civetweb_num_threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.log access_log_file=<%= node['ceph']['radosgw']['civetweb_access_log_file'] %>.log
+  log file = /var/log/radosgw/$cluster.client.radosgw.log
   debug rgw = 1/0
+  <% else %>
+  rgw frontends = civetweb port=<%= node['ceph']['radosgw']['port'] %> num_threads=<%= node['ceph']['radosgw']['civetweb_num_threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.log 
+  debug default=0/0
+  debug lockdep=0/0
+  debug context=0/0
+  debug crush=0/0
+  debug buffer=0/0
+  debug timer=0/0
+  debug filer=0/0
+  debug objecter=0/0
+  debug rados=0/0
+  debug journaler=0/0
+  debug objectcacher=0/0
+  debug client=0/0
+  debug optracker=0/0
+  debug objclass=0/0
+  debug ms=0/0
+  debug tp=0/0
+  debug auth=0/0
+  debug finisher=0/0
+  debug heartbeatmap=0/0
+  debug perfcounter=0/0
+  debug rgw=0/0
+  debug asok=0/0
+  debug throttle=0/0
+  debug civetweb=0/0
+  <% end %>
   rgw dns name = <%= node['ceph']['radosgw']['default_url'] %>
   rgw resolve cname = True
   <% if node['ceph']['radosgw']['keystone']['auth'] %>
