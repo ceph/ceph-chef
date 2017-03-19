@@ -42,6 +42,7 @@ yum_repository 'ceph' do
   description "Ceph #{platform_family} #{node['ceph']['version']} #{branch}"
   baseurl node['ceph'][platform_family][branch]['repository']
   gpgkey node['ceph'][platform_family][branch]['repository_key']
+  not_if 'test -f /etc/yum.repos.d/ceph.repo'
   only_if { node['ceph']['repo']['create'] }
 end
 
