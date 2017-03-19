@@ -20,6 +20,10 @@
 # Change this if you want a different cluster name other than the default of ceph
 default['ceph']['cluster'] = 'ceph'
 
+# Beginning in Kraken ceph-mgr is available. Change to true if running Kraken or higher and you wish to enable it.
+# Should run on mon nodes. Does not require a quorum like mons.
+default['ceph']['mgr']['enable'] = false
+
 # Allows for experimental things such SHEC Erasure Coding plugin in releases below Jewel.
 # This will go into the global section of the ceph.conf on all nodes
 default['ceph']['experimental']['enable'] = false
@@ -31,9 +35,7 @@ default['ceph']['branch'] = 'stable' # Can be stable, testing or dev.
 
 # Major release version to install or gitbuilder branch
 # Must set this outside of this cookbook!
-# if node['ceph'].attribute?('version') && node['ceph']['version'].empty?
 # default['ceph']['version'] = 'hammer'
-# end
 
 default['ceph']['init_style'] = case node['platform']
                                 when 'ubuntu'

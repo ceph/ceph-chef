@@ -57,15 +57,4 @@ else
   end
 end
 
-# Ceph Manager (Jewel >)
-include_recipe 'ceph-chef::mgr'
-
-# if node['ceph']['version'] != 'hammer'
-#   service 'ceph-mon' do
-#     service_name "ceph-mon@#{node['hostname']}"
-#     action [:enable, :start]
-#     only_if { systemd? }
-#   end
-# end
-
 # Can include mon_bootstrap_peer_hint recipe here or include it in roles after mon_install.
