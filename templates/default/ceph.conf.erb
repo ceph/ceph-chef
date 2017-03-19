@@ -1,7 +1,7 @@
 #######################################################################
 # Maintained by ceph cookbook
 # Please do not modify by hand. Changes will get overridden.
-# Copyright 2017, Bloomberg Finance L.P.
+# Author: Chris Jones 
 #######################################################################
 
 [global]
@@ -300,7 +300,7 @@
   log file = /var/log/radosgw/$cluster.client.radosgw.log
   debug rgw = 1/0
   <% else %>
-  rgw frontends = civetweb port=<%= node['ceph']['radosgw']['port'] %> num_threads=<%= node['ceph']['radosgw']['civetweb_num_threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.log 
+  rgw frontends = civetweb port=<%= node['ceph']['radosgw']['port'] %> num_threads=<%= node['ceph']['radosgw']['civetweb_num_threads'] %> error_log_file=<%= node['ceph']['radosgw']['civetweb_error_log_file'] %>.log
   debug default=0/0
   debug lockdep=0/0
   debug context=0/0
