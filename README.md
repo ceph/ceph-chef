@@ -7,33 +7,42 @@
 
 Installs and configures Ceph, a distributed network storage and filesystem designed to provide excellent performance, reliability, and scalability. Supports *Hammer* and higher releases (nothing below Hammer is supported in this repo).
 
+>Once *Hammer* support has stopped in Ceph then it will be removed from this cookbook as an option.
+
 The current version is focused on installing and configuring Ceph for Ubuntu, CentOS and RHEL.
 
 For documentation on how to use this cookbook, refer to the **[USAGE](#USAGE)** section.
 
+>Ceph-Chef works with __ALL__ of the latest versions of Ceph and includes `Ceph-Mgr` recipe.
+
 ### Recommendation
-Also, you can look at **[https://github.com/bloomberg/chef-bcs](https://github.com/bloomberg/chef-bcs)**. That Chef App (repo) uses this repo for Bloomberg's large clusters. The **chef-bcs repo** is an S3 Object Store Cluster used in multiple data centers.
+
+There are many Enterprises that use the cookbook to install and manage Ceph. Below are a few reference Chef Wrapper Repos and projects that use Ceph-Chef.
+
+>**[https://github.com/bloomberg/chef-bcs](https://github.com/bloomberg/chef-bcs)**. That Chef App (repo) uses this repo for Bloomberg's large clusters. The **chef-bcs repo** is an S3 Object Store Cluster used in multiple data centers.
+
+>**[https://github.com/cepheus-io/cepheus](https://github.com/cepheus-io/cepheus)** or http://cepheus.io. This is a powerful and flexible example of use Ceph-Chef. Everything is data driven so you can simply change the data and use it to build your own Ceph cluster or as a reference. It also provides a full management stack for Ceph.
 
 Note: The documentation is a WIP along with a few other features. This repo is actively managed.  
 
 For help, use **[Gitter chat](https://gitter.im/ceph/ceph-chef)**, **[mailing-list](mailto:ceph-users-join@lists.ceph.com)** or **[issues](https://github.com/ceph/ceph-chef/issues)** here in this repo.
 
 ### NOTE: Users of ceph-cookbook
-The original ceph-cookbook will remain and may continue to be updated (see that repo for specifics). We tried to use some of the interesting features of ceph-cookbook but we added a lot of enhancements and simplifications. Simply replacing ceph-cookbook with ceph-chef will not work without a few modifications. Also, ceph-chef only works with Chef 12.5+ and Hammer and higher. Nothing below the Hammer release of Ceph is supported in this repo. In addition, only **civitweb** is used going forward (not Apache).
+The original ceph-cookbook will remain and may continue to be updated (see that repo for specifics). We tried to use some of the interesting features of ceph-cookbook but we added a lot of enhancements and simplifications. Simply replacing ceph-cookbook with ceph-chef will not work without a few modifications. Also, ceph-chef only works with Chef 12.8+ and Hammer and higher. Nothing below the Hammer release of Ceph is supported in this repo. In addition, only **civitweb** is used going forward (not Apache).
 
-NOTE: The current LWRP are using the style prior to Chef version 12.5. There will a new release shortly that will support the now recommended way of handling custom resources. To make that change easier we will be using a helper cookbook called Poise. Using Poise makes creating custom resources and common services very simple.
+NOTE: The current LWRP are using the style prior to Chef version 12.5. There will be a new release shortly that will support the now recommended way of handling custom resources. To make that change easier we will be using a helper cookbook called Poise. Using Poise makes creating custom resources and common services very simple.
 
 ### Chef
 
-\>= 12.5+
+\>= 12.8+
 
 ### Platform
 
 Tested as working:
 
-* Ubuntu Trusty (14.04) [Still verifying updates work]
-* CentOS (7.1)
-* RHEL (7.1)
+* Ubuntu Trusty (16.04) [Still verifying updates work]
+* CentOS (7.3)
+* RHEL (7.3)
 
 ### Cookbooks
 
@@ -46,6 +55,7 @@ https://supermarket.chef.io/
 * [yum](https://supermarket.chef.io/cookbooks/yum)
 * [ntp](https://supermarket.chef.io/cookbooks/ntp)
 * [poise](https://supermarket.chef.io/cookbooks/poise)
+* [chef-sugar](https://supermarket.chef.io/cookbooks/chef-sugar)
 
 ## USAGE
 
@@ -55,8 +65,6 @@ public wiki, mailing lists, visit our IRC channel, or contact Red Hat:
 
 http://ceph.com/docs/master
 http://ceph.com/resources/mailing-list-irc/
-
-NOTE: The recommendation above on the Bloomberg Cluster repo will give you a solid design and/or provide ideas and guidance on laying out your Ceph cluster at scale.
 
 This cookbook can be used to implement a chosen cluster design. Most of the configuration is retrieved from node attributes, which can be set by an environment json file or by a wrapper cookbook that updates the attributes directly. A basic cluster configuration will need most of the following attributes:
 
@@ -77,23 +85,23 @@ The other set of attributes that this recipe needs is `node['ceph']['osd']['devi
 ### Ceph Admin Commands
 
 An example of finding a mon socket in a generic like environment.
-ceph-conf --name mon.$(hostname -s) --show-config-value admin_socket
+`ceph-conf --name mon.$(hostname -s) --show-config-value admin_socket`
 
 ### Trouble Shooting
 
 Pools - After creating it appears that some of the PGs are stuck 'creating+peering'. This can be caused by a number of things. Most likely an OSD is not blocking the creation. Do something like:
 ceph pg ls-by-pool <whatever the pool name> | grep creating
 
-Something like: ceph pg ls-by-pool .rgw | grep creating
+Something like: `ceph pg ls-by-pool .rgw | grep creating`
 
 It should show you the PG number as the first column. Use that to query it to see if something is blocking it.
 ceph pg <pg num> query
 
-Something like: ceph pg 175.f7 query
+Something like: `ceph pg 175.f7 query`
 
-This will return a lot of json data. You can grep or look for 'blocking'. If found then restart the given OSD. You can find the host for the OSD with: ceph osd find <OSD number>
+This will return a lot of json data. You can grep or look for 'blocking'. If found then restart the given OSD. You can find the host for the OSD with: `ceph osd find <OSD number>`
 
-Once you're on the host simply restart the specific OSD with: sudo service ceph restart osd.<whatever the number>
+Once you're on the host simply restart the specific OSD with: `sudo service ceph restart osd.<whatever the number>`
 
 
 ### Using a Policy Wrapper Cookbook
@@ -118,7 +126,7 @@ Includes:
 
 ### Ceph Metadata Server
 
-Ceph metadata server nodes should use the ceph-mds role.
+Ceph metadata server nodes should use the ceph-mds role. NB: Only required for Ceph-FS
 
 Includes:
 
