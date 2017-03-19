@@ -1,4 +1,5 @@
 #
+# Author: Chris Jones <chris.jones@lambdastack.io, cjones303@bloomberg.net>
 # Copyright 2017, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+# NB: Important - If the `ceph.repo` does not get created correctly then check to make sure you have set
+# the node attribute for repo create to true. 
 
 case node['platform_family']
 when 'debian'

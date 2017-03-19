@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Author:: Chris Jones <cjones303@bloomberg.net>
+# Author:: Chris Jones <chris.jones@lambdastack.io, cjones303@bloomberg.net>
 #
 # Copyright 2017, Bloomberg Finance L.P.
 #
