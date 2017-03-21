@@ -1,7 +1,7 @@
 #######################################################################
 # Maintained by ceph cookbook
 # Please do not modify by hand. Changes will get overridden.
-# Author: Chris Jones 
+# Author: Chris Jones
 #######################################################################
 
 [global]
@@ -54,7 +54,7 @@
   <% if node['ceph']['config']['osd'].nil? -%>
   # Set the default values here if no values provided to override them
   # Need xattr use omap = true for RGW
-  osd op threads = 16
+  osd op threads = 8
   osd map dedup = true
   osd max write size = 256
   osd disk threads = 1
