@@ -54,7 +54,6 @@
   <% if node['ceph']['config']['osd'].nil? -%>
   # Set the default values here if no values provided to override them
   # Need xattr use omap = true for RGW
-  osd op threads = 8
   osd map dedup = true
   osd max write size = 256
   osd disk threads = 1
@@ -98,12 +97,20 @@
   # Host 1, Rack 3 - Default is 1. This can have an impact on the crushmap if not the default.
   osd crush chooseleaf type = <%= node['ceph']['osd']['crush']['chooseleaf_type'] %>
   # Note: All of these values can be overridden in you wrapper cookbook or "chef-repo" project
+  osd recovery op priority = <%= node['ceph']['tuning']['osd_recovery_op_priority'] %>
+  osd recovery max active = <%= node['ceph']['tuning']['osd_recovery_max_active'] %>
+  osd max backfills = <%= node['ceph']['tuning']['osd_max_backfills'] %>
+  osd op threads = <%= node['ceph']['tuning']['osd_op_threads'] %>
+  <% if node['ceph']['system']['scheduler']['device']['type'] == 'cfq' %>
+  osd disk thread ioprio priority = <%= node['ceph']['system']['scheduler']['device']['ceph']['priority'] %>
+  osd disk thread ioprio class = <%= node['ceph']['system']['scheduler']['device']['ceph']['class'] %>
+  <% end -%>
   <% end -%>
   <% if !node['ceph']['config']['rebalance'].nil? and !node['ceph']['config']['rebalance'].empty? %>
   # These two max active and max single work together
   osd recovery max active = 1
   osd recovery max single start = 1
-  osd recovery op priority = 50
+  osd recovery op priority = 1
   osd recovery max chunk = 1048576
   osd recovery threads = 1
   osd max backfills  = 2
@@ -116,7 +123,7 @@
   osd deep scrub stride = 1048576
   osd scrub begin hour = 23
   osd scrub end hour = 6
-  osd op threads = 10
+  osd op threads = 8
   osd recovery op priority = 1
   osd mon report interval min = 30
   <% end %>

@@ -20,6 +20,15 @@
 # Change this if you want a different cluster name other than the default of ceph
 default['ceph']['cluster'] = 'ceph'
 
+default['ceph']['tuning']['osd_op_threads'] = 8
+default['ceph']['tuning']['osd_recovery_op_priority'] = 1
+default['ceph']['tuning']['osd_recovery_max_active'] = 1
+default['ceph']['tuning']['osd_max_backfills'] = 1
+
+default['ceph']['system']['scheduler']['device']['ceph']['priority'] = 7
+default['ceph']['system']['scheduler']['device']['ceph']['class'] = 'idle'
+default['ceph']['system']['scheduler']['device']['type'] = 'deadline'
+
 # Beginning in Kraken ceph-mgr is available. Change to true if running Kraken or higher and you wish to enable it.
 # Should run on mon nodes. Does not require a quorum like mons.
 default['ceph']['mgr']['enable'] = false
