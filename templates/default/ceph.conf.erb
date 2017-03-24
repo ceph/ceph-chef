@@ -101,10 +101,8 @@
   osd recovery max active = <%= node['ceph']['tuning']['osd_recovery_max_active'] %>
   osd max backfills = <%= node['ceph']['tuning']['osd_max_backfills'] %>
   osd op threads = <%= node['ceph']['tuning']['osd_op_threads'] %>
-  <% if node['ceph']['system']['scheduler']['device']['type'] == 'cfq' %>
   osd disk thread ioprio priority = <%= node['ceph']['system']['scheduler']['device']['ceph']['priority'] %>
   osd disk thread ioprio class = <%= node['ceph']['system']['scheduler']['device']['ceph']['class'] %>
-  <% end -%>
   <% end -%>
   <% if !node['ceph']['config']['rebalance'].nil? and !node['ceph']['config']['rebalance'].empty? %>
   # These two max active and max single work together
