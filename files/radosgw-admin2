@@ -18,6 +18,7 @@
 #
 
 import sys
+import locale
 import argparse
 import datetime
 import subprocess
@@ -62,6 +63,30 @@ def radosgw_admin(cmd):
     return json.loads(json_output)
 
 
+def get_usage(start_date, end_date, show_log_entries=False):
+    retcode = False
+
+    try:
+        cmd = ["sudo radosgw-admin", "usage", "show", "-n client.radosgw.%s-%s" % (region, zone), "--start-date=%s" % start_date, "--end-date=%s" % end_date, "--show-log-entries=%s" % show_log_entries]
+
+        json_data = radosgw_admin(cmd)
+        if json_data:
+            # Set locale for other types
+            locale.setlocale(locale.LC_ALL, 'en_US')
+            for data in json_data['summary']:
+                print "%s - Bytes" % data['user']
+                print "\tPUT: %s" % locale.format("%d", data['total']['bytes_received'], grouping=True)
+                print "\tGET: %s" % locale.format("%d", data['total']['bytes_sent'], grouping=True)
+                print "\tOperations: %s" % locale.format("%d", data['total']['successful_ops'], grouping=True)
+                print '-'*60
+
+            retcode = True
+    except Exception, e:
+        error(1, e.message)
+
+    return retcode
+
+
 def user_connect():
     global conn
     conn = rgw_s3_api.connect(key, secret, endpoint=endpoint, port=port)  # There are many other options
@@ -76,7 +101,7 @@ def get_user_secrets():
     try:
         if region is None and zone is None:
             cmd = ["radosgw-admin", "user", "info", "--uid=%s" % user]
-        else
+        else:
             cmd = ["sudo radosgw-admin", "user", "info", "--uid=%s" % user, "-n client.radosgw.%s-%s" % (region, zone)]
 
         user_dict = radosgw_admin(cmd)
@@ -126,6 +151,8 @@ def tasks(options):
         if not options.location and not options.object_string:
             error(400, 'Object location and/or object-string actions are not specified. At least one is required.')
             return None
+        if find_action(options.actions, 'usage'):
+            return get_usage(options.start_date, options.end_date, options.show_log_entries)
         if find_action(options.actions, 'put'):
             return rgw_s3_api.object_create(bucket, options.object, options.object_string, options.location, make_public=find_action(options.actions, 'public'), headers=options.headers)
         if find_action(options.actions, 'delete'):
@@ -160,12 +187,15 @@ def main():
     p.add_argument('--object', '-o', action='store', help='Object.')
     p.add_argument('--object-string', '-t', action='store', help='Object string - Make an object from the passed in string.')
     p.add_argument('--location', '-l', action='store', default=None, help='Location of object etc.')
-    p.add_argument('--headers', '-r', action='store', default=None, help='Headers to inject.')
-    p.add_argument('--version-id', '-i', action='store', default=None, help='Version ID of object.')
+    p.add_argument('--headers', action='store', default=None, help='Headers to inject.')
+    p.add_argument('--version-id', action='store', default=None, help='Version ID of object.')
     p.add_argument('--duration', '-d', action='store', default=0, type=int, help='Object URL duration in seconds.')
     p.add_argument('--actions', '-a', nargs='+', help='Action(s) to take - N arguments.')
     p.add_argument('--region', '-r', action='store', help='RGW Region (datacenter).')
     p.add_argument('--zone', '-z', action='store', help='RGW Zone (tier).')
+    p.add_argument('--start-date', action='store', help='Usage Start Date - yyyy-mm-dd (radosgw-admin restriction of format) - Used only with usage task.')
+    p.add_argument('--end-date', action='store', help='Usage End Date - yyyy-mm-dd (radosgw-admin restriction of format) - Used only with usage task.')
+    p.add_argument('--show-log-entries', action='store', default=False, help='True/False - default is False - Used only with usage task')
     p.add_argument('--version', '-v', action='version', version="radosgw-admin2 %s" % VERSION)
 
     # Make sure to set global since variable will be set
@@ -199,6 +229,9 @@ def main():
     if port < 80:
         p.print_help()
         return retcode
+
+    if find_action(options.actions, 'usage'):
+        return get_usage(options.start_date, options.end_date, options.show_log_entries)
 
     if not options.user and not options.endpoint:
         p.print_help()
