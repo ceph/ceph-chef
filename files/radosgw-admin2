@@ -113,6 +113,7 @@ def get_users(output=None):
             users = json_data
             if output is not None:
                 with open("%s/users-%s.json" % (output, zone), 'w') as f:
+                    json_data = {"users": users}
                     f.write(json.dumps(json_data, indent=4, sort_keys=True))
 
     except Exception, e:
@@ -139,6 +140,7 @@ def get_user_bucket_stats(uid, bucket=None, output=None):
             if output is not None:
                 bucket_stats = json_data
                 with open("%s/usage-%s-%s.json" % (output, uid, zone), 'w') as f:
+                    json_data = {"bucket_stats": bucket_stats}
                     f.write(json.dumps(json_data, indent=4, sort_keys=True))
 
     except Exception, e:
@@ -158,6 +160,7 @@ def user_stats_sync(uid, output=None):
             if output is not None:
                 user_stats = json_data
                 with open("%s/user-stats-sync-%s-%s.json" % (output, uid, zone), 'w') as f:
+                    json_data = {"user_stats": user_stats}
                     f.write(json.dumps(json_data, indent=4, sort_keys=True))
 
     except Exception, e:
@@ -184,10 +187,10 @@ def users_stats_sync(user=None, output=None, show_zero=False):
                     users_stats.append({"user": user_search, "stats": user_stats})
 
     if users_stats:
-        # Write it out for later use maybe...
         if output is not None:
             with open("%s/user-stats-total-%s.json" % (output, zone), 'w') as f:
-                f.write(json.dumps(users_stats, indent=4, sort_keys=True))
+                json_data = {"user_stats": users_stats}
+                f.write(json.dumps(json_data, indent=4, sort_keys=True))
 
     print 'Generating users stats...'
     print
@@ -269,7 +272,8 @@ def get_bucket_stats(user=None, bucket_output=None, user_output=None):
         # Write it out for later use maybe...
         if bucket_stats_output is not None:
             with open("%s/usage-total-%s.json" % (bucket_output, zone), 'w') as f:
-                f.write(json.dumps(bucket_stats, indent=4, sort_keys=True))
+                json_data = {"bucket_stats": bucket_stats}
+                f.write(json.dumps(json_data, indent=4, sort_keys=True))
 
     bucket_stats_summary(bucket_stats)
 
