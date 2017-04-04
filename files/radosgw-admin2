@@ -18,6 +18,7 @@
 #
 
 import sys
+import os
 import locale
 import argparse
 import datetime
@@ -54,7 +55,7 @@ def error(code, message):
 # Returns JSON output from radosgw-admin and converts it to dict
 # cmd is an array and NOT a string
 def radosgw_admin(cmd):
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    process = subprocess.Popen(cmd, env=os.environ.copy(), stdout=subprocess.PIPE)
     json_output, err = process.communicate()
     if err:
         error(500, err)
@@ -63,28 +64,278 @@ def radosgw_admin(cmd):
     return json.loads(json_output)
 
 
+# This data is from the usage log of radosgw (must have 'rgw usage log = true' in the ceph.conf). It pulls in the usage
+# across the wire for a date rante or since the last time the usage log reset (radosgw restart or hard reset option).
+# Basically, what has come across the wire.
 def get_usage(start_date, end_date, show_log_entries=False):
     retcode = False
 
     try:
-        cmd = ["sudo radosgw-admin", "usage", "show", "-n client.radosgw.%s-%s" % (region, zone), "--start-date=%s" % start_date, "--end-date=%s" % end_date, "--show-log-entries=%s" % show_log_entries]
+        cmd = ["sudo", "radosgw-admin", "usage", "show", "-n", "client.radosgw.%s-%s" % (region, zone), "--start-date=%s" % start_date, "--end-date=%s" % end_date, "--show-log-entries=%s" % show_log_entries]
 
         json_data = radosgw_admin(cmd)
         if json_data:
+            total_puts = 0
+            total_gets = 0
+
             # Set locale for other types
             locale.setlocale(locale.LC_ALL, 'en_US')
             for data in json_data['summary']:
+                total_puts += data['total']['bytes_received']
+                total_gets += data['total']['bytes_sent']
+
                 print "%s - Bytes" % data['user']
                 print "\tPUT: %s" % locale.format("%d", data['total']['bytes_received'], grouping=True)
                 print "\tGET: %s" % locale.format("%d", data['total']['bytes_sent'], grouping=True)
                 print "\tOperations: %s" % locale.format("%d", data['total']['successful_ops'], grouping=True)
                 print '-'*60
 
+            print "Total PUT: %s" % locale.format("%d", total_puts, grouping=True)
+            print "Total GET: %s" % locale.format("%d", total_gets, grouping=True)
+            print '='*60
+
             retcode = True
     except Exception, e:
-        error(1, e.message)
+        print e
 
     return retcode
+
+
+# If output is None then don't write the json data and only return the json users else write the user json and return it.
+def get_users(output=None):
+    users = None
+
+    try:
+        cmd = ["sudo", "radosgw-admin", "metadata", "list", "user", "-n", "client.radosgw.%s-%s" % (region, zone)]
+
+        json_data = radosgw_admin(cmd)
+        if json_data:
+            users = json_data
+            if output is not None:
+                with open("%s/users-%s.json" % (output, zone), 'w') as f:
+                    f.write(json.dumps(json_data, indent=4, sort_keys=True))
+
+    except Exception, e:
+        print e
+
+    return users
+
+
+# Must pass a valid user id. If bucket is None then pull stats on all buckets for the given user or just the bucket
+# passed in.
+def get_user_bucket_stats(uid, bucket=None, output=None):
+    bucket_stats = None
+
+    try:
+        bucket_str = ""
+
+        if bucket is not None:
+            bucket_str = "--bucket=%s" % bucket
+
+        cmd = ["sudo", "radosgw-admin", "bucket", "stats", "--uid=%s" % uid, "%s" % bucket_str, "-n", "client.radosgw.%s-%s" % (region, zone)]
+
+        json_data = radosgw_admin(cmd)
+        if json_data:
+            if output is not None:
+                bucket_stats = json_data
+                with open("%s/usage-%s-%s.json" % (output, uid, zone), 'w') as f:
+                    f.write(json.dumps(json_data, indent=4, sort_keys=True))
+
+    except Exception, e:
+        print e
+
+    return bucket_stats
+
+
+def user_stats_sync(uid, output=None):
+    user_stats = None
+
+    try:
+        cmd = ["sudo", "radosgw-admin", "user", "stats", "--uid=%s" % uid, "--sync-stats", "-n", "client.radosgw.%s-%s" % (region, zone)]
+
+        json_data = radosgw_admin(cmd)
+        if json_data:
+            if output is not None:
+                user_stats = json_data
+                with open("%s/user-stats-sync-%s-%s.json" % (output, uid, zone), 'w') as f:
+                    f.write(json.dumps(json_data, indent=4, sort_keys=True))
+
+    except Exception, e:
+        print "UID: %d" % uid
+        print e
+
+    return user_stats
+
+def users_stats_sync(user=None, output=None, show_zero=False):
+    users_stats = []
+    users = get_users(output)
+    if users:
+        for usr in users:
+            user_search = None
+            if user is not None:
+                if usr == user:
+                    user_search = usr
+            else:
+                user_search = usr
+
+            if user_search is not None:
+                user_stats = user_stats_sync(user_search, output=output)
+                if user_stats:
+                    users_stats.append({"user": user_search, "stats": user_stats})
+
+    if users_stats:
+        # Write it out for later use maybe...
+        if output is not None:
+            with open("%s/user-stats-total-%s.json" % (output, zone), 'w') as f:
+                f.write(json.dumps(users_stats, indent=4, sort_keys=True))
+
+    print 'Generating users stats...'
+    print
+
+    users_stats_summary(users_stats, show_zero=show_zero)
+
+    return 0  # Force good
+
+
+def users_stats_summary(users_stats, show_zero=False):
+    if users_stats:
+        user_total = 0
+        object_count = 0
+        total = 0
+        total_objects = 0
+        user = ''
+        first_pass = True
+
+        # Set locale for other types
+        locale.setlocale(locale.LC_ALL, 'en_US')
+        # A list of lists of buckets
+        for data in users_stats:
+            if user != data['user']:
+                if not first_pass:
+                    if show_zero or (show_zero is False and user_total > 0):
+                        print "%s" % user
+                        print "\tTotal (bytes): %s" % locale.format("%d", user_total, grouping=True)
+                        print "\tObjects: %s" % locale.format("%d", object_count, grouping=True)
+                        print '-'*60
+
+                    total_objects += object_count
+                    total += user_total
+
+                    user_total = 0
+                    object_count = 0
+
+                user = data['user']
+                first_pass = False
+
+            user_total += data['stats']['stats']['total_bytes_rounded']
+            object_count += data['stats']['stats']['total_entries']
+
+        # Catch last one
+        if not first_pass:
+            if show_zero or (show_zero is False and user_total > 0):
+                print "%s" % user
+                print "\tTotal (bytes): %s" % locale.format("%d", user_total, grouping=True)
+                print "\tObjects: %s" % locale.format("%d", object_count, grouping=True)
+                print '-'*60
+
+            total_objects += object_count
+            total += user_total
+
+        print "Total Objects: %s" % locale.format("%d", total_objects, grouping=True)
+        print "Total Data Used (Bytes): %s" % locale.format("%d", total, grouping=True)
+        print '='*60
+    else:
+        print 'No user stats!'
+
+
+def get_bucket_stats(user=None, bucket_output=None, user_output=None):
+    bucket_stats = []
+    users = get_users(user_output)
+    if users:
+        for usr in users:
+            user_search = None
+            if user is not None:
+                if usr == user:
+                    user_search = usr
+            else:
+                user_search = usr
+
+            if user_search is not None:
+                user_bucket_stats = get_user_bucket_stats(user_search, output=bucket_output)
+                if user_bucket_stats:
+                    bucket_stats.append({"user": user_search, "buckets": user_bucket_stats})
+
+    if bucket_stats:
+        # Write it out for later use maybe...
+        if bucket_stats_output is not None:
+            with open("%s/usage-total-%s.json" % (bucket_output, zone), 'w') as f:
+                f.write(json.dumps(bucket_stats, indent=4, sort_keys=True))
+
+    bucket_stats_summary(bucket_stats)
+
+    return 0  # Force good
+
+
+def bucket_stats_summary(bucket_stats):
+    if bucket_stats:
+        bucket_total = 0
+        bucket_count = 0
+        object_count = 0
+        total = 0
+        total_buckets = 0
+        total_objects = 0
+        user = ''
+        first_pass = True
+
+        # Set locale for other types
+        locale.setlocale(locale.LC_ALL, 'en_US')
+        # A list of lists of buckets
+        for data in bucket_stats:
+            if user != data['user']:
+                if not first_pass:
+                    print "%s" % user
+                    print "\tBucket total: %s" % locale.format("%d", bucket_count, grouping=True)
+                    print "\tObjects: %s" % locale.format("%d", object_count, grouping=True)
+                    print "\tData used for user (kb): %s" % locale.format("%d", bucket_total, grouping=True)
+                    print '-'*60
+
+                    total_buckets += bucket_count
+                    total_objects += object_count
+                    total += bucket_total
+
+                    bucket_count = 0
+                    bucket_total = 0
+                    object_count = 0
+
+                user = data['user']
+                first_pass = False
+
+            for bucket_data in data['buckets']:
+                bucket_count += 1
+                try:
+                    bucket_total += bucket_data['usage']['rgw.main']['size_kb_actual']
+                    object_count += bucket_data['usage']['rgw.main']['num_objects']
+                except Exception, e:
+                    pass
+
+        # Catch last one
+        if not first_pass:
+            print "%s" % user
+            print "\tBucket total: %s" % locale.format("%d", bucket_count, grouping=True)
+            print "\tObjects: %s" % locale.format("%d", object_count, grouping=True)
+            print "\tData used for user (kb): %s" % locale.format("%d", bucket_total, grouping=True)
+            print '-'*60
+
+            total_buckets += bucket_count
+            total_objects += object_count
+            total += bucket_total
+
+        print "Total Buckets: %s" % locale.format("%d", total_buckets, grouping=True)
+        print "Total Objects: %s" % locale.format("%d", total_objects, grouping=True)
+        print "Total Data Used (kb): %s" % locale.format("%d", total, grouping=True)
+        print '='*60
+    else:
+        print 'No bucket stats!'
 
 
 def user_connect():
@@ -196,6 +447,8 @@ def main():
     p.add_argument('--start-date', action='store', help='Usage Start Date - yyyy-mm-dd (radosgw-admin restriction of format) - Used only with usage task.')
     p.add_argument('--end-date', action='store', help='Usage End Date - yyyy-mm-dd (radosgw-admin restriction of format) - Used only with usage task.')
     p.add_argument('--show-log-entries', action='store', default=False, help='True/False - default is False - Used only with usage task')
+    p.add_argument('--bucket-output', action='store', default='/home/operations', help='Path to place Bucket related JSON data. Defaults to /home/operations')
+    p.add_argument('--user-output', action='store', default='/home/operations', help='Path to place User related JSON data. Defaults to /home/operations')
     p.add_argument('--version', '-v', action='version', version="radosgw-admin2 %s" % VERSION)
 
     # Make sure to set global since variable will be set
@@ -231,7 +484,16 @@ def main():
         return retcode
 
     if find_action(options.actions, 'usage'):
-        return get_usage(options.start_date, options.end_date, options.show_log_entries)
+        if get_usage(options.start_date, options.end_date, options.show_log_entries) is None:
+            return 1
+        else:
+            return 0
+
+    if find_action(options.actions, 'stats'):
+        return get_bucket_stats(bucket_output=options.bucket_output, user_output=options.user_output)
+
+    if find_action(options.actions, 'user-stats-sync'):
+        return users_stats_sync(output=options.user_output)
 
     if not options.user and not options.endpoint:
         p.print_help()
