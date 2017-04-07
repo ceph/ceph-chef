@@ -43,7 +43,7 @@ node['ceph']['radosgw']['users'].each do |user|
                        "#{user['secret_key']}"
                      end
 
-        rgw_admin = JSON.parse(`radosgw-admin user create --display-name="#{user['name']}" --uid="#{user['uid']}" "#{max_buckets}" --access_key="#{access_key}" --secret="#{secret_key}"`)
+        rgw_admin = JSON.parse(`radosgw-admin user create --display-name="#{user['name']}" --uid="#{user['uid']}" "#{max_buckets}" --access-key="#{access_key}" --secret="#{secret_key}"`)
         if user.attribute?('admin_caps') && !user['admin_caps'].empty?
           rgw_admin_cap = JSON.parse(`radosgw-admin caps add --uid="#{user['uid']}" --caps="#{user['admin_caps']}"`)
         end

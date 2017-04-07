@@ -370,7 +370,7 @@ def get_user_secrets():
 
     return retcode
 
-def get_bucket(bucket_name, actions, headers=None, validate=True):
+def get_bucket(bucket_name, actions, headers=None, validate=True, verbose=False):
     global bucket
 
     retcode = False
@@ -388,7 +388,7 @@ def get_bucket(bucket_name, actions, headers=None, validate=True):
         if action == 'public':
             make_public = True
 
-    bucket = rgw_s3_api.bucket_handle(conn, bucket_name, validate=validate, headers=headers, create=create, make_public=make_public)
+    bucket = rgw_s3_api.bucket_handle(conn, bucket_name, validate=validate, headers=headers, create=create, make_public=make_public, verbose=verbose)
     if not bucket:
         error(404, 'Bucket not found.')
         return retcode
@@ -454,6 +454,7 @@ def main():
     p.add_argument('--bucket-output', action='store', default='/home/operations', help='Path to place Bucket related JSON data. Defaults to /home/operations')
     p.add_argument('--user-output', action='store', default='/home/operations', help='Path to place User related JSON data. Defaults to /home/operations')
     p.add_argument('--version', '-v', action='version', version="radosgw-admin2 %s" % VERSION)
+    p.add_argument('--verbose', '-V', action='store_true', help='Verbose')
 
     # Make sure to set global since variable will be set
     global user
@@ -493,11 +494,11 @@ def main():
         else:
             return 0
 
-    if find_action(options.actions, 'stats'):
-        return get_bucket_stats(bucket_output=options.bucket_output, user_output=options.user_output)
-
     if find_action(options.actions, 'user-stats-sync'):
         return users_stats_sync(output=options.user_output)
+
+    if find_action(options.actions, 'stats'):
+        return get_bucket_stats(bucket_output=options.bucket_output, user_output=options.user_output)
 
     if not options.user and not options.endpoint:
         p.print_help()
@@ -516,10 +517,14 @@ def main():
         if get_user_secrets() is not True:
             return retcode
 
+    print 'Connection section..'
+
     if user_connect() is None:
         return retcode
 
-    if get_bucket(options.bucket, options.actions):
+    print 'Bucket section..'
+
+    if get_bucket(options.bucket, options.actions, verbose=options.verbose):
         tasks(options)
         retcode = 0
     else:
