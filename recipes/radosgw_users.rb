@@ -53,9 +53,10 @@ node['ceph']['radosgw']['users'].each do |user|
     end
 
     if user.attribute?('buckets')
+      # --key #{access_key} --secret #{secret_key} <-- pulled from radosgw-admin2 below since user could have already been created so simply let the script get the secrets and used them
       user['buckets'].each do |bucket|
         execute "create-bucket-#{bucket}" do
-          command "radosgw-admin2 --user #{user['uid']} --endpoint #{node['ceph']['radosgw']['default_url']} --port #{node['ceph']['radosgw']['port']} --key #{access_key} --secret #{secret_key} --bucket #{bucket} --action create"
+          command "radosgw-admin2 --user #{user['uid']} --endpoint #{node['ceph']['radosgw']['default_url']} --port #{node['ceph']['radosgw']['port']} --bucket #{bucket} --action create"
           ignore_failure true
         end
       end
@@ -80,7 +81,7 @@ node['ceph']['radosgw']['users'].each do |user|
                          "#{user['secret_key']}"
                        end
 
-          rgw_admin = JSON.parse(`sudo radosgw-admin user create --name client.radosgw.#{inst['region']}-#{inst['name']} --display-name="#{user['name']}" --uid="#{user['uid']}" "#{max_buckets}" --access_key="#{access_key}" --secret="#{secret_key}"`)
+          rgw_admin = JSON.parse(`sudo radosgw-admin user create --name client.radosgw.#{inst['region']}-#{inst['name']} --display-name="#{user['name']}" --uid="#{user['uid']}" "#{max_buckets}" --access-key="#{access_key}" --secret="#{secret_key}"`)
           if user.attribute?('admin_caps') && !user['admin_caps'].empty?
             rgw_admin_cap = JSON.parse(`sudo radosgw-admin caps add --name client.radosgw.#{inst['region']}-#{inst['name']} --uid="#{user['uid']}" --caps="#{user['admin_caps']}"`)
           end
