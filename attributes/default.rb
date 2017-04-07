@@ -83,6 +83,10 @@ default['ceph']['restapi']['tag'] = 'ceph-restapi'
 default['ceph']['radosgw']['logs']['ops']['enable'] = false
 default['ceph']['radosgw']['logs']['usage']['enable'] = false
 default['ceph']['radosgw']['debug']['logs']['enable'] = true
+default['ceph']['radosgw']['gc']['max_objects'] = 32
+default['ceph']['radosgw']['gc']['obj_min_wait'] = 7200
+default['ceph']['radosgw']['gc']['processor_max_time'] = 3600
+default['ceph']['radosgw']['gc']['processor_period'] = 3600
 
 # Search by environment
 # Setting this to true will search for nodes by environment/attributes instead of roles/tags.
