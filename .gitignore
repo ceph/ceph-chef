@@ -25,4 +25,4 @@ bin/*
 
 # Don't save any iso images
 *.iso
-.pyc
+*.pyc
