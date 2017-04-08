@@ -19,7 +19,7 @@
 
 # Stops radosgw on the given node.
 
-service 'radosgw' do
+service 'radosgw-stop' do
   case node['ceph']['radosgw']['init_style']
   when 'upstart'
     service_name 'radosgw-all-starter'

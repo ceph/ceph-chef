@@ -32,10 +32,11 @@ from boto.s3.bucket import Bucket
 # rgw_s3_api.py is a collection of Python functions to do S3 things...
 import rgw_s3_api
 
+# Not currently used.
 # Change to any user you wish it to be that has admin rights to RGW
-admin_user = 'radosgw'
+# admin_user = 'radosgw'
 
-VERSION="0.1.0"
+VERSION="0.1.5"
 
 # These values get set by the functions below
 conn = ''
@@ -47,6 +48,7 @@ endpoint = ''
 port = 80
 region = None
 zone = None
+
 
 def error(code, message):
     print "Error: %d - %s" % (code, message)
@@ -488,6 +490,10 @@ def main():
         p.print_help()
         return retcode
 
+    if options.actions is None:
+        p.print_help()
+        return retcode
+
     if find_action(options.actions, 'usage'):
         if get_usage(options.start_date, options.end_date, options.show_log_entries) is None:
             return 1
@@ -517,12 +523,8 @@ def main():
         if get_user_secrets() is not True:
             return retcode
 
-    print 'Connection section..'
-
     if user_connect() is None:
         return retcode
-
-    print 'Bucket section..'
 
     if get_bucket(options.bucket, options.actions, verbose=options.verbose):
         tasks(options)

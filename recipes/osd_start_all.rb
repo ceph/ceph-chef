@@ -34,7 +34,7 @@ if service_type == 'upstart'
   end
 else
   if node['ceph']['version'] != 'hammer'
-    service 'ceph.target' do
+    service 'ceph.target-osd' do
       service_name 'ceph.target'
       provider Chef::Provider::Service::Systemd
       action [:enable, :start]
