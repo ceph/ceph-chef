@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-service 'radosgw' do
+service 'radosgw-start' do
   case node['ceph']['radosgw']['init_style']
   when 'upstart'
     service_name 'radosgw-all-starter'

@@ -53,7 +53,6 @@ node['ceph']['radosgw']['users'].each do |user|
     end
 
     if user.attribute?('buckets')
-      # --key #{access_key} --secret #{secret_key} <-- pulled from radosgw-admin2 below since user could have already been created so simply let the script get the secrets and used them
       user['buckets'].each do |bucket|
         execute "create-bucket-#{bucket}" do
           command "radosgw-admin2 --user #{user['uid']} --endpoint #{node['ceph']['radosgw']['default_url']} --port #{node['ceph']['radosgw']['port']} --bucket #{bucket} --action create"

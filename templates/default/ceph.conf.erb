@@ -12,10 +12,11 @@
   auth cluster required = cephx
   auth service required = cephx
   auth client required = cephx
-  #cephx require signatures = true
-  #cephx cluster require signatures = true
-  #cephx service require signatures = false
-  #cephx sign messages = true
+  # Example of default cephx settings
+  # cephx require signatures = true
+  # cephx cluster require signatures = true
+  # cephx service require signatures = false
+  # cephx sign messages = true
   # Note: mon host (required) and mon initial members (optional) should be in global section in addition
   # to the cluster and public network options since they are all critical to every node.
   # List of all of the monitor nodes in the given cluster
@@ -230,6 +231,7 @@
   <% end %>
   rgw enable ops log = <%= node['ceph']['radosgw']['logs']['ops']['enable'] %>
   rgw enable usage log = <%= node['ceph']['radosgw']['logs']['usage']['enable'] %>
+  # For GC Max Objects: Use Prime numbers and larger ones if your cluster is large (i.e., 5003 or higher for a multi PB size)
   rgw gc max objects = <%= node['ceph']['radosgw']['gc']['max_objects'] %>
   rgw gc obj min wait = <%= node['ceph']['radosgw']['gc']['obj_min_wait'] %>
   rgw gc processor max time = <%= node['ceph']['radosgw']['gc']['processor_max_time'] %>
@@ -302,6 +304,7 @@
   rgw num rados handles = <%= node['ceph']['radosgw']['rgw_num_rados_handles'] %>
   rgw enable ops log = <%= node['ceph']['radosgw']['logs']['ops']['enable'] %>
   rgw enable usage log = <%= node['ceph']['radosgw']['logs']['usage']['enable'] %>
+  # For GC Max Objects: Use Prime numbers and larger ones if your cluster is large (i.e., 5003 or higher for a multi PB size)
   rgw gc max objects = <%= node['ceph']['radosgw']['gc']['max_objects'] %>
   rgw gc obj min wait = <%= node['ceph']['radosgw']['gc']['obj_min_wait'] %>
   rgw gc processor max time = <%= node['ceph']['radosgw']['gc']['processor_max_time'] %>
