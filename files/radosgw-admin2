@@ -69,11 +69,23 @@ def radosgw_admin(cmd):
 # This data is from the usage log of radosgw (must have 'rgw usage log = true' in the ceph.conf). It pulls in the usage
 # across the wire for a date rante or since the last time the usage log reset (radosgw restart or hard reset option).
 # Basically, what has come across the wire.
-def get_usage(start_date, end_date, show_log_entries=False):
+def get_usage(start_date=None, end_date=None, show_log_entries=False):
     retcode = False
 
     try:
-        cmd = ["sudo", "radosgw-admin", "usage", "show", "-n", "client.radosgw.%s-%s" % (region, zone), "--start-date=%s" % start_date, "--end-date=%s" % end_date, "--show-log-entries=%s" % show_log_entries]
+        start_date_str = ""
+        end_date_str = ""
+
+        if start_date is not None:
+            start_date_str = "--start-date=%s" % start_date
+
+        if end_date is not None:
+            end_date_str = "--end-date=%s" % end_date
+
+        if region is None and zone is None:
+            cmd = ["radosgw-admin", "usage", "show", start_date_str, end_date_str, "--show-log-entries=%s" % show_log_entries]
+        else:
+            cmd = ["sudo", "radosgw-admin", "usage", "show", "-n", "client.radosgw.%s-%s" % (region, zone), start_date_str, end_date_str, "--show-log-entries=%s" % show_log_entries]
 
         json_data = radosgw_admin(cmd)
         if json_data:
@@ -108,7 +120,10 @@ def get_users(output=None):
     users = None
 
     try:
-        cmd = ["sudo", "radosgw-admin", "metadata", "list", "user", "-n", "client.radosgw.%s-%s" % (region, zone)]
+        if region is None and zone is None:
+            cmd = ["radosgw-admin", "metadata", "list", "user"]
+        else:
+            cmd = ["sudo", "radosgw-admin", "metadata", "list", "user", "-n", "client.radosgw.%s-%s" % (region, zone)]
 
         json_data = radosgw_admin(cmd)
         if json_data:
@@ -135,7 +150,10 @@ def get_user_bucket_stats(uid, bucket=None, output=None):
         if bucket is not None:
             bucket_str = "--bucket=%s" % bucket
 
-        cmd = ["sudo", "radosgw-admin", "bucket", "stats", "--uid=%s" % uid, "%s" % bucket_str, "-n", "client.radosgw.%s-%s" % (region, zone)]
+        if region is None and zone is None:
+            cmd = ["radosgw-admin", "bucket", "stats", "--uid=%s" % uid, "%s" % bucket_str]
+        else:
+            cmd = ["sudo", "radosgw-admin", "bucket", "stats", "--uid=%s" % uid, "%s" % bucket_str, "-n", "client.radosgw.%s-%s" % (region, zone)]
 
         json_data = radosgw_admin(cmd)
         if json_data:
@@ -155,7 +173,10 @@ def user_stats_sync(uid, output=None):
     user_stats = None
 
     try:
-        cmd = ["sudo", "radosgw-admin", "user", "stats", "--uid=%s" % uid, "--sync-stats", "-n", "client.radosgw.%s-%s" % (region, zone)]
+        if region is None and zone is None:
+            cmd = ["radosgw-admin", "user", "stats", "--uid=%s" % uid, "--sync-stats"]
+        else:
+            cmd = ["sudo", "radosgw-admin", "user", "stats", "--uid=%s" % uid, "--sync-stats", "-n", "client.radosgw.%s-%s" % (region, zone)]
 
         json_data = radosgw_admin(cmd)
         if json_data:
@@ -272,7 +293,7 @@ def get_bucket_stats(user=None, bucket_output=None, user_output=None):
 
     if bucket_stats:
         # Write it out for later use maybe...
-        if bucket_stats_output is not None:
+        if bucket_output is not None:
             with open("%s/usage-total-%s.json" % (bucket_output, zone), 'w') as f:
                 json_data = {"bucket_stats": bucket_stats}
                 f.write(json.dumps(json_data, indent=4, sort_keys=True))
