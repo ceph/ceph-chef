@@ -423,7 +423,7 @@ def get_bucket_stats(user=None, bucket_output=None, user_output=None):
                 json_data = {"bucket_stats": bucket_stats}
                 f.write(json.dumps(json_data, indent=4, sort_keys=True))
 
-            with open("%s/bucket_stats-%s.csv" % (output, zone), 'w') as csv_file:
+            with open("%s/bucket_stats-%s.csv" % (bucket_output, zone), 'w') as csv_file:
                 fieldnames = ['uid', 'display_name', 'bucket', 'size_kb', 'size_kb_actual', 'num_objects', 'bucket_quota', 'bucket_quota_size', 'bucket_quota_objects']
                 csvwriter = csv.DictWriter(csv_file, fieldnames=fieldnames)
                 csvwriter.writeheader()
