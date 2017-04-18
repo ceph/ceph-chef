@@ -24,6 +24,7 @@ import argparse
 import datetime
 import subprocess
 import json
+import csv
 import boto
 import boto.s3.connection
 from boto.s3.connection import Location
@@ -36,7 +37,7 @@ import rgw_s3_api
 # Change to any user you wish it to be that has admin rights to RGW
 # admin_user = 'radosgw'
 
-VERSION="0.1.5"
+VERSION="0.1.6"
 
 # These values get set by the functions below
 conn = ''
@@ -49,6 +50,7 @@ port = 80
 region = None
 zone = None
 
+# NB: Outputs both JSON and CSV for pulling into Excel and graphing etc.
 
 def error(code, message):
     print "Error: %d - %s" % (code, message)
@@ -69,6 +71,9 @@ def radosgw_admin(cmd):
 # This data is from the usage log of radosgw (must have 'rgw usage log = true' in the ceph.conf). It pulls in the usage
 # across the wire for a date rante or since the last time the usage log reset (radosgw restart or hard reset option).
 # Basically, what has come across the wire.
+
+# Display on terminal. Data is always written to json and csv files. These files can be read by web service, pushed into
+# cluster for later extraction based on dates or pushed into git or something else.
 def get_usage(start_date=None, end_date=None, show_log_entries=False):
     retcode = False
 
@@ -133,11 +138,35 @@ def get_users(output=None):
                     json_data = {"users": users}
                     f.write(json.dumps(json_data, indent=4, sort_keys=True))
 
+                with open("%s/users-%s.csv" % (output, zone), 'w') as csv_file:
+                    # NB: Since only one column just write it
+                    for data in users:
+                        csv_file.write(data + '\n')
+
     except Exception, e:
         print e
 
     return users
 
+
+# Pass in the uid and return the user which you can then extract the attribute(s) you like
+def get_user(uid):
+    data = None
+
+    try:
+        if region is None and zone is None:
+            cmd = ["radosgw-admin", "user", "info", "--uid=%s" % uid]
+        else:
+            cmd = ["sudo", "radosgw-admin", "user", "info", "-n", "client.radosgw.%s-%s" % (region, zone), "--uid=%s" % uid]
+
+        json_data = radosgw_admin(cmd)
+        if json_data:
+            data = json_data
+
+    except Exception, e:
+        print e
+
+    return data
 
 # Must pass a valid user id. If bucket is None then pull stats on all buckets for the given user or just the bucket
 # passed in.
@@ -151,17 +180,71 @@ def get_user_bucket_stats(uid, bucket=None, output=None):
             bucket_str = "--bucket=%s" % bucket
 
         if region is None and zone is None:
-            cmd = ["radosgw-admin", "bucket", "stats", "--uid=%s" % uid, "%s" % bucket_str]
+            cmd = ["radosgw-admin", "bucket", "stats", "--uid=%s" % uid if bucket is None else "", "%s" % bucket_str]
         else:
-            cmd = ["sudo", "radosgw-admin", "bucket", "stats", "--uid=%s" % uid, "%s" % bucket_str, "-n", "client.radosgw.%s-%s" % (region, zone)]
+            cmd = ["sudo", "radosgw-admin", "bucket", "stats", "--uid=%s" % uid if bucket is None else "", "%s" % bucket_str, "-n", "client.radosgw.%s-%s" % (region, zone)]
 
         json_data = radosgw_admin(cmd)
         if json_data:
             if output is not None:
                 bucket_stats = json_data
+                user = get_user(uid)
+                if user is not None:
+                    display_name = user['display_name']
+                else:
+                    display_name = ""
+
                 with open("%s/usage-%s-%s.json" % (output, uid, zone), 'w') as f:
                     json_data = {"bucket_stats": bucket_stats}
                     f.write(json.dumps(json_data, indent=4, sort_keys=True))
+
+                with open("%s/usage-%s-%s.csv" % (output, uid, zone), 'w') as csv_file:
+                    fieldnames = ['uid', 'display_name', 'bucket', 'size_kb', 'size_kb_actual', 'num_objects', 'bucket_quota', 'bucket_quota_size', 'bucket_quota_objects']
+                    csvwriter = csv.DictWriter(csv_file, fieldnames=fieldnames)
+
+                    if bucket is not None:
+                        size_kb = 0
+                        size_kb_actual = 0
+                        num_objects = 0
+                        bucket_quota = False
+                        bucket_quota_size = 0
+                        bucket_quota_objects =0
+
+                        if bucket_stats['usage'] and bucket_stats['usage']['rgw.main']:
+                            size_kb = bucket_stats['usage']['rgw.main']['size_kb']
+                            size_kb_actual = bucket_stats['usage']['rgw.main']['size_kb_actual']
+                            num_objects = bucket_stats['usage']['rgw.main']['num_objects']
+
+                        if bucket_stats['bucket_quota'] and bucket_stats['bucket_quota']['enabled']:
+                            bucket_quota = True
+                            bucket_quota_size = bucket_stats['bucket_quota']['max_size_kb'] if bucket_stats['bucket_quota']['max_size_kb'] > 0 else 0
+                            bucket_quota_objects = bucket_stats['bucket_quota']['max_objects'] if bucket_stats['bucket_quota']['max_objects'] > 0 else 0
+
+                        bucket_stat2 = {"uid": uid, "display_name": display_name, "bucket": bucket, "size_kb": size_kb, "size_kb_actual": size_kb_actual, "num_objects": num_objects, "bucket_quota": bucket_quota, "bucket_quota_size": bucket_quota_size, "bucket_quota_objects": bucket_quota_objects}
+                        csvwriter.writerow(bucket_stat2)
+                    else:
+                        csvwriter.writeheader()
+
+                        for bucket_stat in bucket_stats:
+                            size_kb = 0
+                            size_kb_actual = 0
+                            num_objects = 0
+                            bucket_quota = False
+                            bucket_quota_size = 0
+                            bucket_quota_objects =0
+
+                            if bucket_stats['usage'] and bucket_stats['usage']['rgw.main']:
+                                size_kb = bucket_stats['usage']['rgw.main']['size_kb']
+                                size_kb_actual = bucket_stats['usage']['rgw.main']['size_kb_actual']
+                                num_objects = bucket_stats['usage']['rgw.main']['num_objects']
+
+                            if bucket_stats['bucket_quota'] and bucket_stats['bucket_quota']['enabled']:
+                                bucket_quota = True
+                                bucket_quota_size = bucket_stats['bucket_quota']['max_size_kb'] if bucket_stats['bucket_quota']['max_size_kb'] > 0 else 0
+                                bucket_quota_objects = bucket_stats['bucket_quota']['max_objects'] if bucket_stats['bucket_quota']['max_objects'] > 0 else 0
+
+                            bucket_stat2 = {"uid": uid, "display_name": display_name, "bucket": bucket, "size_kb": size_kb, "size_kb_actual": size_kb_actual, "num_objects": num_objects, "bucket_quota": bucket_quota, "bucket_quota_size": bucket_quota_size, "bucket_quota_objects": bucket_quota_objects}
+                            csvwriter.writerow(bucket_stat2)
 
     except Exception, e:
         print e
@@ -180,14 +263,31 @@ def user_stats_sync(uid, output=None):
 
         json_data = radosgw_admin(cmd)
         if json_data:
+            user = get_user(uid)
+            if user is not None:
+                display_name = user['display_name']
+            else:
+                display_name = ""
+
             if output is not None:
                 user_stats = json_data
                 with open("%s/user-stats-sync-%s-%s.json" % (output, uid, zone), 'w') as f:
                     json_data = {"user_stats": user_stats}
                     f.write(json.dumps(json_data, indent=4, sort_keys=True))
 
+                with open("%s/user-stats-sync-%s-%s.csv" % (output, uid, zone), 'w') as csv_file:
+                    # NB: The CSV library is not very robust so you must flatten out json. A better way would
+                    # be more generic and cycle through each attribute and flatten as it went.
+
+                    fieldnames = ['uid', 'display_name', 'total_entries', 'total_bytes', 'total_bytes_rounded', 'last_stats_sync']
+
+                    ustats = {"uid": uid, "display_name": display_name, "total_entries": user_stats['stats']['total_entries'], "total_bytes": user_stats['stats']['total_bytes'], "total_bytes_rounded": user_stats['stats']['total_bytes_rounded'], "last_stats_sync": user_stats['last_stats_sync']}
+
+                    csvwriter = csv.DictWriter(csv_file, fieldnames=fieldnames)
+                    csvwriter.writerow(ustats)
+
     except Exception, e:
-        print "UID: %d" % uid
+        print "UID: %s" % uid
         print e
 
     return user_stats
@@ -207,13 +307,30 @@ def users_stats_sync(user=None, output=None, show_zero=False):
             if user_search is not None:
                 user_stats = user_stats_sync(user_search, output=output)
                 if user_stats:
-                    users_stats.append({"user": user_search, "stats": user_stats})
+                    users_stats.append({"uid": user_search, "user_stats": user_stats})
 
     if users_stats:
         if output is not None:
             with open("%s/user-stats-total-%s.json" % (output, zone), 'w') as f:
                 json_data = {"user_stats": users_stats}
                 f.write(json.dumps(json_data, indent=4, sort_keys=True))
+
+            with open("%s/user-stats-total-%s.csv" % (output, zone), 'w') as csv_file:
+                fieldnames = ['uid', 'display_name', 'total_entries', 'total_bytes', 'total_bytes_rounded', 'last_stats_sync']
+
+                csvwriter = csv.DictWriter(csv_file, fieldnames=fieldnames)
+                csvwriter.writeheader()
+
+                for data in users_stats:
+                    user = get_user(data['uid'])
+                    if user is not None:
+                        display_name = user['display_name']
+                    else:
+                        display_name = ""
+
+                    user_stats = data['user_stats']['stats']
+                    ustats = {"uid": data['uid'], "display_name": display_name, "total_entries": user_stats['total_entries'], "total_bytes": user_stats['total_bytes'], "total_bytes_rounded": user_stats['total_bytes_rounded'], "last_stats_sync": data['user_stats']['last_stats_sync']}
+                    csvwriter.writerow(ustats)
 
     print 'Generating users stats...'
     print
@@ -223,6 +340,8 @@ def users_stats_sync(user=None, output=None, show_zero=False):
     return 0  # Force good
 
 
+# Display on terminal. Data is always written to json and csv files. These files can be read by web service, pushed into
+# cluster for later extraction based on dates or pushed into git or something else.
 def users_stats_summary(users_stats, show_zero=False):
     if users_stats:
         user_total = 0
@@ -236,7 +355,7 @@ def users_stats_summary(users_stats, show_zero=False):
         locale.setlocale(locale.LC_ALL, 'en_US')
         # A list of lists of buckets
         for data in users_stats:
-            if user != data['user']:
+            if user != data['uid']:
                 if not first_pass:
                     if show_zero or (show_zero is False and user_total > 0):
                         print "%s" % user
@@ -250,11 +369,11 @@ def users_stats_summary(users_stats, show_zero=False):
                     user_total = 0
                     object_count = 0
 
-                user = data['user']
+                user = data['uid']
                 first_pass = False
 
-            user_total += data['stats']['stats']['total_bytes_rounded']
-            object_count += data['stats']['stats']['total_entries']
+            user_total += data['user_stats']['stats']['total_bytes_rounded']
+            object_count += data['user_stats']['stats']['total_entries']
 
         # Catch last one
         if not first_pass:
@@ -287,9 +406,15 @@ def get_bucket_stats(user=None, bucket_output=None, user_output=None):
                 user_search = usr
 
             if user_search is not None:
+                user2 = get_user(usr)
+                if user2 is not None:
+                    display_name = user2['display_name']
+                else:
+                    display_name = ""
+
                 user_bucket_stats = get_user_bucket_stats(user_search, output=bucket_output)
                 if user_bucket_stats:
-                    bucket_stats.append({"user": user_search, "buckets": user_bucket_stats})
+                    bucket_stats.append({"uid": user_search, "display_name": display_name, "buckets": user_bucket_stats})
 
     if bucket_stats:
         # Write it out for later use maybe...
@@ -298,11 +423,39 @@ def get_bucket_stats(user=None, bucket_output=None, user_output=None):
                 json_data = {"bucket_stats": bucket_stats}
                 f.write(json.dumps(json_data, indent=4, sort_keys=True))
 
+            with open("%s/bucket_stats-%s.csv" % (output, zone), 'w') as csv_file:
+                fieldnames = ['uid', 'display_name', 'bucket', 'size_kb', 'size_kb_actual', 'num_objects', 'bucket_quota', 'bucket_quota_size', 'bucket_quota_objects']
+                csvwriter = csv.DictWriter(csv_file, fieldnames=fieldnames)
+                csvwriter.writeheader()
+
+                for bucket_stat in bucket_stats:
+                    size_kb = 0
+                    size_kb_actual = 0
+                    num_objects = 0
+                    bucket_quota = False
+                    bucket_quota_size = 0
+                    bucket_quota_objects =0
+
+                    if bucket_stats['usage'] and bucket_stats['usage']['rgw.main']:
+                        size_kb = bucket_stats['usage']['rgw.main']['size_kb']
+                        size_kb_actual = bucket_stats['usage']['rgw.main']['size_kb_actual']
+                        num_objects = bucket_stats['usage']['rgw.main']['num_objects']
+
+                    if bucket_stats['bucket_quota'] and bucket_stats['bucket_quota']['enabled']:
+                        bucket_quota = True
+                        bucket_quota_size = bucket_stats['bucket_quota']['max_size_kb'] if bucket_stats['bucket_quota']['max_size_kb'] > 0 else 0
+                        bucket_quota_objects = bucket_stats['bucket_quota']['max_objects'] if bucket_stats['bucket_quota']['max_objects'] > 0 else 0
+
+                    bucket_stat2 = {"uid": uid, "display_name": display_name, "bucket": bucket, "size_kb": size_kb, "size_kb_actual": size_kb_actual, "num_objects": num_objects, "bucket_quota": bucket_quota, "bucket_quota_size": bucket_quota_size, "bucket_quota_objects": bucket_quota_objects}
+                    csvwriter.writerow(bucket_stat2)
+
     bucket_stats_summary(bucket_stats)
 
     return 0  # Force good
 
 
+# Display on terminal. Data is always written to json and csv files. These files can be read by web service, pushed into
+# cluster for later extraction based on dates or pushed into git or something else.
 def bucket_stats_summary(bucket_stats):
     if bucket_stats:
         bucket_total = 0
@@ -318,7 +471,7 @@ def bucket_stats_summary(bucket_stats):
         locale.setlocale(locale.LC_ALL, 'en_US')
         # A list of lists of buckets
         for data in bucket_stats:
-            if user != data['user']:
+            if user != data['uid']:
                 if not first_pass:
                     print "%s" % user
                     print "\tBucket total: %s" % locale.format("%d", bucket_count, grouping=True)
