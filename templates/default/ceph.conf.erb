@@ -79,7 +79,7 @@
   journal aio = true
   osd mkfs type = xfs
   #osd mount options xfs = rw,noexec,nodev,noatime,nodiratime,nobarrier
-  osd mount options xfs = rw,noatime,inode64,logbufs=8,logbsize=256k,delaylog,allocsize=4M
+  osd mount options xfs = rw,noatime,inode64,logbufs=8,logbsize=256k,allocsize=4M
   # Example: osd mkfs options xfs = -f -i size=2048
   # Example: osd mount options xfs = noexec,nodev,noatime,nodiratime,barrier=0,discard
   # IMPORTANT: If you modify the crush map with the automation then uncomment the line below (osd crush update ...)
