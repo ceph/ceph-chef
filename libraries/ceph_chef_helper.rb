@@ -71,17 +71,29 @@ def ceph_chef_pool_create(pool)
       profile_val = pool_val['profile'] if type_val == 'erasure'
       crush_ruleset_name = pool_val['crush_ruleset_name']
 
-      ceph_chef_pool name do
-        action :create
-        pg_num pg_num_val
-        pgp_num pg_num_val
-        type type_val
-        crush_ruleset pool_val['crush_ruleset'] if node['ceph']['osd']['crush']['update']
-        crush_ruleset_name crush_ruleset_name if !crush_ruleset_name.nil? && node['ceph']['osd']['crush']['update']
-        profile profile_val unless profile_val.nil?
-        options options_val unless options_val.nil?
-        # notifies :run, "bash[wait-for-pgs-creating]", :immediately
-      end
+        if node['ceph']['pools']['version'] == 1
+          ceph_chef_pool name do
+            action :create
+            pg_num pg_num_val
+            pgp_num pg_num_val
+            type type_val
+            crush_ruleset pool_val['crush_ruleset'] if node['ceph']['osd']['crush']['update']
+            crush_ruleset_name crush_ruleset_name if !crush_ruleset_name.nil? && node['ceph']['osd']['crush']['update']
+            profile profile_val unless profile_val.nil?
+            options options_val unless options_val.nil?
+            # notifies :run, "bash[wait-for-pgs-creating]", :immediately
+          end
+        else
+            profile_val = '' if profile_val.nil?
+            # May want to add node['ceph']['osd']['crush']['update'] later...
+            crush_ruleset_name = '' if crush_ruleset_name.nil?
+            options_val = '' if options_val.nil?
+
+            execute "ceph-pool-create-#{name}" do
+              command lazy { "ceph osd pool create #{name} #{pg_num_val} #{pg_num_val} #{type_val} #{profile_val} #{crush_ruleset_name} #{options_val}" }
+              not_if "ceph osd pool get #{name} pg_num"
+            end
+        end
     end
   else
     node_loop = node['ceph']['pools'][pool]['pools']
@@ -90,17 +102,30 @@ def ceph_chef_pool_create(pool)
       pg_num_val = get_pool_pg_count(pool, index, type_val, 1, false)
       profile_val = pool_val['profile'] if type_val == 'erasure'
       crush_ruleset_name = pool_val['crush_ruleset_name']
+      options_val = node['ceph']['pools'][pool]['settings']['options'] if node['ceph']['pools'][pool]['settings']['options']
 
-      ceph_chef_pool pool_val['name'] do
-        action :create
-        pg_num pg_num_val
-        pgp_num pg_num_val
-        type type_val
-        crush_ruleset pool_val['crush_ruleset'] if node['ceph']['osd']['crush']['update']
-        crush_ruleset_name crush_ruleset_name if !crush_ruleset_name.nil? && node['ceph']['osd']['crush']['update']
-        profile profile_val unless profile_val.nil?
-        options node['ceph']['pools'][pool]['settings']['options'] if node['ceph']['pools'][pool]['settings']['options']
-        # notifies :run, "bash[wait-for-pgs-creating]", :immediately
+      if node['ceph']['pools']['version'] == 1
+          ceph_chef_pool pool_val['name'] do
+            action :create
+            pg_num pg_num_val
+            pgp_num pg_num_val
+            type type_val
+            crush_ruleset pool_val['crush_ruleset'] if node['ceph']['osd']['crush']['update']
+            crush_ruleset_name crush_ruleset_name if !crush_ruleset_name.nil? && node['ceph']['osd']['crush']['update']
+            profile profile_val unless profile_val.nil?
+            options node['ceph']['pools'][pool]['settings']['options'] if node['ceph']['pools'][pool]['settings']['options']
+            # notifies :run, "bash[wait-for-pgs-creating]", :immediately
+          end
+      else
+          profile_val = '' if profile_val.nil?
+          # May want to add node['ceph']['osd']['crush']['update'] later...
+          crush_ruleset_name = '' if crush_ruleset_name.nil?
+          options_val = '' if options_val.nil?
+
+          execute "ceph-pool-create-#{pool_val['name']}" do
+            command lazy { "ceph osd pool create #{pool_val['name']} #{pg_num_val} #{pg_num_val} #{type_val} #{profile_val} #{crush_ruleset_name} #{options_val}" }
+            not_if "ceph osd pool get #{pool_val['name']} pg_num"
+          end
       end
     end
   end
@@ -120,11 +145,18 @@ def ceph_chef_pool_set(pool)
               node['ceph']['osd']['size']['max']
             end
 
-      ceph_chef_pool name do
-        action :set
-        key 'size'
-        value val
-        only_if "ceph osd pool #{name} size | grep #{val}"
+      if node['ceph']['pools']['version'] == 1
+          ceph_chef_pool name do
+            action :set
+            key 'size'
+            value val
+            not_if "ceph osd pool get #{name} size | grep #{val}"
+          end
+      else
+          execute "ceph-pool-set-#{name}" do
+            command lazy { "ceph osd pool set #{name} size #{val}" }
+            not_if "ceph osd pool get #{name} size | grep #{val}"
+          end
       end
     end
   else
@@ -138,11 +170,18 @@ def ceph_chef_pool_set(pool)
               node['ceph']['osd']['size']['max']
             end
 
-      ceph_chef_pool pool_val['name'] do
-        action :set
-        key 'size'
-        value val
-        only_if "ceph osd pool #{pool_val['name']} size | grep #{val}"
+      if node['ceph']['pools']['version'] == 1
+          ceph_chef_pool pool_val['name'] do
+            action :set
+            key 'size'
+            value val
+            not_if "ceph osd pool get #{pool_val['name']} size | grep #{val}"
+          end
+      else
+          execute "ceph-pool-set-#{pool_val['name']}" do
+            command lazy { "ceph osd pool set #{pool_val['name']} size #{val}" }
+            not_if "ceph osd pool get #{pool_val['name']} size | grep #{val}"
+          end
       end
     end
   end
