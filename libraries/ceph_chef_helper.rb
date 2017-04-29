@@ -71,7 +71,7 @@ def ceph_chef_pool_create(pool)
       profile_val = pool_val['profile'] if type_val == 'erasure'
       crush_ruleset_name = pool_val['crush_ruleset_name']
 
-        if node['ceph']['pools']['version'] == 1
+        if node['ceph']['pools']['version'] != 2
           ceph_chef_pool name do
             action :create
             pg_num pg_num_val
@@ -104,7 +104,7 @@ def ceph_chef_pool_create(pool)
       crush_ruleset_name = pool_val['crush_ruleset_name']
       options_val = node['ceph']['pools'][pool]['settings']['options'] if node['ceph']['pools'][pool]['settings']['options']
 
-      if node['ceph']['pools']['version'] == 1
+      if node['ceph']['pools']['version'] != 2
           ceph_chef_pool pool_val['name'] do
             action :create
             pg_num pg_num_val
@@ -145,7 +145,7 @@ def ceph_chef_pool_set(pool)
               node['ceph']['osd']['size']['max']
             end
 
-      if node['ceph']['pools']['version'] == 1
+      if node['ceph']['pools']['version'] != 2
           ceph_chef_pool name do
             action :set
             key 'size'
@@ -170,7 +170,7 @@ def ceph_chef_pool_set(pool)
               node['ceph']['osd']['size']['max']
             end
 
-      if node['ceph']['pools']['version'] == 1
+      if node['ceph']['pools']['version'] != 2
           ceph_chef_pool pool_val['name'] do
             action :set
             key 'size'
