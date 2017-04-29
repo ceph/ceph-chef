@@ -130,3 +130,5 @@ rescue
   Chef::Log.debug "Pool doesn't seem to exist: #{cmd.stderr}"
   false
 end
+
+#

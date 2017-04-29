@@ -119,7 +119,7 @@ def ceph_chef_pool_create(pool)
       else
           profile_val = '' if profile_val.nil?
           # May want to add node['ceph']['osd']['crush']['update'] later...
-          crush_ruleset_name = '' if crush_ruleset_name.nil?
+          crush_ruleset_name = '' if crush_ruleset_name.nil? || !node['ceph']['osd']['crush']['update']
           options_val = '' if options_val.nil?
 
           execute "ceph-pool-create-#{pool_val['name']}" do
