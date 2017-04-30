@@ -60,5 +60,4 @@ template "/etc/ceph/#{node['ceph']['cluster']}.conf" do
     }
   }
   mode '0644'
-  not_if "test -f /etc/ceph/#{node['ceph']['cluster']}.conf"
 end
