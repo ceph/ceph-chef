@@ -36,6 +36,10 @@ default['ceph']['pools']['erasure_coding']['profiles'] = [{ 'profile' => 'custom
 #####
 
 # RADOSGW - Rados Gateway section
+
+# 'version' causes the newer version of the pool creation to be called
+default['ceph']['pools']['version'] = 2
+
 # Update these if you want to setup federated regions and zones
 # {region name}-{zone name}-{instance} -- Naming convention used but you can change it
 default['ceph']['pools']['radosgw']['federated_enable'] = false
