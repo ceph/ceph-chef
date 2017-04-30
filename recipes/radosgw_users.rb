@@ -54,8 +54,8 @@ node['ceph']['radosgw']['users'].each do |user|
 
     if user.attribute?('buckets')
       user['buckets'].each do |bucket|
-        execute "create-bucket-#{bucket}" do
-          command "radosgw-admin2 --user #{user['uid']} --endpoint #{node['ceph']['radosgw']['default_url']} --port #{node['ceph']['radosgw']['port']} --bucket #{bucket} --action create"
+        execute "create-bucket-#{bucket['name']}" do
+          command "radosgw-admin2 --user #{user['uid']} --endpoint #{node['ceph']['radosgw']['default_url']} --port #{node['ceph']['radosgw']['port']} --bucket #{bucket['name']} --action create"
           ignore_failure true
         end
       end
@@ -89,15 +89,20 @@ node['ceph']['radosgw']['users'].each do |user|
         ignore_failure true
       end
 
-      # TODO: Update script to support region/zone --name option
-      # if user.attribute?('buckets')
-      #  user['buckets'].each do | bucket |
-      #    execute "create-bucket-#{bucket}" do
-      #      command "radosgw-admin2 --user #{user['uid']} --endpoint #{node['ceph']['radosgw']['default_url'] } --port #{node['ceph']['radosgw']['port']} --key #{access_key} --secret #{secret_key} --bucket #{bucket} --action create"
-      #      ignore_failure true
-      #    end
-      #  end
-      # end
+      if user.attribute?('buckets')
+        user['buckets'].each do |bucket|
+          execute "create-bucket-#{bucket['name']}" do
+            command "radosgw-admin2 --user #{user['uid']} --endpoint #{node['ceph']['radosgw']['default_url']} --port #{node['ceph']['radosgw']['port']} --bucket #{bucket['name']} -r #{inst['region']} -z #{inst['name']} --action create"
+            ignore_failure true
+          end
+          if bucket['acl'] == 'public'
+              execute "change-bucket-acl-#{bucket['name']}" do
+                command "radosgw-admin2 --user #{user['uid']} --endpoint #{node['ceph']['radosgw']['default_url']} --port #{node['ceph']['radosgw']['port']} --bucket #{bucket['name']} -r #{inst['region']} -z #{inst['name']} --action public"
+                ignore_failure true
+              end
+          end
+        end
+      end
     end
   end
 end
