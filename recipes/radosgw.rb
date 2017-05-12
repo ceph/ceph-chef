@@ -56,12 +56,12 @@ include_recipe 'ceph-chef::radosgw_civetweb'
 
 execute 'osd-create-key-mon-client-in-directory' do
   command lazy { "ceph-authtool /etc/ceph/#{node['ceph']['cluster']}.mon.keyring --create-keyring --name=mon. --add-key=#{ceph_chef_mon_secret} --cap mon 'allow *'" }
-  not_if "test -f /etc/ceph/#{node['ceph']['cluster']}.mon.keyring"
+  not_if "test -s /etc/ceph/#{node['ceph']['cluster']}.mon.keyring"
 end
 
 execute 'osd-create-key-admin-client-in-directory' do
   command lazy { "ceph-authtool /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring --create-keyring --name=client.admin --add-key=#{ceph_chef_admin_secret} --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *'" }
-  not_if "test -f /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
+  not_if "test -s /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring"
 end
 
 # Verifies or sets the correct mode only
@@ -109,7 +109,7 @@ end
 #     ceph-authtool -n "client.radosgw.#{node['hostname']}" --cap osd 'allow rwx' --cap mon 'allow rw' "/etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring"
 #     ceph -k "#{base_key}" auth add client.radosgw.gateway -i "/etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring"
 #   EOH
-#   not_if "test -f /etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring"
+#   not_if "test -s /etc/ceph/#{node['ceph']['cluster']}.client.radosgw.keyring"
 #   notifies :create, 'ruby_block[save radosgw_secret]', :immediately
 # end
 
@@ -124,18 +124,18 @@ end
 #         --name=client.radosgw.#{node['hostname']} \
 #         --add-key="$RGW_KEY"
 #   EOH
-#   not_if "test -f /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}/keyring"
+#   not_if "test -s /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}/keyring"
 #   notifies :create, 'ruby_block[save radosgw_secret]', :immediately
 # end
 
 # execute 'update rgw keys' do
 #   command "ceph -k /etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring auth add client.radosgw.#{node['hostname']} -i /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}/keyring"
-#   only_if {"test -f /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-#{node['hostname']}/keyring"}
+#   only_if {"test -s /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-#{node['hostname']}/keyring"}
 # end
 
 # execute 'set rgw_permissions' do
 #   command lazy { "chmod 0644 /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}/keyring" }
-#   only_if "test -f /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}/keyring"
+#   only_if "test -s /var/lib/ceph/radosgw/#{node['ceph']['cluster']}-radosgw.#{node['hostname']}/keyring"
 # end
 # End of comment block
 

@@ -42,7 +42,7 @@ yum_repository 'ceph' do
   description "Ceph #{platform_family} #{node['ceph']['version']} #{branch}"
   baseurl node['ceph'][platform_family][branch]['repository']
   gpgkey node['ceph'][platform_family][branch]['repository_key']
-  not_if 'test -f /etc/yum.repos.d/ceph.repo'
+  not_if 'test -s /etc/yum.repos.d/ceph.repo'
   only_if { node['ceph']['repo']['create'] }
 end
 
@@ -51,7 +51,7 @@ package 'hdparm'    # used by ceph-disk activate
 package 'xfsprogs'  # needed by ceph-disk-prepare to format as xfs
 
 package 'redhat-lsb-core' do # lsb-init
-  not_if 'test -f /lib/lsb/init-functions'
+  not_if 'test -s /lib/lsb/init-functions'
 end
 
 if node['platform_family'] == 'rhel' && node['platform_version'].to_f > 6
