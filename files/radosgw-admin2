@@ -33,7 +33,7 @@ from boto.s3.bucket import Bucket
 # rgw_s3_api.py is a collection of Python functions to do S3 things...
 import rgw_s3_api
 
-VERSION="0.1.6"
+VERSION="0.1.7"
 
 # These values get set by the functions below
 conn = ''
@@ -85,9 +85,9 @@ def get_usage(start_date=None, end_date=None, show_log_entries=False):
             end_date_str = "--end-date=%s" % end_date
 
         if region is None and zone is None:
-            cmd = ["radosgw-admin", "usage", "show", start_date_str, end_date_str, "--show-log-entries=%s" % show_log_entries]
+            cmd = ["/usr/bin/radosgw-admin", "usage", "show", start_date_str, end_date_str, "--show-log-entries=%s" % show_log_entries]
         else:
-            cmd = ["sudo", "radosgw-admin", "usage", "show", "-n", "client.radosgw.%s-%s" % (region, zone), start_date_str, end_date_str, "--show-log-entries=%s" % show_log_entries]
+            cmd = ["sudo", "/bin/radosgw-admin", "usage", "show", "-n", "client.radosgw.%s-%s" % (region, zone), start_date_str, end_date_str, "--show-log-entries=%s" % show_log_entries]
 
         json_data = radosgw_admin(cmd)
         if json_data:
@@ -123,9 +123,9 @@ def get_users(output=None):
 
     try:
         if region is None and zone is None:
-            cmd = ["radosgw-admin", "metadata", "list", "user"]
+            cmd = ["/usr/bin/radosgw-admin", "metadata", "list", "user"]
         else:
-            cmd = ["sudo", "radosgw-admin", "metadata", "list", "user", "-n", "client.radosgw.%s-%s" % (region, zone)]
+            cmd = ["sudo", "/bin/radosgw-admin", "metadata", "list", "user", "-n", "client.radosgw.%s-%s" % (region, zone)]
 
         json_data = radosgw_admin(cmd)
         if json_data:
@@ -152,9 +152,9 @@ def get_user(uid):
 
     try:
         if region is None and zone is None:
-            cmd = ["radosgw-admin", "user", "info", "--uid=%s" % uid]
+            cmd = ["/usr/bin/radosgw-admin", "user", "info", "--uid", "%s" % uid]
         else:
-            cmd = ["sudo", "radosgw-admin", "user", "info", "-n", "client.radosgw.%s-%s" % (region, zone), "--uid=%s" % uid]
+            cmd = ["sudo", "/bin/radosgw-admin", "user", "info", "-n", "client.radosgw.%s-%s" % (region, zone), "--uid", "%s" % uid]
 
         json_data = radosgw_admin(cmd)
         if json_data:
@@ -177,9 +177,9 @@ def get_user_bucket_stats(uid, bucket=None, output=None):
             bucket_str = "--bucket=%s" % bucket
 
         if region is None and zone is None:
-            cmd = ["radosgw-admin", "bucket", "stats", "--uid=%s" % uid if bucket is None else "", "%s" % bucket_str]
+            cmd = ["/usr/bin/radosgw-admin", "bucket", "stats", "--uid", "%s" % uid if bucket is None else "", "%s" % bucket_str]
         else:
-            cmd = ["sudo", "radosgw-admin", "bucket", "stats", "--uid=%s" % uid if bucket is None else "", "%s" % bucket_str, "-n", "client.radosgw.%s-%s" % (region, zone)]
+            cmd = ["sudo", "/bin/radosgw-admin", "bucket", "stats", "--uid", "%s" % uid if bucket is None else "", "%s" % bucket_str, "-n", "client.radosgw.%s-%s" % (region, zone)]
 
         json_data = radosgw_admin(cmd)
         if json_data:
@@ -254,9 +254,9 @@ def user_stats_sync(uid, output=None):
 
     try:
         if region is None and zone is None:
-            cmd = ["radosgw-admin", "user", "stats", "--uid=%s" % uid, "--sync-stats"]
+            cmd = ["/usr/bin/radosgw-admin", "user", "stats", "--uid", "%s" % uid, "--sync-stats"]
         else:
-            cmd = ["sudo", "radosgw-admin", "user", "stats", "--uid=%s" % uid, "--sync-stats", "-n", "client.radosgw.%s-%s" % (region, zone)]
+            cmd = ["sudo", "/bin/radosgw-admin", "user", "stats", "--uid", "%s" % uid, "--sync-stats", "-n", "client.radosgw.%s-%s" % (region, zone)]
 
         json_data = radosgw_admin(cmd)
         if json_data:
@@ -528,9 +528,9 @@ def get_user_secrets():
     retcode = False
     try:
         if region is None and zone is None:
-            cmd = ["radosgw-admin", "user", "info", "--uid=%s" % user]
+            cmd = ["/usr/bin/radosgw-admin", "user", "info", "--uid", "%s" % user]
         else:
-            cmd = ["sudo radosgw-admin", "user", "info", "--uid=%s" % user, "-n client.radosgw.%s-%s" % (region, zone)]
+            cmd = ["sudo", "/bin/radosgw-admin", "user", "info", "--uid", "%s" % user, "-n", "client.radosgw.%s-%s" % (region, zone)]
 
         user_dict = radosgw_admin(cmd)
         if user_dict:
@@ -574,9 +574,9 @@ def create_user(uid, display_name, access_key=None, secret_key=None):
 
     try:
         if region is None and zone is None:
-            cmd = ["radosgw-admin", "user", "create", "--uid=%s" % uid, "--display-name='%s'" % display_name]
+            cmd = ["/usr/bin/radosgw-admin", "user", "create", "--uid", "%s" % uid, "--display-name", "%s" % display_name]
         else:
-            cmd = ["sudo", "radosgw-admin", "user", "create", "-n", "client.radosgw.%s-%s" % (region, zone), "--uid=%s" % uid, "--display-name='%s'" % display_name]
+            cmd = ["sudo", "/bin/radosgw-admin", "user", "create", "-n", "client.radosgw.%s-%s" % (region, zone), "--uid", "%s" % uid, "--display-name", "%s" % display_name]
 
         if access_key is not None and secret_key is not None:
             cmd.append("--access-key=%s" % access_key)
@@ -681,8 +681,8 @@ def main():
         user = options.user
     if options.bucket:
         bucket = options.bucket
-    if options.key:
-        key = options.key
+    if options.access:
+        key = options.access
     if options.secret:
         secret = options.secret
     if options.endpoint:
@@ -720,15 +720,15 @@ def main():
         return retcode
 
     # These two values are optional but if one is specified then both must be specified
-    if options.key and not options.secret:
+    if options.access and not options.secret:
         p.print_help()
         return retcode
 
-    if options.secret and not options.key:
+    if options.secret and not options.access:
         p.print_help()
         return retcode
 
-    if not options.key and not options.secret:
+    if not options.access and not options.secret and not find_action(options.actions, 'create'):
         if get_user_secrets() is not True:
             return retcode
 
