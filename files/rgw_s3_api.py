@@ -28,13 +28,14 @@ from boto.s3.connection import Location
 from boto.s3.bucket import Bucket
 
 # NOTE: Modify these values with your key, secret and url/ip for s3 endpoint
-key = "<whatever your key is>"
-secret = "<whatever your secret is>"
+access_key = "<whatever your access_key is>"
+secret_key = "<whatever your secret_key is>"
 endpoint = "<whatever your s3 url or IP is>"
+admin_user = "<whatever your RGW admin user is>"
 
 # NOTE: Add the proxy if you need one.
 
-def connect(key, secret, proxy=None, user_agent=None, endpoint=endpoint, port=80,
+def connect(key, secret, host, proxy=None, user_agent=None, port=80,
             proxy_port=8080, is_secure=False, debug=0, verbose=False):
     conn = None
 
@@ -43,7 +44,7 @@ def connect(key, secret, proxy=None, user_agent=None, endpoint=endpoint, port=80
                     aws_access_key_id=key,
                     aws_secret_access_key=secret,
                     port=port,
-                    host=endpoint,
+                    host=host,
                     proxy=proxy,
                     proxy_port=proxy_port,
                     is_secure=is_secure,
@@ -263,6 +264,34 @@ def upload_directory(bucket, directory, pattern='*', include_dir_prefix=False, m
         count += 1
 
     return key_objects
+
+
+# NB: Create a Tenancy (user) using the RGW API which is part of RGW on the same port(s).
+# NB: *MUST USE* user with admin caps such as the default 'radosgw' user ceph-chef creates by default.
+def user_create(conn, admin_user, user_name, display_name, caps=None, verbose=False):
+    if not conn or not user_name:
+        if verbose:
+            print('Connection and/or user name not valid - unable to create.')
+        return None
+
+    user = None
+
+    try:
+        print "/%s/user?format=json&uid=%s&display-name='%s'" % (admin_user, user_name, display_name)
+
+        resp = conn.make_request("PUT", query_args="/%s/user?format=json&uid=%s&display-name='%s'" % (admin_user, user_name, display_name))
+
+        if resp:
+            print resp.status
+            print resp.read()
+
+        if user and verbose:
+            print('User %s created.' % user_name)
+    except BaseException, e:
+        print(e.message)
+
+    return user
+
 
 
 def main():

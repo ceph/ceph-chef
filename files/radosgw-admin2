@@ -33,14 +33,11 @@ from boto.s3.bucket import Bucket
 # rgw_s3_api.py is a collection of Python functions to do S3 things...
 import rgw_s3_api
 
-# Not currently used.
-# Change to any user you wish it to be that has admin rights to RGW
-# admin_user = 'radosgw'
-
-VERSION="0.1.6"
+VERSION="0.1.7"
 
 # These values get set by the functions below
 conn = ''
+admin_user = ''
 user = ''
 key = ''
 secret = ''
@@ -88,9 +85,9 @@ def get_usage(start_date=None, end_date=None, show_log_entries=False):
             end_date_str = "--end-date=%s" % end_date
 
         if region is None and zone is None:
-            cmd = ["radosgw-admin", "usage", "show", start_date_str, end_date_str, "--show-log-entries=%s" % show_log_entries]
+            cmd = ["/usr/bin/radosgw-admin", "usage", "show", start_date_str, end_date_str, "--show-log-entries=%s" % show_log_entries]
         else:
-            cmd = ["sudo", "radosgw-admin", "usage", "show", "-n", "client.radosgw.%s-%s" % (region, zone), start_date_str, end_date_str, "--show-log-entries=%s" % show_log_entries]
+            cmd = ["sudo", "/bin/radosgw-admin", "usage", "show", "-n", "client.radosgw.%s-%s" % (region, zone), start_date_str, end_date_str, "--show-log-entries=%s" % show_log_entries]
 
         json_data = radosgw_admin(cmd)
         if json_data:
@@ -126,9 +123,9 @@ def get_users(output=None):
 
     try:
         if region is None and zone is None:
-            cmd = ["radosgw-admin", "metadata", "list", "user"]
+            cmd = ["/usr/bin/radosgw-admin", "metadata", "list", "user"]
         else:
-            cmd = ["sudo", "radosgw-admin", "metadata", "list", "user", "-n", "client.radosgw.%s-%s" % (region, zone)]
+            cmd = ["sudo", "/bin/radosgw-admin", "metadata", "list", "user", "-n", "client.radosgw.%s-%s" % (region, zone)]
 
         json_data = radosgw_admin(cmd)
         if json_data:
@@ -155,9 +152,9 @@ def get_user(uid):
 
     try:
         if region is None and zone is None:
-            cmd = ["radosgw-admin", "user", "info", "--uid=%s" % uid]
+            cmd = ["/usr/bin/radosgw-admin", "user", "info", "--uid", "%s" % uid]
         else:
-            cmd = ["sudo", "radosgw-admin", "user", "info", "-n", "client.radosgw.%s-%s" % (region, zone), "--uid=%s" % uid]
+            cmd = ["sudo", "/bin/radosgw-admin", "user", "info", "-n", "client.radosgw.%s-%s" % (region, zone), "--uid", "%s" % uid]
 
         json_data = radosgw_admin(cmd)
         if json_data:
@@ -180,9 +177,9 @@ def get_user_bucket_stats(uid, bucket=None, output=None):
             bucket_str = "--bucket=%s" % bucket
 
         if region is None and zone is None:
-            cmd = ["radosgw-admin", "bucket", "stats", "--uid=%s" % uid if bucket is None else "", "%s" % bucket_str]
+            cmd = ["/usr/bin/radosgw-admin", "bucket", "stats", "--uid", "%s" % uid if bucket is None else "", "%s" % bucket_str]
         else:
-            cmd = ["sudo", "radosgw-admin", "bucket", "stats", "--uid=%s" % uid if bucket is None else "", "%s" % bucket_str, "-n", "client.radosgw.%s-%s" % (region, zone)]
+            cmd = ["sudo", "/bin/radosgw-admin", "bucket", "stats", "--uid", "%s" % uid if bucket is None else "", "%s" % bucket_str, "-n", "client.radosgw.%s-%s" % (region, zone)]
 
         json_data = radosgw_admin(cmd)
         if json_data:
@@ -257,9 +254,9 @@ def user_stats_sync(uid, output=None):
 
     try:
         if region is None and zone is None:
-            cmd = ["radosgw-admin", "user", "stats", "--uid=%s" % uid, "--sync-stats"]
+            cmd = ["/usr/bin/radosgw-admin", "user", "stats", "--uid", "%s" % uid, "--sync-stats"]
         else:
-            cmd = ["sudo", "radosgw-admin", "user", "stats", "--uid=%s" % uid, "--sync-stats", "-n", "client.radosgw.%s-%s" % (region, zone)]
+            cmd = ["sudo", "/bin/radosgw-admin", "user", "stats", "--uid", "%s" % uid, "--sync-stats", "-n", "client.radosgw.%s-%s" % (region, zone)]
 
         json_data = radosgw_admin(cmd)
         if json_data:
@@ -520,7 +517,7 @@ def bucket_stats_summary(bucket_stats):
 
 def user_connect():
     global conn
-    conn = rgw_s3_api.connect(key, secret, endpoint=endpoint, port=port)  # There are many other options
+    conn = rgw_s3_api.connect(key, secret, endpoint, port=port)  # There are many other options
     return conn
 
 
@@ -531,9 +528,9 @@ def get_user_secrets():
     retcode = False
     try:
         if region is None and zone is None:
-            cmd = ["radosgw-admin", "user", "info", "--uid=%s" % user]
+            cmd = ["/usr/bin/radosgw-admin", "user", "info", "--uid", "%s" % user]
         else:
-            cmd = ["sudo radosgw-admin", "user", "info", "--uid=%s" % user, "-n client.radosgw.%s-%s" % (region, zone)]
+            cmd = ["sudo", "/bin/radosgw-admin", "user", "info", "--uid", "%s" % user, "-n", "client.radosgw.%s-%s" % (region, zone)]
 
         user_dict = radosgw_admin(cmd)
         if user_dict:
@@ -572,28 +569,59 @@ def get_bucket(bucket_name, actions, headers=None, validate=True, verbose=False)
         return True
 
 
+def create_user(uid, display_name, access_key=None, secret_key=None):
+    data = None
+
+    try:
+        if region is None and zone is None:
+            cmd = ["/usr/bin/radosgw-admin", "user", "create", "--uid", "%s" % uid, "--display-name", "%s" % display_name]
+        else:
+            cmd = ["sudo", "/bin/radosgw-admin", "user", "create", "-n", "client.radosgw.%s-%s" % (region, zone), "--uid", "%s" % uid, "--display-name", "%s" % display_name]
+
+        if access_key is not None and secret_key is not None:
+            cmd.append("--access-key=%s" % access_key)
+            cmd.append("--secret=%s" % secret_key)
+
+        json_data = radosgw_admin(cmd)
+        if json_data:
+            data = json_data
+
+    except Exception, e:
+        print e
+
+    return data
+
+
 # Define a class for returns
 def tasks(options):
     if find_action(options.actions, 'list'):
         rgw_s3_api.bucket_list(bucket)
         return None
 
+    if find_action(options.actions, 'user'):
+        if find_action(options.actions, 'create'):
+            return create_user(options.user, options.display_name, options.access, options.secret)
+            # NB: This call uses the S3 Auth verison - wip
+            # return rgw_s3_api.user_create(conn, options.admin, options.user, options.display_name)
+
     if options.object:
         if not options.location and not options.object_string:
             error(400, 'Object location and/or object-string actions are not specified. At least one is required.')
             return None
-        if find_action(options.actions, 'usage'):
-            return get_usage(options.start_date, options.end_date, options.show_log_entries)
-        if find_action(options.actions, 'put'):
-            return rgw_s3_api.object_create(bucket, options.object, options.object_string, options.location, make_public=find_action(options.actions, 'public'), headers=options.headers)
-        if find_action(options.actions, 'delete'):
-            return rgw_s3_api.object_delete(bucket, options.object, headers=options.headers, version_id=options.version_id, mfa_token=None)
-        if find_action(options.actions, 'get'):
-            return rgw_s3_api.object_get(bucket, options.object, options.location, headers=options.headers, version_id=options.version_id)
-        if find_action(options.actions, 'url'):
-            signature = rgw_s3_api.object_url(bucket, options.object, signed_duration=options.duration)
-            print signature
-            return signature
+
+        # NB: The rest of the actions require a valid bucket name
+        if len(bucket) > 0:
+            if find_action(options.actions, 'usage'):
+                return get_usage(options.start_date, options.end_date, options.show_log_entries)
+            if find_action(options.actions, 'put'):
+                return rgw_s3_api.object_create(bucket, options.object, options.object_string, options.location, make_public=find_action(options.actions, 'public'), headers=options.headers)
+            if find_action(options.actions, 'delete'):
+                return rgw_s3_api.object_delete(bucket, options.object, headers=options.headers, version_id=options.version_id, mfa_token=None)
+            if find_action(options.actions, 'get'):
+                return rgw_s3_api.object_get(bucket, options.object, options.location, headers=options.headers, version_id=options.version_id)
+            if find_action(options.actions, 'url'):
+                signature = rgw_s3_api.object_url(bucket, options.object, signed_duration=options.duration)
+                return signature
 
     return None
 
@@ -609,10 +637,12 @@ def main():
     retcode = 1
 
     p = argparse.ArgumentParser(description='radosgw-admin2 - Adds some missing features to radosgw-admin', prog='radosgw-admin2')
-    p.add_argument('--user', '-u', action='store', help='(Required) - Pass in the username used to during the creation of the user.')
+    p.add_argument('--admin', action='store', default='radosgw', help='Admin user name.')
+    p.add_argument('--user', '-u', action='store', help='(Required) - Pass in the username used to perform action on.')
+    p.add_argument('--display-name', action='store', help='Required when creating user. The display name.')
     p.add_argument('--endpoint', '-e', action='store', help='(Required) - Endpoint URL.')
     p.add_argument('--port', '-p', action='store', default=80, type=int, help='(Required - Defaults to port=80) - Endpoint port.')
-    p.add_argument('--key', '-k', action='store', help='(Optional) - Pass in the key of the user.')
+    p.add_argument('--access', '-k', action='store', help='(Optional) - Pass in the key of the user.')
     p.add_argument('--secret', '-s', action='store', help='(Optional) - Pass in the secret of the user.')
     p.add_argument('--bucket', '-b', action='store', help='Bucket.')
     p.add_argument('--object', '-o', action='store', help='Object.')
@@ -633,6 +663,7 @@ def main():
     p.add_argument('--verbose', '-V', action='store_true', help='Verbose')
 
     # Make sure to set global since variable will be set
+    global admin_user
     global user
     global bucket
     global key
@@ -644,10 +675,14 @@ def main():
 
     options = p.parse_args()
 
+    if options.admin:
+        admin_user = options.admin
     if options.user:
         user = options.user
-    if options.key:
-        key = options.key
+    if options.bucket:
+        bucket = options.bucket
+    if options.access:
+        key = options.access
     if options.secret:
         secret = options.secret
     if options.endpoint:
@@ -685,26 +720,28 @@ def main():
         return retcode
 
     # These two values are optional but if one is specified then both must be specified
-    if options.key and not options.secret:
+    if options.access and not options.secret:
         p.print_help()
         return retcode
 
-    if options.secret and not options.key:
+    if options.secret and not options.access:
         p.print_help()
         return retcode
 
-    if not options.key and not options.secret:
+    if not options.access and not options.secret and not find_action(options.actions, 'create'):
         if get_user_secrets() is not True:
             return retcode
 
     if user_connect() is None:
         return retcode
 
-    if get_bucket(options.bucket, options.actions, verbose=options.verbose):
-        tasks(options)
-        retcode = 0
-    else:
-        retcode = 1
+    # if get_bucket(options.bucket, options.actions, verbose=options.verbose):
+    tasks(options)
+    retcode = 0
+    # else:
+    #     # NB: exit code is hard coded to 0 for now. Change later...
+    #     tasks(options)
+    #     retcode = 0
 
     return retcode
 
