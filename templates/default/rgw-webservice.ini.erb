@@ -1,0 +1,19 @@
+[uwsgi]
+uid = <%= node['ceph']['radosgw']['rgw_webservice']['user'] %>
+gid = <%= node['ceph']['radosgw']['rgw_webservice']['user'] %>
+
+wsgi-file = /usr/local/lib/rgw_webservice/rgw_webservice
+callable = app
+plugin = python
+
+master = true
+processes = 5
+
+socket = /usr/local/lib/rgw_webservice/rgw_webservice.sock
+chmod-socket = 777
+chown-socket = <%= node['ceph']['radosgw']['rgw_webservice']['user'] %>
+
+# vacuum - NGINX requirement so leave if using apache
+vacuum = true
+die-on-term = true
+close-on-exit

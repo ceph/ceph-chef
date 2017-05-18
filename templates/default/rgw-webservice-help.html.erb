@@ -1,0 +1,59 @@
+<html>
+<head>
+    <title>RGW API WebService</title>
+</head>
+<body>
+    <h1>RGW API WebService</h1>
+    <p>
+        The RGW API WebService wraps the `radosgw-admin` utility and/or accesses the admin services directly using
+        S3 Authentication in the headers. This service acts as a simply RESTful API that can be called by any application
+        that has access to the API Gateway.
+    </p>
+    <h2>Users</h2>
+    <div>
+        <h4>Create</h4>
+        <p>
+            URL
+        </p>
+        <p>
+            /v1/users/create/<user>/<display_name>
+        </p>
+        <p>
+            This API will create a new user/tenancy using the `user` ID you want to assign and the `display_name` such as
+            the user's name or project name. `user` must be one word with no spaces or special characters. `display_name`
+            can be multiple words and must be URL encoded.
+        </p>
+        <p>
+            Example: GET /v1/users/create/foo/foobar
+        </p>
+        <p>
+            Method
+        </p>
+        <p>
+            PUT
+        </p>
+    </div>
+    <div>
+        <h4>Get</h4>
+        <p>
+            URL
+        </p>
+        <p>
+            /v1/users/get/<user>
+        </p>
+        <p>
+            This API will GET the requested `user` and return the JSON representation of the user account. If the user
+            is NOT found then a 404 returned as not found.
+        </p>
+        <p>
+            Example: GET /v1/users/get/foo
+        </p>
+        <p>
+            Method
+        </p>
+        <p>
+            GET
+        </p>
+    </div>
+</body>
+</html>
