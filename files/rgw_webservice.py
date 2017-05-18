@@ -26,6 +26,7 @@ import logging.handlers
 import subprocess
 import json
 import os
+import datetime
 import flask
 from flask import request
 
@@ -47,7 +48,11 @@ class RGWWebServiceAPI(object):
         # Setup admin user info here
         pass
 
-    def user_create(self, user, display_name, region=None, zone=None, access_key=None, secret_key=None, email=None, zone_region_prefix="client.radosgw"):
+    def user_create(self, user, display_name=None, remote_addr=None, region=None, zone=None, access_key=None, secret_key=None, email=None, zone_region_prefix="client.radosgw"):
+        # Set the display_name equal to the user id if display_name not passed in!
+        if display_name is None:
+            display_name = user
+
         cmd = ["/usr/bin/radosgw-admin", "user", "create", "--conf", "/etc/ceph/ceph.conf", "--uid", "%s" % user, "--display-name", "%s" % display_name]
         if region is not None and zone is not None:
             cmd.append("-n")
@@ -67,7 +72,7 @@ class RGWWebServiceAPI(object):
             cmd.append("--secret")
             cmd.append("%s" % secret_key)
 
-        return call(cmd)
+        return call(cmd, remote_addr)
 
     def user_get(self, user, region=None, zone=None, zone_region_prefix="client.radosgw"):
         cmd = ["/usr/bin/radosgw-admin", "user", "info", "--conf", "/etc/ceph/ceph.conf", "--uid", "%s" % user]
@@ -137,8 +142,10 @@ class RGWWebServiceAPI(object):
 
 
 # NB: Expects JSON returned
-def call(cmd):
-    # log.debug(' '.join([str(x) for x in cmd]))
+def call(cmd, remote_addr=None):
+    if remote_addr is None:
+        remote_addr = ''
+    log.debug(str(datetime.datetime.utcnow()) + ' ' + remote_addr + ' ' + ' '.join([str(x) for x in cmd]))
     process = subprocess.Popen(cmd, env=os.environ.copy(), stdout=subprocess.PIPE)
     json_output, err = process.communicate()
     if err:
@@ -191,7 +198,7 @@ def rgw_users_create(user):
     # Json example
     # flask.jsonify(data_dict)
 
-    return flaskify(api.user_create, user, display_name, region=region, zone=zone, access_key=access_key, secret_key=secret_key, email=email)
+    return flaskify(api.user_create, user, display_name=display_name, remote_addr=request.remote_addr, region=region, zone=zone, access_key=access_key, secret_key=secret_key, email=email)
 
 
 @app.route('/v1/users/get/<user>', methods=['GET'])
