@@ -38,6 +38,10 @@ default['ceph']['radosgw']['port'] = 80
 
 default['ceph']['radosgw']['default_url'] = 's3.rgw.ceph.example.com'
 
+# NB: Must create the user 'radosgw' in your upstream Chef process or 'radosgw' user AND group must exists before running
+# 'ceph-radosgw-webservice-install.rb'
+default['ceph']['radosgw']['rgw_webservice']['user'] = 'radosgw'
+
 # IMPORTANT: The civetweb user manual is a good place to look for custom config for civetweb:
 # https://github.com/civetweb/civetweb/blob/master/docs/UserManual.md
 # Add the options to the single line of the 'frontends etc...'
