@@ -53,7 +53,11 @@ class RGWWebServiceAPI(object):
         if display_name is None:
             display_name = user
 
-        cmd = ["/usr/bin/radosgw-admin", "user", "create", "--conf", "/etc/ceph/ceph.conf", "--uid", "%s" % user, "--display-name", "%s" % display_name]
+        if region is not None and zone is not None:
+            cmd = ["sudo", "/bin/radosgw-admin", "user", "create", "--conf", "/etc/ceph/ceph.conf", "--uid", "%s" % user, "--display-name", "%s" % display_name]
+        else:
+            cmd = ["/usr/bin/radosgw-admin", "user", "create", "--conf", "/etc/ceph/ceph.conf", "--uid", "%s" % user, "--display-name", "%s" % display_name]
+
         if region is not None and zone is not None:
             cmd.append("-n")
             # NB: This should match '[client.radosgw...]' or something similar found in ceph.conf for the RGW section
@@ -75,7 +79,11 @@ class RGWWebServiceAPI(object):
         return call(cmd, remote_addr)
 
     def user_get(self, user, region=None, zone=None, zone_region_prefix="client.radosgw"):
-        cmd = ["/usr/bin/radosgw-admin", "user", "info", "--conf", "/etc/ceph/ceph.conf", "--uid", "%s" % user]
+        if region is not None and zone is not None:
+            cmd = ["sudo", "/bin/radosgw-admin", "user", "info", "--conf", "/etc/ceph/ceph.conf", "--uid", "%s" % user]
+        else:
+            cmd = ["/usr/bin/radosgw-admin", "user", "info", "--conf", "/etc/ceph/ceph.conf", "--uid", "%s" % user]
+
         if region is not None and zone is not None:
             cmd.append("-n")
             # NB: This should match '[client.radosgw...]' or something similar found in ceph.conf for the RGW section
@@ -84,7 +92,11 @@ class RGWWebServiceAPI(object):
         return call(cmd)
 
     def user_keys_add(self, user, access_key=None, secret_key=None, region=None, zone=None, zone_region_prefix="client.radosgw"):
-        cmd = ["/usr/bin/radosgw-admin", "key", "create", "--conf", "/etc/ceph/ceph.conf", "--uid", "%s" % user, "--key-type", "s3"]
+        if region is not None and zone is not None:
+            cmd = ["sudo", "/usr/bin/radosgw-admin", "key", "create", "--conf", "/etc/ceph/ceph.conf", "--uid", "%s" % user, "--key-type", "s3"]
+        else:
+            cmd = ["/usr/bin/radosgw-admin", "key", "create", "--conf", "/etc/ceph/ceph.conf", "--uid", "%s" % user, "--key-type", "s3"]
+
         if access_key is not None:
             cmd.append("--access_key")
             cmd.append("%s" % access_key)
@@ -105,7 +117,10 @@ class RGWWebServiceAPI(object):
         return call(cmd)
 
     def user_quota_enable(self, user, region=None, zone=None, zone_region_prefix="client.radosgw"):
-        cmd = ["/usr/bin/radosgw-admin", "quota", "enable", "--conf", "/etc/ceph/ceph.conf", "--uid", "%s" % user, "--quota-scope", "user"]
+        if region is not None and zone is not None:
+            cmd = ["sudo", "/bin/radosgw-admin", "quota", "enable", "--conf", "/etc/ceph/ceph.conf", "--uid", "%s" % user, "--quota-scope", "user"]
+        else:
+            cmd = ["/usr/bin/radosgw-admin", "quota", "enable", "--conf", "/etc/ceph/ceph.conf", "--uid", "%s" % user, "--quota-scope", "user"]
 
         if region is not None and zone is not None:
             cmd.append("-n")
@@ -115,7 +130,10 @@ class RGWWebServiceAPI(object):
         return call(cmd)
 
     def user_quota_disable(self, user, region=None, zone=None, zone_region_prefix="client.radosgw"):
-        cmd = ["/usr/bin/radosgw-admin", "quota", "disable", "--conf", "/etc/ceph/ceph.conf", "--uid", "%s" % user, "--quota-scope", "user"]
+        if region is not None and zone is not None:
+            cmd = ["sudo", "/bin/radosgw-admin", "quota", "disable", "--conf", "/etc/ceph/ceph.conf", "--uid", "%s" % user, "--quota-scope", "user"]
+        else:
+            cmd = ["/usr/bin/radosgw-admin", "quota", "disable", "--conf", "/etc/ceph/ceph.conf", "--uid", "%s" % user, "--quota-scope", "user"]
 
         if region is not None and zone is not None:
             cmd.append("-n")
@@ -125,7 +143,10 @@ class RGWWebServiceAPI(object):
         return call(cmd)
 
     def user_quota_set(self, user, num, scope="user", qtype="size", region=None, zone=None, zone_region_prefix="client.radosgw"):
-        cmd = ["/usr/bin/radosgw-admin", "quota", "set", "--conf", "/etc/ceph/ceph.conf", "--uid", "%s" % user, "--quota-scope", "%s" % scope]
+        if region is not None and zone is not None:
+            cmd = ["sudo", "/bin/radosgw-admin", "quota", "set", "--conf", "/etc/ceph/ceph.conf", "--uid", "%s" % user, "--quota-scope", "%s" % scope]
+        else:
+            cmd = ["/usr/bin/radosgw-admin", "quota", "set", "--conf", "/etc/ceph/ceph.conf", "--uid", "%s" % user, "--quota-scope", "%s" % scope]
 
         if qtype == "objects":
             cmd.append("--max-objects")
