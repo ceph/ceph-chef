@@ -216,10 +216,14 @@ def rgw_users_create(user):
     secret_key = request.args.get('secret_key')
     email = request.args.get('email')
 
+    remote_addr = request.headers.get('X-Forwarded-For')
+    if remote_addr is None:
+        remote_addr = request.remote_addr
+
     # Json example
     # flask.jsonify(data_dict)
 
-    return flaskify(api.user_create, user, display_name=display_name, remote_addr=request.remote_addr, region=region, zone=zone, access_key=access_key, secret_key=secret_key, email=email)
+    return flaskify(api.user_create, user, display_name=display_name, remote_addr=remote_addr, region=region, zone=zone, access_key=access_key, secret_key=secret_key, email=email)
 
 
 @app.route('/v1/users/get/<user>', methods=['GET'])

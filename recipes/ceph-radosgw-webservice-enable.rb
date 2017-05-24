@@ -17,7 +17,9 @@
 # limitations under the License.
 #
 
-execute 'rgw-webservice-enable' do
-    command 'sudo systemctl enable rgw_webservice'
-    ignore_failure true
+if node['ceph']['radosgw']['rgw_webservice']['enable']
+    execute 'rgw-webservice-enable' do
+        command 'sudo systemctl enable rgw_webservice'
+        ignore_failure true
+    end
 end

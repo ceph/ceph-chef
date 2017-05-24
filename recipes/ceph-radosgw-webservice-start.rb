@@ -18,8 +18,9 @@
 #
 
 # If using Ubuntu then must be using 16.04 or higher
-
-execute 'rgw-webservice-start' do
-    command 'sudo systemctl start rgw_webservice'
-    ignore_failure true
+if node['ceph']['radosgw']['rgw_webservice']['enable']
+    execute 'rgw-webservice-start' do
+        command 'sudo systemctl start rgw_webservice'
+        ignore_failure true
+    end
 end
