@@ -23,7 +23,7 @@ distribution_codename = node['lsb']['codename']
 
 apt_preference 'ceph_repo' do
   glob '*'
-  pin 'origin "ceph.com"'
+  pin 'origin "*.ceph.com"'
   pin_priority '1001'
 end
 
