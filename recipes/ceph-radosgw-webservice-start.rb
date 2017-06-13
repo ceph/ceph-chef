@@ -1,5 +1,5 @@
 #
-# Author:: Chris Jones <chris.jones@lambdastack.io>
+# Author:: Hans Chris Jones <chris.jones@lambdastack.io>
 # Cookbook Name:: cepheus
 #
 # Copyright 2017, LambdaStack

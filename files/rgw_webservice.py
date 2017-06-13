@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Author: Chris Jones <chris.jones@lambdastack.io>
+# Author: Hans Chris Jones <chris.jones@lambdastack.io>
 # Copyright 2017, LambdaStack
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
