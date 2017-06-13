@@ -1,5 +1,5 @@
 #
-# Author:: Chris Jones <chris.jones@lambdastack.io, cjones303@bloomberg.net>
+# Author:: Hans Chris Jones <chris.jones@lambdastack.io>
 # Cookbook Name:: ceph
 # Recipe:: radosgw_civetweb
 #
