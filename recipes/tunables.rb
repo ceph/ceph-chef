@@ -21,7 +21,7 @@
 
 bash 'set-ceph-crush-tunables' do
   code <<-EOH
-    ceph crush tunables optimal
+    ceph osd crush tunables optimal
     ceph osd crush set-tunable straw_calc_version 2
   EOH
   ignore_failure true
