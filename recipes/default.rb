@@ -35,18 +35,20 @@ end
 # has been bootstrapped with Chef - /opt/chef/embedded/bin/gem install --force --local /tmp/netaddr-1.5.1.gem
 # Of course, this means you have downloaded the gem from: https://rubygems.org/downloads/netaddr-1.5.1.gem and then
 # copied it to your /tmp directory.
-chef_gem 'netaddr-local' do
-  package_name 'netaddr'
-  source '/tmp/netaddr-1.5.1.gem'
-  action :install
-  compile_time true
-  only_if { File.exist?('/tmp/netaddr-1.5.1.gem') }
-end
+if node['ceph']['netaddr_install']
+  chef_gem 'netaddr-local' do
+    package_name 'netaddr'
+    source '/tmp/netaddr-1.5.1.gem'
+    action :install
+    compile_time true
+    only_if { File.exist?('/tmp/netaddr-1.5.1.gem') }
+  end
 
-chef_gem 'netaddr' do
-  action :install
-  compile_time true
-  not_if { File.exist?('/tmp/netaddr-1.5.1.gem') }
+  chef_gem 'netaddr' do
+    action :install
+    compile_time true
+    not_if { File.exist?('/tmp/netaddr-1.5.1.gem') }
+  end
 end
 
 if node['ceph']['pools']['radosgw']['federated_enable']
