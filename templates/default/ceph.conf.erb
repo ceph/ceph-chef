@@ -8,7 +8,9 @@
   # This value must be set before the mon.rb recipe is called. Do this in your own recipe where you set your owner
   # variables. For an example, see ceph-chef/recipes/ceph-mon.rb
   fsid = <%= @fsid_secret %>
-  keyring = /etc/ceph/$cluster.$name.keyring
+  <% if !node['ceph']['keyring']['global'].empty? %>
+  keyring = <%= node['ceph']['keyring']['global'] %>
+  <% end -%>
   auth cluster required = cephx
   auth service required = cephx
   auth client required = cephx
@@ -50,7 +52,9 @@
 
 <% if @is_osd -%>
 [osd]
-  keyring = /var/lib/ceph/osd/$cluster-$id/keyring
+  <% if !node['ceph']['keyring']['osd'].empty? %>
+  keyring = <%= node['ceph']['keyring']['osd'] %>
+  <% end -%>
   <% # If the 'config''osd' key/value pairs are nil then use these values as defaults other wise be SURE to have at least these defined in your custom key/value OSD array -%>
   <% if node['ceph']['config']['osd'].nil? -%>
   # Set the default values here if no values provided to override them
@@ -135,6 +139,9 @@
 
 <% if @is_mon -%>
 [mon]
+  <% if !node['ceph']['keyring']['mon'].empty? %>
+  keyring = <%= node['ceph']['keyring']['mon'] %>
+  <% end -%>
   # Change the allow pool delete to false once you have everything where you want it. It keeps someone from
   # accidently deleting a pool!
   mon_allow_pool_delete = true
@@ -148,6 +155,9 @@
 <% if !node['ceph']['config']['mds'].nil? -%>
 # NOTE: Only needed for CephFS
 [mds]
+  <% if !node['ceph']['keyring']['mds'].empty? %>
+  keyring = <%= node['ceph']['keyring']['mds'] %>
+  <% end -%>
   mds cache size = 250000
   <% node['ceph']['config']['mds'].sort.each do |key, value| -%>
   <%= key %> = <%= value %>
@@ -180,7 +190,9 @@
 # NOTE: You can null out the 'admin socket' below if you wish. If present, when running ceph -s without being 'sudo'
 # you will receive an 'unable to bind error msg'.
 [client.admin]
-  keyring = /etc/ceph/$cluster.client.admin.keyring
+  <% if !node['ceph']['keyring']['adm'].empty? %>
+  keyring = <%= node['ceph']['keyring']['adm'] %>
+  <% end -%>
   admin socket =
   log file =
 <% end -%>
@@ -213,11 +225,13 @@
   rgw zone = <%= inst['region'] %>-<%= inst['name'] %>
   rgw zone root pool = .<%= inst['region'] %>-<%= inst['name'] %>.rgw.root
   <% end %>
+  <% if !node['ceph']['keyring']['rgw'].empty? %>
   <% if node['ceph']['pools']['radosgw']['federated_multisite_replication'] %>
-  keyring = /etc/ceph/$cluster.client.radosgw.keyring
+  keyring = <%= node['ceph']['keyring']['rgw'] %>.keyring
   <% else %>
-  keyring = /etc/ceph/$cluster.client.radosgw.<%= inst['region'] %>-<%= inst['name'] %>.keyring
+  keyring = <%= node['ceph']['keyring']['rgw'] %>.<%= inst['region'] %>-<%= inst['name'] %>.keyring
   <% end %>
+  <% end -%>
   admin socket = /var/run/ceph/$cluster-$type.radosgw.<%= inst['region'] %>-<%= inst['name'] %>.asok
   <% if inst['rgw_thread_pool'] %>
   rgw thread pool size = <%= inst['rgw_thread_pool'] %>
@@ -298,7 +312,9 @@
 [client.radosgw.gateway]
   host = <%= node['hostname'] %>
   rgw opstate ratelimit = 0
-  keyring = /etc/ceph/$cluster.client.radosgw.keyring
+  <% if !node['ceph']['keyring']['rgw'].empty? %>
+  keyring = <%= node['ceph']['keyring']['rgw'] %>.keyring
+  <% end -%>
   admin socket = /var/run/ceph/$cluster-$type.radosgw.gateway.asok
   rgw thread pool size = <%= node['ceph']['radosgw']['rgw_thread_pool'] %>
   rgw num rados handles = <%= node['ceph']['radosgw']['rgw_num_rados_handles'] %>
@@ -363,7 +379,9 @@
 <% if @is_rest_api -%>
 [client.restapi]
   public addr = <%= node['ceph']['restapi']['ip'] %>:<%= node['ceph']['restapi']['port'] %>
-  keyring = /etc/ceph/$cluster.client.restapi.keyring
+  <% if !node['ceph']['keyring']['res'].empty? %>
+  keyring = <%= node['ceph']['keyring']['res'] %>.keyring
+  <% end -%>
   admin socket = /var/run/ceph/$cluster-$type.restapi.asok
   restapi base url = <%= node['ceph']['restapi']['base_url'] %>
   log file = /var/log/ceph/$cluster.client.restapi.log

@@ -20,6 +20,16 @@
 # Change this if you want a different cluster name other than the default of ceph
 default['ceph']['cluster'] = 'ceph'
 
+# Set default keyring locations. These can be overriden by setting them after this loads.
+default['ceph']['keyring']['global'] = '/etc/ceph/$cluster.$name.keyring'
+# NB: Could leave others set to '' and template would skip or do the same for global
+default['ceph']['keyring']['mon'] = '/etc/ceph/$cluster.$name.keyring'
+default['ceph']['keyring']['mds'] = '/etc/ceph/$cluster.$name.keyring'
+default['ceph']['keyring']['rgw'] = '/etc/ceph/$cluster.client.radosgw'
+default['ceph']['keyring']['res'] = '/etc/ceph/$cluster.client.restapi'
+default['ceph']['keyring']['adm'] = '/etc/ceph/$cluster.client.admin.keyring'
+default['ceph']['keyring']['osd'] = '/var/lib/ceph/osd/$cluster-$id/keyring'
+
 default['ceph']['tuning']['osd_op_threads'] = 8
 default['ceph']['tuning']['osd_recovery_op_priority'] = 1
 default['ceph']['tuning']['osd_recovery_max_active'] = 1
