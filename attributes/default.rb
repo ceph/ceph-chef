@@ -103,6 +103,9 @@ default['ceph']['encrypted_data_bags'] = false
 default['ceph']['install_repo'] = true
 default['ceph']['btrfs'] = false
 
+# Install the netaddr gem
+default['ceph']['netaddr_install'] = true
+
 case node['platform_family']
 when 'debian'
   packages = ['ceph-common', 'python-pycurl']
