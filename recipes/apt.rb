@@ -37,12 +37,13 @@ if node['ceph']['repo']['create']
   end
 
   # Only if ceph extras_repo is true
-  apt_repository 'ceph-extras' do
-    repo_name 'ceph-extras'
-    uri node['ceph']['debian']['extras']['repository']
-    distribution distribution_codename
-    components ['main']
-    key node['ceph']['debian']['extras']['repository_key']
-    only_if { node['ceph']['extras_repo'] }
+  if node['ceph']['debian']['extras']
+    apt_repository 'ceph-extras' do
+      repo_name 'ceph-extras'
+      uri node['ceph']['debian']['extras']['repository']
+      distribution distribution_codename
+      components ['main']
+      key node['ceph']['debian']['extras']['repository_key']
+    end
   end
 end
