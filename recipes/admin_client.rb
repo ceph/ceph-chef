@@ -24,7 +24,7 @@ execute 'format ceph-admin-secret as keyring' do
   command lazy { "ceph-authtool --create-keyring #{keyring} --name=client.admin --add-key='#{node['ceph']['admin-secret']}' --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *'" }
   creates keyring
   only_if { ceph_chef_admin_secret }
-  not_if "test -f #{keyring}"
+  not_if "test -s #{keyring}"
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
@@ -32,7 +32,7 @@ execute 'gen ceph-admin-secret' do
   command lazy { "ceph-authtool --create-keyring #{keyring} --gen-key -n client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *'" }
   creates keyring
   not_if { ceph_chef_admin_secret }
-  not_if "test -f #{keyring}"
+  not_if "test -s #{keyring}"
   notifies :create, 'ruby_block[save ceph_chef_admin_secret]', :immediately
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end

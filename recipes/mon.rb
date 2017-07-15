@@ -111,7 +111,7 @@ execute 'format ceph-mon-secret as keyring' do
   user node['ceph']['owner']
   group node['ceph']['group']
   only_if { ceph_chef_mon_secret }
-  not_if "test -f #{keyring}"
+  not_if "test -s #{keyring}"
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
@@ -122,7 +122,7 @@ execute 'generate ceph-mon-secret as keyring' do
   user node['ceph']['owner']
   group node['ceph']['group']
   not_if { ceph_chef_mon_secret }
-  not_if "test -f #{keyring}"
+  not_if "test -s #{keyring}"
   notifies :create, 'ruby_block[save ceph_chef_mon_secret]', :immediately
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
@@ -161,7 +161,7 @@ execute 'ceph-mon mkfs' do
   creates "/var/lib/ceph/mon/#{node['ceph']['cluster']}-#{node['hostname']}/keyring"
   user node['ceph']['owner']
   group node['ceph']['group']
-  not_if "test -f /var/lib/ceph/mon/#{node['ceph']['cluster']}-#{node['hostname']}/keyring"
+  not_if "test -s /var/lib/ceph/mon/#{node['ceph']['cluster']}-#{node['hostname']}/keyring"
 end
 
 ruby_block 'mon-finalize' do

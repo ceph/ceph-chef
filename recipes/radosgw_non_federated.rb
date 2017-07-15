@@ -63,14 +63,14 @@ end
 execute 'update-ceph-radosgw-secret' do
   command lazy { "sudo ceph-authtool #{keyring} --name=client.radosgw.gateway --add-key=#{new_key} --cap osd 'allow rwx' --cap mon 'allow rwx'" }
   only_if { new_key }
-  only_if "test -f #{keyring}"
+  only_if "test -s #{keyring}"
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
 execute 'write-ceph-radosgw-secret' do
   command lazy { "ceph-authtool #{keyring} --create-keyring --name=client.radosgw.gateway --add-key=#{new_key} --cap osd 'allow rwx' --cap mon 'allow rwx'" }
   only_if { new_key }
-  not_if "test -f #{keyring}"
+  not_if "test -s #{keyring}"
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
@@ -81,7 +81,7 @@ execute 'generate-client-radosgw-secret' do
   EOH
   creates keyring
   not_if { new_key }
-  not_if "test -f #{keyring}"
+  not_if "test -s #{keyring}"
   notifies :create, 'ruby_block[save-radosgw-secret]', :immediately
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end

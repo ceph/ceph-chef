@@ -46,7 +46,7 @@ if node['ceph']['version'] != 'hammer' && node['ceph']['mgr']['enable']
   #   user node['ceph']['owner']
   #   group node['ceph']['group']
   #   # only_if { ceph_chef_mgr_secret }
-  #   not_if "test -f #{keyring}"
+  #   not_if "test -s #{keyring}"
   #   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
   # end
   #

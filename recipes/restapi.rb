@@ -44,7 +44,7 @@ keyring = "/etc/ceph/#{node['ceph']['cluster']}.client.restapi.keyring"
 execute 'write ceph-restapi-secret' do
   command lazy { "ceph-authtool #{keyring} --create-keyring --name=client.restapi --add-key='#{node['ceph']['restapi-secret']}'" }
   only_if { ceph_chef_restapi_secret }
-  not_if "test -f #{keyring}"
+  not_if "test -s #{keyring}"
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
@@ -53,7 +53,7 @@ execute 'gen client-restapi-secret' do
   command lazy { "ceph auth get-or-create client.restapi osd 'allow *' mon 'allow *' -o #{keyring}" }
   creates keyring
   not_if { ceph_chef_restapi_secret }
-  not_if "test -f #{keyring}"
+  not_if "test -s #{keyring}"
   notifies :create, 'ruby_block[save restapi_secret]', :immediately
   sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
