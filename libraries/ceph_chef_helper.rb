@@ -703,8 +703,8 @@ def ceph_chef_mon_nodes_ip(nodes)
 end
 
 def ceph_chef_mon_node_ip(nodeish)
-  # Note: A valid cidr block MUST exist!
-  mon_ip = ceph_chef_find_node_ip_in_network(node['ceph']['network']['public']['cidr'], nodeish)
+  # Note: A valid cidr block MUST exist! or node['ceph']['config']['global']['public addr'] MUST be populated.
+  mon_ip = ceph_chef_find_node_ip_in_network(node['ceph']['network']['public']['cidr'], nodeish) || nodeish['ceph']['config'].fetch('global', {}).fetch('public addr', nil)
   mon_ip
 end
 
