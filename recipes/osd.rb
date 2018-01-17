@@ -121,6 +121,14 @@ if node['ceph']['osd']['devices']
     # IMPORTANT: More work needs to be done on solid key management for very high security environments.
     dmcrypt = osd_device['encrypted'] == true ? '--dmcrypt' : ''
 
+    # set the storage type for the OSD data
+    # if none is specified use the default specified by upstream (currently bluestore)
+    osd_type = if node['ceph']['osd']['type'].eql?('bluestore')
+      '--bluestore'
+    elsif node['ceph']['osd']['type'].eql?('filestore')
+      '--filestore'
+    end
+
     # is_device - Is the device a partition or not
     # is_ceph - Does the device contain the default 'ceph data' or 'ceph journal' label
     # The -v option is added to the ceph-disk script so as to get a verbose output if debugging is needed. No other reason.
@@ -128,7 +136,7 @@ if node['ceph']['osd']['devices']
     execute "ceph-disk-prepare on #{osd_device['data']}" do
       command <<-EOH
         is_device=$(echo '#{osd_device['data']}' | egrep '/dev/(([a-z]{3,4}[0-9]$)|(cciss/c[0-9]{1}d[0-9]{1}p[0-9]$))')
-        ceph-disk -v prepare --cluster #{node['ceph']['cluster']} #{dmcrypt} --fs-type #{node['ceph']['osd']['fs_type']} #{osd_device['data']} #{osd_device['journal']}
+        ceph-disk -v prepare --cluster #{node['ceph']['cluster']} #{dmcrypt} #{osd_type} --fs-type #{node['ceph']['osd']['fs_type']} #{osd_device['data']} #{osd_device['journal']}
         if [[ ! -z $is_device ]]; then
           ceph-disk -v activate #{osd_device['data']}#{partitions}
         else
