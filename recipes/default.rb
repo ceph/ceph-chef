@@ -46,6 +46,7 @@ if node['ceph']['netaddr_install']
 
   chef_gem 'netaddr' do
     action :install
+    version '<2'
     compile_time true
     not_if { File.exist?('/tmp/netaddr-1.5.1.gem') }
   end
