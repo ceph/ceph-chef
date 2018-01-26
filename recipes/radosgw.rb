@@ -66,7 +66,7 @@ end
 
 # Verifies or sets the correct mode only
 file "/etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring" do
-  mode '0644'
+  mode '0640'
 end
 
 # Portion above is the same for Federated and Non-Federated versions.
