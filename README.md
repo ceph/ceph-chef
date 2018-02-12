@@ -263,7 +263,7 @@ This cookbook uses Test Kitchen to verify functionality. A Pull Request can't be
 
 ## AUTHORS
 * Author: Hans Chris Jones <chris.jones@lambdastack.io>
-NOTE: No longer with Bloomberg - * Author: Chris Jones <cjones303@bloomberg.net>
+NOTE: No longer with Bloomberg - * Author: Hans Chris Jones <cjones303@bloomberg.net>
 Actively maintained by Hans Chris Jones, others from Bloomberg, Red Hat and other firms
 
 ## CONTRIBUTIONS
