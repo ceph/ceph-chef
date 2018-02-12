@@ -1,5 +1,5 @@
 #
-# Author:: Hans Hans Chris Jones <chris.jones@lambdastack.io>
+# Author:: Hans Chris Jones <chris.jones@lambdastack.io>
 # Cookbook Name:: ceph
 #
 # Copyright 2017, Bloomberg Finance L.P.

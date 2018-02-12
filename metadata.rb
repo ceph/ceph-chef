@@ -1,5 +1,5 @@
 name 'ceph-chef'
-maintainer 'Hans Hans Chris Jones'
+maintainer 'Hans Chris Jones'
 maintainer_email 'chris.jones@lambdastack.io'
 license 'Apache v2.0'
 description 'Installs/Configures Ceph (Jewel and above)'
