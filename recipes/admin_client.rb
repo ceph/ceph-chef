@@ -52,5 +52,7 @@ end
 
 # Verifies or sets the correct mode only
 file "/etc/ceph/#{node['ceph']['cluster']}.client.admin.keyring" do
+  user node['ceph']['owner']
+  group node['ceph']['group']
   mode '0640'
 end
